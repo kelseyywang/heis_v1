@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Spinner, Button } from './common';
 import {Scene, Router, Actions} from 'react-native-router-flux';
+import firebase from 'firebase';
 
 export default class MapScreen extends React.Component {
 
@@ -45,7 +46,18 @@ directionCoords(lat1, lon1, lat2, lon2) {
   }]);
 }
 
+
   componentDidMount() {
+    this.callCurrentPosition();
+    const { currentUser } = firebase.auth();
+    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
+      this.interval = setInterval(() => {
+        this.callCurrentPosition();
+      }, 5000);
+  }
+  }
+
+  callCurrentPosition() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         this.setState({
@@ -59,8 +71,15 @@ directionCoords(lat1, lon1, lat2, lon2) {
     );
   }
 
+  componentWillUnmount() {
+    const { currentUser } = firebase.auth();
+    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
+      clearInterval(this.interval);
+    }
+  }
+
   render() {
-    return (
+      return (
       <View style={styles.container}>
         {this.renderContent()}
       </View>
@@ -69,6 +88,15 @@ directionCoords(lat1, lon1, lat2, lon2) {
 
   renderContent() {
     if (this.state.latitude != null && this.state.longitude != null) {
+      const { currentUser } = firebase.auth();
+     firebase.database().ref(`/users/${currentUser.uid}/`)
+       .set({latitude: this.state.latitude, longitude: this.state.longitude})
+       .then(() => {
+         console.log("location set success");
+       })
+       .catch(() => {
+         console.log("location set failed");
+       });
       return (
         <MapView
           provider="google"
