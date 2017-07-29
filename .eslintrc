@@ -1,3 +1,22 @@
 {
-    "extends": "rallycoding"
+    "extends": "rallycoding",
+    "rules": {
+      "object-curly-spacing": "off" ,
+      "comma-spacing": "off",
+      "key-spacing": "off",
+      "quotes": "off",
+      "space-before-blocks": "off",
+      "brace-style": "off",
+      "react/self-closing-comp": "off",
+      "react/jsx-equals-spacing": "off",
+      "prefer-const": "off",
+      "no-mixed-operators": "off",
+      "space-infix-ops": "off",
+      "no-param-reassign": "off",
+      "no-mixed-spaces-and-tabs": "off",
+      "react/sort-comp": "off",
+      "no-lone-blocks": "off",
+      "operator-assignment": "off",
+      "block-spacing": "off"
+    }
 }
