@@ -1,22 +1,27 @@
+import { Grid, Button } from 'react-native-elements';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Spinner, Button } from './common';
-import {Scene, Router, Actions} from 'react-native-router-flux';
+import { Spinner, Card, CardSection } from './common';
+import { Scene, Router, Actions } from 'react-native-router-flux';
 import firebase from 'firebase';
 
+//TODO: create state variables renderPolyline and renderCircle
+//and && statement for creating clues for tracer
 export default class MapScreen extends React.Component {
 
   state = {
     latitude: null,
     longitude: null,
+    distance: null,
     error: null
-    };
+  };
 
   distance(lat1, lon1, lat2, lon2) {
-    { /* Setting zeroed second point to Rinconada Library for test*/ }
+    { /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
-    lon2 -= 122.139389;
+    lon2 -= 122.139389;*/
+  }
     let radlat1 = Math.PI * lat1/180;
   	let radlat2 = Math.PI * lat2/180;
   	let theta = lon1-lon2;
@@ -31,9 +36,10 @@ export default class MapScreen extends React.Component {
   }
 
 directionCoords(lat1, lon1, lat2, lon2) {
-  {/* Setting zeroed second point to Rinconada Library for test*/}
+  { /* Setting zeroed second point to Rinconada Library for test
   lat2 += 37.444999;
-  lon2 -= 122.139389;
+  lon2 -= 122.139389;*/
+}
   {/* Arbitrary multiplier as long as it begins and ends off screen initially*/}
   const multiplier = 50;
   return ([{
@@ -46,15 +52,27 @@ directionCoords(lat1, lon1, lat2, lon2) {
   }]);
 }
 
+  getCurrentDistance() {
+    let traitorLat = -1000;
+    let traitorLon = -1000;
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .on('value', snapshot => {
+      console.log("latitude is " + snapshot.val().latitude);
+      console.log("latitude is " + snapshot.val().longitude);
+      traitorLat = snapshot.val().latitude;
+      traitorLon = snapshot.val().longitude;
+      let dist = this.distance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+      this.setState({ distance: dist });
+    });
+
+    console.log("dist between the two is " +
+    this.distance(this.state.latitude, this.state.longitude, traitorLat, traitorLon));
+  }
 
   componentDidMount() {
-    this.callCurrentPosition();
-    const { currentUser } = firebase.auth();
-    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
-      this.interval = setInterval(() => {
-        this.callCurrentPosition();
-      }, 5000);
-  }
+    this.interval = setInterval(() => {
+      this.callCurrentPosition();
+    }, 5000);
   }
 
   callCurrentPosition() {
@@ -69,6 +87,8 @@ directionCoords(lat1, lon1, lat2, lon2) {
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+    console.log("set lat to " + this.state.latitude + " and lon to "
+  + this.state.longitude);
   }
 
   componentWillUnmount() {
@@ -78,10 +98,53 @@ directionCoords(lat1, lon1, lat2, lon2) {
     }
   }
 
-  render() {
-      return (
+  renderCurrentUser() {
+    const { currentUser } = firebase.auth();
+    console.log("BITCH");
+    return (
       <View style={styles.container}>
-        {this.renderContent()}
+        <MapView
+          provider="google"
+          style={styles.map}
+          region={{
+            latitude: this.state.latitude,
+            longitude: this.state.longitude,
+            latitudeDelta: 0.015,
+            longitudeDelta: 0.015,
+          }}
+        >
+          <MapView.Marker
+            title="me"
+            coordinate={{
+              latitude: this.state.latitude,
+              longitude: this.state.longitude
+            }}
+          />
+
+          <MapView.Circle
+            center={{
+              latitude: this.state.latitude,
+              longitude: this.state.longitude
+            }}
+            radius={this.state.distance}
+            fillColor="rgba(106,92,165,.3)"
+            strokeColor="rgba(106,92,165,.9)"
+          />
+
+          <MapView.Polyline
+            coordinates={
+              this.directionCoords(this.state.latitude, this.state.longitude, 0, 0)
+            }
+            strokeColor="rgba(106,92,165,.9)"
+            strokeWidth={2}
+          />
+        </MapView>
+        { currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333" &&
+        <Button
+          onPress={this.getCurrentDistance.bind(this)}
+          title='Get Update'
+        />
+        }
       </View>
     );
   }
@@ -97,56 +160,25 @@ directionCoords(lat1, lon1, lat2, lon2) {
        .catch(() => {
          console.log("location set failed");
        });
-      return (
-        <MapView
-          provider="google"
-          style={styles.map}
-          region={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.015,
-          }}
-        >
-          <MapView.Marker
-          title="me"
-          coordinate={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude
-          }}
-          />
-
-          <MapView.Circle
-          center={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude
-          }}
-          radius={this.distance(this.state.latitude, this.state.longitude, 0, 0)}
-          fillColor="rgba(106,92,165,.3)"
-          strokeColor="rgba(106,92,165,.9)"
-          />
-
-          <MapView.Polyline
-          coordinates={
-            this.directionCoords(this.state.latitude, this.state.longitude, 0, 0)
-          }
-          strokeColor="rgba(106,92,165,.9)"
-          strokeWidth={2}
-          />
-
-        </MapView>
-      );
+      return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+        {this.renderContent()}
+      </View>
+    );
   }
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
     height: 400,
     width: 400,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   map: {
