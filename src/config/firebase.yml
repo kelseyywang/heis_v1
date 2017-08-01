@@ -1,0 +1,9 @@
+# Eventually you should probably have a config file like this instead of using
+# a variable. 
+
+apiKey:             "AIzaSyCyCJdHSlhJmgVUf9G-9IPAxJPOAhRDlOQ"
+authDomain:         "heis-v1.firebaseapp.com"
+databaseURL:        "https://heis-v1.firebaseio.com"
+projectId:          "heis-v1"
+storageBucket:      "heis-v1.appspot.com"
+messagingSenderId:  "1042195751384"

@@ -10,18 +10,35 @@ import firebase from 'firebase';
 //and && statement for creating clues for tracer
 export default class MapScreen extends React.Component {
 
-  state = {
-    latitude: null,
-    longitude: null,
-    distance: null,
-    error: null
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      latitude: null,
+      longitude: null,
+      distance: null,
+      error: null
+    };
+  }
+
+  componentDidMount() {
+    this.interval = setInterval(() => {
+      this.callCurrentPosition();
+    }, 5000);
+  }
+
+  componentWillUnmount() {
+    const { currentUser } = firebase.auth();
+    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
+      clearInterval(this.interval);
+    }
+  }
 
   distance(lat1, lon1, lat2, lon2) {
-    { /* Setting zeroed second point to Rinconada Library for test
+    /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
     lon2 -= 122.139389;*/
-  }
+
     let radlat1 = Math.PI * lat1/180;
   	let radlat2 = Math.PI * lat2/180;
   	let theta = lon1-lon2;
@@ -35,22 +52,22 @@ export default class MapScreen extends React.Component {
   	return dist;
   }
 
-directionCoords(lat1, lon1, lat2, lon2) {
-  { /* Setting zeroed second point to Rinconada Library for test
-  lat2 += 37.444999;
-  lon2 -= 122.139389;*/
-}
-  {/* Arbitrary multiplier as long as it begins and ends off screen initially*/}
-  const multiplier = 50;
-  return ([{
-    latitude: lat1 + ((lat2 - lat1) * multiplier),
-    longitude: lon1 + ((lon2 - lon1) * multiplier)
-  },
-  {
-    latitude: lat1 + ((lat1 - lat2) * multiplier),
-    longitude: lon1 + ((lon1 - lon2) * multiplier)
-  }]);
-}
+  directionCoords(lat1, lon1, lat2, lon2) {
+    /* Setting zeroed second point to Rinconada Library for test
+    lat2 += 37.444999;
+    lon2 -= 122.139389;*/
+
+    /* Arbitrary multiplier as long as it begins and ends off screen initially*/
+    const multiplier = 50;
+    return ([{
+      latitude: lat1 + ((lat2 - lat1) * multiplier),
+      longitude: lon1 + ((lon2 - lon1) * multiplier)
+    },
+    {
+      latitude: lat1 + ((lat1 - lat2) * multiplier),
+      longitude: lon1 + ((lon1 - lon2) * multiplier)
+    }]);
+  }
 
   getCurrentDistance() {
     let traitorLat = -1000;
@@ -69,12 +86,6 @@ directionCoords(lat1, lon1, lat2, lon2) {
     this.distance(this.state.latitude, this.state.longitude, traitorLat, traitorLon));
   }
 
-  componentDidMount() {
-    this.interval = setInterval(() => {
-      this.callCurrentPosition();
-    }, 5000);
-  }
-
   callCurrentPosition() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -91,16 +102,9 @@ directionCoords(lat1, lon1, lat2, lon2) {
   + this.state.longitude);
   }
 
-  componentWillUnmount() {
-    const { currentUser } = firebase.auth();
-    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
-      clearInterval(this.interval);
-    }
-  }
-
   renderCurrentUser() {
     const { currentUser } = firebase.auth();
-    console.log("BITCH");
+    console.log("BITCH"); // GOOD SHET
     return (
       <View style={styles.container}>
         <MapView
@@ -152,14 +156,14 @@ directionCoords(lat1, lon1, lat2, lon2) {
   renderContent() {
     if (this.state.latitude != null && this.state.longitude != null) {
       const { currentUser } = firebase.auth();
-     firebase.database().ref(`/users/${currentUser.uid}/`)
-       .set({latitude: this.state.latitude, longitude: this.state.longitude})
-       .then(() => {
-         console.log("location set success");
-       })
-       .catch(() => {
-         console.log("location set failed");
-       });
+      firebase.database().ref(`/users/${currentUser.uid}/`)
+        .set({latitude: this.state.latitude, longitude: this.state.longitude})
+        .then(() => {
+          console.log("location set success");
+        })
+        .catch(() => {
+          console.log("location set failed");
+        });
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
