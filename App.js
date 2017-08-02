@@ -11,8 +11,8 @@ export default class App extends React.Component {
     return (
       <Router>
         <Scene key="root">
-          <Scene key="login" component={LoginForm} title="Please Login" initial />
-          <Scene key="mapScreen" component={MapScreen} title="Please Login" />
+          <Scene key="login" component={LoginForm} title="Login" initial />
+          <Scene key="mapScreen" component={MapScreen} title="Map" />
         </Scene>
       </Router>
     );

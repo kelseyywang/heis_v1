@@ -6,8 +6,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
 
-//TODO: create state variables renderPolyline and renderCircle
-//and && statement for creating clues for tracer
+//TODO: add flex styling! also maybe work on notifying
+//traitor when tracer gets their location or dist
 export default class MapScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -60,7 +60,7 @@ export default class MapScreen extends React.Component {
     lon2 -= 122.139389;*/
 
     /* Arbitrary multiplier as long as it begins and ends off screen initially*/
-    const multiplier = 50;
+    const multiplier = 1000;
     return ([{
       latitude: lat1 + ((lat2 - lat1) * multiplier),
       longitude: lon1 + ((lon2 - lon1) * multiplier)
@@ -127,8 +127,8 @@ export default class MapScreen extends React.Component {
           initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.015,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
           }}
         >
           <MapView.Marker
@@ -161,12 +161,14 @@ export default class MapScreen extends React.Component {
         </MapView>
         { currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333" &&
         <Button
+          buttonStyle={{backgroundColor: 'blue', borderRadius: 10, marginBottom: 20}}
           onPress={this.setCurrentDistance.bind(this)}
           title='Distance'
         />
         }
         { currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333" &&
         <Button
+          buttonStyle={{backgroundColor: 'blue', borderRadius: 10, marginBottom: 20}}
           onPress={this.setCurrentDirectionCoords.bind(this)}
           title='Direction'
         />
@@ -202,12 +204,18 @@ export default class MapScreen extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    height: 400,
+    height: 500,
     width: 400,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    height: 300,
+    width: 400,
   },
+  button: {
+    height: 50,
+    width: 200,
+    marginBottom: 10
+  }
 });
