@@ -17,6 +17,8 @@
       "react/sort-comp": "off",
       "no-lone-blocks": "off",
       "operator-assignment": "off",
-      "block-spacing": "off"
+      "block-spacing": "off",
+      "no-unused-vars": "off"
+
     }
 }
