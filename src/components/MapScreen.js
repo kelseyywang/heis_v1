@@ -9,22 +9,39 @@ import { Spinner, Card, CardSection } from './common';
 //TODO: create state variables renderPolyline and renderCircle
 //and && statement for creating clues for tracer
 export default class MapScreen extends React.Component {
+  constructor(props) {
+    super(props);
 
-  state = {
-    latitude: null,
-    longitude: null,
-    distance: null,
-    directionCoords: null,
-    error: null,
-    showPolyline: false,
-    showCircle: false
-  };
+    this.state = {
+      latitude: null,
+      longitude: null,
+      distance: null,
+      error: null,
+      directionCoords: null,
+      error: null,
+      showPolyline: false,
+      showCircle: false
+    };
+  }
 
-  calcDistance(lat1, lon1, lat2, lon2) {
-    { /* Setting zeroed second point to Rinconada Library for test
+  componentDidMount() {
+    this.interval = setInterval(() => {
+      this.callCurrentPosition();
+    }, 5000);
+  }
+
+  componentWillUnmount() {
+    const { currentUser } = firebase.auth();
+    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
+      clearInterval(this.interval);
+    }
+  }
+
+  distance(lat1, lon1, lat2, lon2) {
+    /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
     lon2 -= 122.139389;*/
-  }
+
     let radlat1 = Math.PI * lat1/180;
   	let radlat2 = Math.PI * lat2/180;
   	let theta = lon1-lon2;
@@ -39,11 +56,11 @@ export default class MapScreen extends React.Component {
   }
 
   calcDirectionCoords(lat1, lon1, lat2, lon2) {
-    { /* Setting zeroed second point to Rinconada Library for test
+    /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
     lon2 -= 122.139389;*/
-    }
-    {/* Arbitrary multiplier as long as it begins and ends off screen initially*/}
+    
+    /* Arbitrary multiplier as long as it begins and ends off screen initially*/
     const multiplier = 50;
     return ([{
       latitude: lat1 + ((lat2 - lat1) * multiplier),
@@ -85,12 +102,6 @@ export default class MapScreen extends React.Component {
     this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon));
   }
 
-  componentDidMount() {
-    this.interval = setInterval(() => {
-      this.callCurrentPosition();
-    }, 5000);
-  }
-
   callCurrentPosition() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -105,13 +116,6 @@ export default class MapScreen extends React.Component {
     );
     console.log("set lat to " + this.state.latitude + " and lon to "
   + this.state.longitude);
-  }
-
-  componentWillUnmount() {
-    const { currentUser } = firebase.auth();
-    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
-      clearInterval(this.interval);
-    }
   }
 
   renderCurrentUser() {
@@ -175,14 +179,14 @@ export default class MapScreen extends React.Component {
   renderContent() {
     if (this.state.latitude != null && this.state.longitude != null) {
       const { currentUser } = firebase.auth();
-     firebase.database().ref(`/users/${currentUser.uid}/`)
-       .set({latitude: this.state.latitude, longitude: this.state.longitude})
-       .then(() => {
-         console.log("location set success");
-       })
-       .catch(() => {
-         console.log("location set failed");
-       });
+      firebase.database().ref(`/users/${currentUser.uid}/`)
+        .set({latitude: this.state.latitude, longitude: this.state.longitude})
+        .then(() => {
+          console.log("location set success");
+        })
+        .catch(() => {
+          console.log("location set failed");
+        });
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
