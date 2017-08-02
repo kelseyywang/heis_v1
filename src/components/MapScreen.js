@@ -1,15 +1,14 @@
 import { Grid, Button } from 'react-native-elements';
+import { Scene, Router, Actions } from 'react-native-router-flux';
+import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
-import { Scene, Router, Actions } from 'react-native-router-flux';
-import firebase from 'firebase';
 
 //TODO: create state variables renderPolyline and renderCircle
 //and && statement for creating clues for tracer
 export default class MapScreen extends React.Component {
-
   constructor(props) {
     super(props);
 
@@ -17,7 +16,11 @@ export default class MapScreen extends React.Component {
       latitude: null,
       longitude: null,
       distance: null,
-      error: null
+      error: null,
+      directionCoords: null,
+      error: null,
+      showPolyline: false,
+      showCircle: false
     };
   }
 
@@ -52,11 +55,11 @@ export default class MapScreen extends React.Component {
   	return dist;
   }
 
-  directionCoords(lat1, lon1, lat2, lon2) {
+  calcDirectionCoords(lat1, lon1, lat2, lon2) {
     /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
     lon2 -= 122.139389;*/
-
+    
     /* Arbitrary multiplier as long as it begins and ends off screen initially*/
     const multiplier = 50;
     return ([{
@@ -69,21 +72,34 @@ export default class MapScreen extends React.Component {
     }]);
   }
 
-  getCurrentDistance() {
-    let traitorLat = -1000;
-    let traitorLon = -1000;
+  setCurrentDirectionCoords() {
+    let traitorLat;
+    let traitorLon;
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .on('value', snapshot => {
+      traitorLat = snapshot.val().latitude;
+      traitorLon = snapshot.val().longitude;
+      let dirCoords =
+        this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+      this.setState({ directionCoords: dirCoords, showCircle: false, showPolyline: true });
+    });
+  }
+
+  setCurrentDistance() {
+    let traitorLat;
+    let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .on('value', snapshot => {
       console.log("latitude is " + snapshot.val().latitude);
       console.log("latitude is " + snapshot.val().longitude);
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
-      let dist = this.distance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({ distance: dist });
+      let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+      this.setState({ distance: dist, showCircle: true, showPolyline: false });
     });
 
     console.log("dist between the two is " +
-    this.distance(this.state.latitude, this.state.longitude, traitorLat, traitorLon));
+    this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon));
   }
 
   callCurrentPosition() {
@@ -104,7 +120,6 @@ export default class MapScreen extends React.Component {
 
   renderCurrentUser() {
     const { currentUser } = firebase.auth();
-    console.log("BITCH"); // GOOD SHET
     return (
       <View style={styles.container}>
         <MapView
@@ -124,7 +139,7 @@ export default class MapScreen extends React.Component {
               longitude: this.state.longitude
             }}
           />
-
+        {this.state.showCircle &&
           <MapView.Circle
             center={{
               latitude: this.state.latitude,
@@ -134,19 +149,27 @@ export default class MapScreen extends React.Component {
             fillColor="rgba(106,92,165,.3)"
             strokeColor="rgba(106,92,165,.9)"
           />
-
+          }
+          {this.state.showPolyline &&
           <MapView.Polyline
             coordinates={
-              this.directionCoords(this.state.latitude, this.state.longitude, 0, 0)
+              this.state.directionCoords
             }
             strokeColor="rgba(106,92,165,.9)"
             strokeWidth={2}
           />
+        }
         </MapView>
         { currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333" &&
         <Button
-          onPress={this.getCurrentDistance.bind(this)}
-          title='Get Update'
+          onPress={this.setCurrentDistance.bind(this)}
+          title='Distance'
+        />
+        }
+        { currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333" &&
+        <Button
+          onPress={this.setCurrentDirectionCoords.bind(this)}
+          title='Direction'
         />
         }
       </View>
