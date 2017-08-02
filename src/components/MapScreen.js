@@ -16,7 +16,6 @@ export default class MapScreen extends React.Component {
       latitude: null,
       longitude: null,
       distance: null,
-      error: null,
       directionCoords: null,
       error: null,
       showPolyline: false,
@@ -37,7 +36,7 @@ export default class MapScreen extends React.Component {
     }
   }
 
-  distance(lat1, lon1, lat2, lon2) {
+  calcDistance(lat1, lon1, lat2, lon2) {
     /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
     lon2 -= 122.139389;*/
@@ -59,7 +58,7 @@ export default class MapScreen extends React.Component {
     /* Setting zeroed second point to Rinconada Library for test
     lat2 += 37.444999;
     lon2 -= 122.139389;*/
-    
+
     /* Arbitrary multiplier as long as it begins and ends off screen initially*/
     const multiplier = 50;
     return ([{
@@ -125,7 +124,7 @@ export default class MapScreen extends React.Component {
         <MapView
           provider="google"
           style={styles.map}
-          region={{
+          initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
             latitudeDelta: 0.015,
