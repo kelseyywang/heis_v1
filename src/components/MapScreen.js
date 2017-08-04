@@ -8,6 +8,12 @@ import { Spinner, Card, CardSection } from './common';
 
 //TODO: add flex styling! fix glitches.
 //And need to test once this stops glitching...
+
+//TODO: specific probs: if traitor logs in before tracer and there
+//is data from prev game, there will be a line or circle on map
+
+//spazzes out anytime traitor's location changes I think??
+//but works fine if iphone tracer and android traitor!? wtf.
 export default class MapScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -62,10 +68,7 @@ export default class MapScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    const { currentUser } = firebase.auth();
-    if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
       clearInterval(this.interval);
-    }
   }
 
   calcDistance(lat1, lon1, lat2, lon2) {
@@ -150,36 +153,41 @@ export default class MapScreen extends React.Component {
   }
 
   callCurrentPosition() {
+    const { currentUser } = firebase.auth();
+
+    console.log("CURR POS CALLED BY "+currentUser.uid);
+    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
+    .on('value', snapshot => {
+      console.log("CALL CURR POS SET STATE 77777");
+
+      //TODO: Is this the best way to do this? Probably will have long wait time
+      //since must wait for navigator to find geolocation, then wait for
+      //firebase pull... should we do this in series?
+      let fbShowPolyline = snapshot.val().showPolyline;
+      let fbShowCircle = snapshot.val().showCircle;
+      let fbDistance = snapshot.val().distance;
+      let fbDirectionCoords = snapshot.val().directionCoords;
+        this.setState({
+          //set to firebase pull from tracer
+          showCircle: fbShowCircle,
+          showPolyline: fbShowPolyline,
+          distance: fbDistance,
+          directionCoords: fbDirectionCoords
+        });
+    });
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log("CALL CURR POS SET STATE 666666");
         this.setState({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           error: null
         });
-        const { currentUser } = firebase.auth();
-        console.log("CURR POS CALLED BY "+currentUser.uid);
-        firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
-        .on('value', snapshot => {
-          //TODO: Is this the best way to do this? Probably will have long wait time
-          //since must wait for navigator to find geolocation, then wait for
-          //firebase pull... should we do this in series?
-          let fbShowPolyline = snapshot.val().showPolyline;
-          let fbShowCircle = snapshot.val().showCircle;
-          let fbDistance = snapshot.val().distance;
-          let fbDirectionCoords = snapshot.val().directionCoords;
-            this.setState({
-              //set to firebase pull from tracer
-              showCircle: fbShowCircle,
-              showPolyline: fbShowPolyline,
-              distance: fbDistance,
-              directionCoords: fbDirectionCoords
-            });
-        });
       },
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+
   }
 
   renderCurrentUser() {
@@ -265,7 +273,7 @@ export default class MapScreen extends React.Component {
           directionCoords: this.state.directionCoords
       })
         .then(() => {
-          console.log("location set success");
+          console.log("TRACER location set success");
         })
         .catch(() => {
           console.log("location set failed");
@@ -279,7 +287,7 @@ export default class MapScreen extends React.Component {
           longitude: this.state.longitude
       })
         .then(() => {
-          console.log("location set success");
+          console.log("TRAITOR location set success");
         })
         .catch(() => {
           console.log("location set failed");
