@@ -54,7 +54,13 @@ class LoginForm extends Component {
   }
 
   onLoginSuccess() {
-    Actions.mapScreen();
+    const { currentUser } = firebase.auth();
+    if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
+      Actions.mapScreenTracer();
+    }
+    else if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
+      Actions.mapScreenTraitor();
+    }
     this.setState({
       email: '',
       password: '',
@@ -138,7 +144,7 @@ const styles = {
   errorTextStyle: {
     fontSize: 20,
     alignSelf: 'center',
-    color: 'red', 
+    color: 'red',
   }
 };
 
