@@ -35,11 +35,9 @@ export default class MapScreenTracer extends React.Component {
       showCircle: false,
       lastClickLatTracer: null,
       lastClickLonTracer: null,
-      //Arbitrary values here!
-      lastClickLatTraitor: 0,
-      lastClickLonTraitor: 0
+      lastClickLatTraitor: null,
+      lastClickLonTraitor: null
     };
-    this.setFirebase();
   }
 
   componentDidMount() {
