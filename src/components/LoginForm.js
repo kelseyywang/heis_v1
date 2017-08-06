@@ -69,6 +69,34 @@ class LoginForm extends Component {
     });
   }
 
+  logOutActions() {
+    console.log("LOG OUT FIREBASE RESET");
+    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+      .set({
+        showPolyline: false,
+        showCircle: false,
+        distance: 0,
+        directionCoords: [{
+          latitude: 0,
+          longitude: 0
+        },
+        {
+          latitude: 0,
+          longitude: 0
+        }],
+        //Arbitrary values here!
+        lastClickLatTraitor: 0,
+        lastClickLonTraitor: 0
+      })
+      .then(() => {
+        console.log("TRACER stuff set success");
+      })
+      .catch(() => {
+        console.log("location set failed");
+      });
+      firebase.auth().signOut();
+  }
+
   renderButton() {
     if (this.state.loading) {
       return <Spinner size="small" />;
@@ -84,7 +112,7 @@ class LoginForm extends Component {
     switch (this.state.loggedIn) {
       case true:
         return (
-          <Button onPress={ () => firebase.auth().signOut() }>
+          <Button onPress={this.logOutActions.bind(this)}>
             Log Out
           </Button>
         );

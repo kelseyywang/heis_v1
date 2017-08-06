@@ -32,8 +32,14 @@ export default class MapScreenTracer extends React.Component {
       }],
       error: null,
       showPolyline: false,
-      showCircle: false
+      showCircle: false,
+      lastClickLatTracer: null,
+      lastClickLonTracer: null,
+      //Arbitrary values here!
+      lastClickLatTraitor: 0,
+      lastClickLonTraitor: 0
     };
+    this.setFirebase();
   }
 
   componentDidMount() {
@@ -53,14 +59,27 @@ export default class MapScreenTracer extends React.Component {
         showPolyline: this.state.showPolyline,
         showCircle: this.state.showCircle,
         distance: this.state.distance,
-        directionCoords: this.state.directionCoords
-    })
+        directionCoords: this.state.directionCoords,
+        lastClickLatTraitor: this.state.lastClickLatTraitor,
+        lastClickLonTraitor: this.state.lastClickLonTraitor
+        })
       .then(() => {
         console.log("TRACER stuff set success");
       })
       .catch(() => {
         console.log("location set failed");
       });
+  }
+
+  setLastClickTraitorLoc(lastClickLat, lastClickLon) {
+    console.log("SET LAST CLICK TRAITOR LOC - TRACER - VALUES: " +
+      lastClickLat + " " + lastClickLon);
+    if (lastClickLat != null && lastClickLon != null) {
+      var updates = {};
+      updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLatTraitor/'] = lastClickLat;
+      updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLonTraitor/'] = lastClickLon;
+      firebase.database().ref().update(updates);
+    }
   }
 
   calcDistance(lat1, lon1, lat2, lon2) {
@@ -89,6 +108,24 @@ export default class MapScreenTracer extends React.Component {
     }]);
   }
 
+  setCurrentDistance() {
+    console.log("SETCURRENTDISTANCE - TRACER");
+    let traitorLat;
+    let traitorLon;
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .on('value', snapshot => {
+      traitorLat = snapshot.val().latitude;
+      traitorLon = snapshot.val().longitude;
+      //this.setLastClickTraitorLoc(traitorLat, traitorLon);
+      let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+      this.setState({ distance: dist, showCircle: true, showPolyline: false,
+       lastClickLatTracer: this.state.latitude, lastClickLonTracer: this.state.longitude,
+       lastClickLatTraitor: snapshot.val().latitude, lastClickLonTraitor: snapshot.val().longitude
+     },
+      this.setFirebase.bind(this));
+    });
+  }
+
   setCurrentDirectionCoords() {
     console.log("SETCURRENTDIRECTIONCOORDS - TRACER");
     let traitorLat;
@@ -99,21 +136,8 @@ export default class MapScreenTracer extends React.Component {
       traitorLon = snapshot.val().longitude;
       let dirCoords =
         this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({ directionCoords: dirCoords, showCircle: false, showPolyline: true },
-      this.setFirebase.bind(this));
-    });
-  }
-
-  setCurrentDistance() {
-    console.log("SETCURRENTDISTANCE - TRACER");
-    let traitorLat;
-    let traitorLon;
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .on('value', snapshot => {
-      traitorLat = snapshot.val().latitude;
-      traitorLon = snapshot.val().longitude;
-      let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({ distance: dist, showCircle: true, showPolyline: false },
+      this.setState({ directionCoords: dirCoords, showCircle: false, showPolyline: true,
+        lastClickLatTracer: this.state.latitude, lastClickLonTracer: this.state.longitude},
       this.setFirebase.bind(this));
     });
   }
@@ -125,6 +149,10 @@ export default class MapScreenTracer extends React.Component {
     .on('value', snapshot => {
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
+      //TODO: allow tracer to only pull trigger 3 times
+      //after each failed time, give warning of how many shots
+      //left and how many meters they were from traitor  and how much
+      //closer they need to be
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       console.log("current dist is " + dist);
@@ -176,8 +204,8 @@ export default class MapScreenTracer extends React.Component {
         {this.state.showCircle &&
           <MapView.Circle
             center={{
-              latitude: this.state.latitude,
-              longitude: this.state.longitude
+              latitude: this.state.lastClickLatTracer,
+              longitude: this.state.lastClickLonTracer
             }}
             radius={this.state.distance}
             fillColor="rgba(106,92,165,.3)"

@@ -32,7 +32,9 @@ export default class MapScreenTraitor extends React.Component {
       }],
       error: null,
       showPolyline: false,
-      showCircle: false
+      showCircle: false,
+      lastClickLatTraitor: null,
+      lastClickLonTraitor: null
     };
   }
 
@@ -57,44 +59,51 @@ export default class MapScreenTraitor extends React.Component {
       let fbShowCircle = snapshot.val().showCircle;
       let fbDistance = snapshot.val().distance;
       let fbDirectionCoords = snapshot.val().directionCoords;
+      let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
+      let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
+
         this.setState({
           //set to firebase pull from tracer
           showCircle: fbShowCircle,
           showPolyline: fbShowPolyline,
           distance: fbDistance,
-          directionCoords: fbDirectionCoords
-        },
-        () => {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              this.setState({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                error: null
-              });
-              //TODO: decompose into function:
-              console.log("SET FIREBASE LOC. CALLBACK - TRAITOR");
-              firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-                .set({latitude: position.coords.latitude,
-                  longitude: position.coords.longitude
-              })
-                .then(() => {
-                  console.log("TRAITOR location set");
-                })
-                .catch(() => {
-                  console.log("location set failed");
-                });
-            },
-            (error) => this.setState({ error: error.message }),
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-          );
-        }
-      );
+          directionCoords: fbDirectionCoords,
+          lastClickLatTraitor: fbLastClickLatTraitor,
+          lastClickLonTraitor: fbLastClickLonTraitor
+          },
+          this.getAndSetLocation.bind(this)
+        );
     });
+  }
 
+  getAndSetLocation() {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.setState({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          error: null
+        });
+        //TODO: decompose into function:
+        console.log("SET FIREBASE LOC. - TRAITOR");
+        firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
+          .set({latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        })
+          .then(() => {
+            console.log("TRAITOR location set");
+          })
+          .catch(() => {
+            console.log("location set failed");
+          });
+      },
+      (error) => this.setState({ error: error.message }),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+    );
   }
 
   renderCurrentUser() {
+    console.log("RENDERCURRENTUSER - TRAITOR");
     return (
       <View style={styles.container}>
         <MapView
@@ -117,8 +126,8 @@ export default class MapScreenTraitor extends React.Component {
         {this.state.showCircle &&
           <MapView.Circle
             center={{
-              latitude: this.state.latitude,
-              longitude: this.state.longitude
+              latitude: this.state.lastClickLatTraitor,
+              longitude: this.state.lastClickLonTraitor
             }}
             radius={this.state.distance}
             fillColor="rgba(106,92,165,.3)"
@@ -143,6 +152,9 @@ export default class MapScreenTraitor extends React.Component {
     console.log("RENDERCONTENT - TRAITOR");
     if (this.state.latitude != null && this.state.longitude != null) {
       return this.renderCurrentUser();
+    }
+    else {
+      console.log("RENDERCONTENT IS NULL - TRAITOR");
     }
     return <Spinner size="large" />;
   }
