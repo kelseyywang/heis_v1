@@ -24,24 +24,23 @@ export default class MapScreenTraitor extends React.Component {
       distance: 0,
       directionCoords: [{
         latitude: 0,
-        longitude: 0
+        longitude: 0,
       },
       {
         latitude: 0,
-        longitude: 0
+        longitude: 0,
       }],
       error: null,
       showPolyline: false,
       showCircle: false,
       lastClickLatTraitor: null,
-      lastClickLonTraitor: null
+      lastClickLonTraitor: null,
     };
+    this.callCurrentPosition = this.callCurrentPosition.bind(this);
   }
 
   componentDidMount() {
-    this.interval = setInterval(() => {
-      this.callCurrentPosition();
-    }, 5000);
+    this.interval = setInterval(this.callCurrentPosition, 5000);
   }
 
   componentWillUnmount() {
@@ -51,7 +50,7 @@ export default class MapScreenTraitor extends React.Component {
   callCurrentPosition() {
     console.log("CALLCURRENTPOSITION - TRAITOR");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
-    .on('value', snapshot => {
+    .once('value', snapshot => {
       //TODO: Is this the best way to do this? Probably will have long wait time
       //since must wait for navigator to find geolocation, then wait for
       //firebase pull... should we do this in series?

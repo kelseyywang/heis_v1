@@ -24,11 +24,11 @@ export default class MapScreenTracer extends React.Component {
       distance: 0,
       directionCoords: [{
         latitude: 0,
-        longitude: 0
+        longitude: 0,
       },
       {
         latitude: 0,
-        longitude: 0
+        longitude: 0,
       }],
       error: null,
       showPolyline: false,
@@ -36,18 +36,23 @@ export default class MapScreenTracer extends React.Component {
       lastClickLatTracer: null,
       lastClickLonTracer: null,
       lastClickLatTraitor: null,
-      lastClickLonTraitor: null
+      lastClickLonTraitor: null,
     };
+
+    this.setFirebase = this.setFirebase.bind(this);
+    this.callCurrentPosition = this.callCurrentPosition.bind(this);
   }
 
   componentDidMount() {
-    this.interval = setInterval(() => {
-      this.callCurrentPosition();
-    }, 5000);
+    this.interval = setInterval(this.callCurrentPosition, 5000);
+    this.bitch = setInterval(() => {
+      console.log(this.state.distance);
+    }, 1000);
   }
 
   componentWillUnmount() {
     clearInterval(this.interval);
+    clearInterval(this.bitch);
   }
 
   setFirebase() {
@@ -111,16 +116,20 @@ export default class MapScreenTracer extends React.Component {
     let traitorLat;
     let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .on('value', snapshot => {
+    .once('value', snapshot => {
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
       //this.setLastClickTraitorLoc(traitorLat, traitorLon);
       let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({ distance: dist, showCircle: true, showPolyline: false,
-       lastClickLatTracer: this.state.latitude, lastClickLonTracer: this.state.longitude,
-       lastClickLatTraitor: snapshot.val().latitude, lastClickLonTraitor: snapshot.val().longitude
-     },
-      this.setFirebase.bind(this));
+      this.setState({
+        distance: dist,
+        showCircle: true,
+        showPolyline: false,
+        lastClickLatTracer: this.state.latitude,
+        lastClickLonTracer: this.state.longitude,
+        lastClickLatTraitor: snapshot.val().latitude,
+        lastClickLonTraitor: snapshot.val().longitude,
+      }, this.setFirebase);
     });
   }
 
@@ -129,14 +138,18 @@ export default class MapScreenTracer extends React.Component {
     let traitorLat;
     let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .on('value', snapshot => {
+    .once('value', snapshot => {
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
       let dirCoords =
         this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({ directionCoords: dirCoords, showCircle: false, showPolyline: true,
-        lastClickLatTracer: this.state.latitude, lastClickLonTracer: this.state.longitude},
-      this.setFirebase.bind(this));
+      this.setState({
+        directionCoords: dirCoords,
+        showCircle: false,
+        showPolyline: true,
+        lastClickLatTracer: this.state.latitude,
+        lastClickLonTracer: this.state.longitude
+      }, this.setFirebase);
     });
   }
 
@@ -144,7 +157,7 @@ export default class MapScreenTracer extends React.Component {
     let traitorLat;
     let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .on('value', snapshot => {
+    .once('value', snapshot => {
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
       //TODO: allow tracer to only pull trigger 3 times
