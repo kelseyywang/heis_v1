@@ -9,11 +9,9 @@ import { Spinner, Card, CardSection } from './common';
 //TODO: add flex styling! fix glitches.
 //And need to test once this stops glitching...
 
-//TODO: specific probs: if traitor logs in before tracer and there
-//is data from prev game, there will be a line or circle on map
-
-//spazzes out anytime traitor's location changes I think??
-//but works fine if iphone tracer and android traitor!? wtf.
+//TODO: decide whether traitor should have option to
+//block or reverse (reflective shield) the trigger and
+//make tracer die instead
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -177,6 +175,6 @@ const styles = StyleSheet.create({
   },
   map: {
     height: 300,
-    width: 400,
+    width: 300,
   }
 });

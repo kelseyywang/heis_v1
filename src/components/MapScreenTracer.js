@@ -3,17 +3,12 @@ import { Scene, Router, Actions } from 'react-native-router-flux';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Modal, TouchableHighlight } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
 
 //TODO: add flex styling! fix glitches.
 //And need to test once this stops glitching...
 
-//TODO: specific probs: if traitor logs in before tracer and there
-//is data from prev game, there will be a line or circle on map
-
-//spazzes out anytime traitor's location changes I think??
-//but works fine if iphone tracer and android traitor!? wtf.
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -37,6 +32,7 @@ export default class MapScreenTracer extends React.Component {
       lastClickLonTracer: null,
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
+      modalVisible: true,
     };
 
     this.setFirebase = this.setFirebase.bind(this);
@@ -160,6 +156,7 @@ export default class MapScreenTracer extends React.Component {
     .once('value', snapshot => {
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
+
       //TODO: allow tracer to only pull trigger 3 times
       //after each failed time, give warning of how many shots
       //left and how many meters they were from traitor  and how much
@@ -191,10 +188,35 @@ export default class MapScreenTracer extends React.Component {
     );
   }
 
+  setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  }
+
   renderCurrentUser() {
     console.log("RENDERCURRENTUSER - TRACER");
     return (
       <View style={styles.container}>
+{/*
+        <Modal
+          visible={this.state.triggerModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {}}
+        >
+          <View style={styles.containerStyle}>
+            <CardSection style={styles.cardSectionStyle}>
+              <Text style={styles.textStyle}>
+                You just triggered me.
+              </Text>
+            </CardSection>
+
+            <CardSection>
+              <Button onPress={this.setCurrentDistance}>Yes</Button>
+              <Button onPress={this.setCurrentDistance}>No</Button>
+            </CardSection>
+          </View>
+    </Modal>*/
+  }
         <MapView
           provider="google"
           style={styles.map}
@@ -233,21 +255,23 @@ export default class MapScreenTracer extends React.Component {
           />
           }
         </MapView>
-        <Button
-          buttonStyle={{backgroundColor: 'blue', borderRadius: 4, marginBottom: 20}}
-          onPress={this.setCurrentDistance.bind(this)}
-          title='Distance'
-        />
-        <Button
-          buttonStyle={{backgroundColor: 'blue', borderRadius: 4, marginBottom: 20}}
-          onPress={this.setCurrentDirectionCoords.bind(this)}
-          title='Direction'
-        />
-        <Button
-          buttonStyle={{backgroundColor: 'red', borderRadius: 4, marginBottom: 20}}
-          onPress={this.didGameEnd.bind(this)}
-          title='Trigger'
-        />
+        <View style={styles.buttonsContainerStyle}>
+          <Button
+            buttonStyle={{backgroundColor: 'blue', borderRadius: 4, marginBottom: 20}}
+            onPress={this.setCurrentDistance.bind(this)}
+            title='Distance'
+          />
+          <Button
+            buttonStyle={{backgroundColor: 'blue', borderRadius: 4, marginBottom: 20}}
+            onPress={this.setCurrentDirectionCoords.bind(this)}
+            title='Direction'
+          />
+          <Button
+            buttonStyle={{backgroundColor: 'red', borderRadius: 4, marginBottom: 20}}
+            onPress={this.didGameEnd.bind(this)}
+            title='Trigger'
+          />
+      </View>
     </View>
     );
   }
@@ -274,18 +298,37 @@ export default class MapScreenTracer extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    height: 500,
-    width: 400,
+    flex: 1,
     justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  buttonsContainerStyle: {
+    flex: 1,
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
   map: {
     height: 300,
-    width: 400,
+    width: 300,
   },
   button: {
     height: 50,
     width: 200,
     marginBottom: 10
-  }
+  },
+  cardSectionStyle: {
+  justifyContent: 'center'
+},
+textStyle: {
+  flex: 1,
+  fontSize: 18,
+  textAlign: 'center',
+  lineHeight: 40
+},
+containerStyle: {
+  backgroundColor: 'rgba(0, 0, 0, 0.75)',
+  position: 'relative',
+  flex: 1,
+  justifyContent: 'center'
+}
 });
