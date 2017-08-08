@@ -33,6 +33,9 @@ export default class MapScreenTracer extends React.Component {
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
       modalVisible: true,
+      showAim: false,
+      showTriggerCircle: false,
+      triggersRemaining: 3,
     };
 
     this.setFirebase = this.setFirebase.bind(this);
@@ -129,6 +132,9 @@ export default class MapScreenTracer extends React.Component {
     });
   }
 
+  //TODO: This is off because of the way longitude changes as you
+  //approach the poles, due to spherical curvature... need to recalculate
+  //Reference this: http://www.movable-type.co.uk/scripts/latlong.html
   setCurrentDirectionCoords() {
     console.log("SETCURRENTDIRECTIONCOORDS - TRACER");
     let traitorLat;
@@ -149,23 +155,24 @@ export default class MapScreenTracer extends React.Component {
     });
   }
 
-  didGameEnd() {
+  setAim() {
+    this.setState({
+      showAim: !this.state.showAim,
+    });
+  }
+
+  triggerPulled() {
     let traitorLat;
     let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
       traitorLat = snapshot.val().latitude;
       traitorLon = snapshot.val().longitude;
-
-      //TODO: allow tracer to only pull trigger 3 times
-      //after each failed time, give warning of how many shots
-      //left and how many meters they were from traitor  and how much
-      //closer they need to be
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       console.log("current dist is " + dist);
       //TODO: change this dist to reasonable value for testing!
-      if (dist < 1) {
+      if (dist < 5) {
         console.log("game end dist is " + dist);
         Actions.endScreen();
       }
@@ -195,7 +202,7 @@ export default class MapScreenTracer extends React.Component {
   renderCurrentUser() {
     console.log("RENDERCURRENTUSER - TRACER");
     return (
-      <View style={styles.container}>
+      <View style={styles.containerStyle}>
 {/*
         <Modal
           visible={this.state.triggerModalVisible}
@@ -203,7 +210,7 @@ export default class MapScreenTracer extends React.Component {
           animationType="slide"
           onRequestClose={() => {}}
         >
-          <View style={styles.containerStyle}>
+          <View style={styles.modalStyle}>
             <CardSection style={styles.cardSectionStyle}>
               <Text style={styles.textStyle}>
                 You just triggered me.
@@ -241,37 +248,58 @@ export default class MapScreenTracer extends React.Component {
               longitude: this.state.lastClickLonTracer
             }}
             radius={this.state.distance}
-            fillColor="rgba(106,92,165,.3)"
-            strokeColor="rgba(106,92,165,.9)"
+            fillColor="rgba(64, 52, 109, .1)"
+            strokeColor="rgba(64, 52, 109, .9)"
           />
+          }
+          {this.state.showAim &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }}
+              radius={10}
+              fillColor="rgba(0,0,0,.4)"
+              strokeColor="rgba(0,0,0,.4)"
+            />
           }
           {this.state.showPolyline &&
           <MapView.Polyline
             coordinates={
               this.state.directionCoords
             }
-            strokeColor="rgba(106,92,165,.9)"
+            strokeColor="rgba(64, 52, 109, .9)"
             strokeWidth={2}
           />
           }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
           <Button
-            buttonStyle={{backgroundColor: 'blue', borderRadius: 4, marginBottom: 20}}
+            buttonStyle={styles.buttonStyle}
+            color='rgba(64, 52, 109, 1)'
             onPress={this.setCurrentDistance.bind(this)}
             title='Distance'
           />
           <Button
-            buttonStyle={{backgroundColor: 'blue', borderRadius: 4, marginBottom: 20}}
+            buttonStyle={styles.buttonStyle}
+            color='rgba(64, 52, 109, 1)'
             onPress={this.setCurrentDirectionCoords.bind(this)}
             title='Direction'
           />
-          <Button
-            buttonStyle={{backgroundColor: 'red', borderRadius: 4, marginBottom: 20}}
-            onPress={this.didGameEnd.bind(this)}
-            title='Trigger'
-          />
-      </View>
+          <View style={styles.triggerAimStyle}>
+            <Button
+              buttonStyle={styles.buttonAltStyle}
+              fontSize={10}
+              onPress={this.setAim.bind(this)}
+              title='Aim'
+            />
+            <Button
+              buttonStyle={styles.buttonAltStyle}
+              onPress={this.triggerPulled.bind(this)}
+              title={`Trigger (${this.state.triggersRemaining})`}
+            />
+          </View>
+        </View>
     </View>
     );
   }
@@ -289,7 +317,7 @@ export default class MapScreenTracer extends React.Component {
   render() {
     console.log("RENDER - TRACER");
     return (
-      <View style={styles.container}>
+      <View style={styles.containerStyle}>
         {this.renderContent()}
       </View>
     );
@@ -297,38 +325,51 @@ export default class MapScreenTracer extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  containerStyle: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
+  },
+  buttonStyle: {
+    backgroundColor: 'white',
+    borderRadius: 2,
+    marginBottom: 20,
+  },
+  buttonAltStyle: {
+    borderRadius: 2,
+    marginBottom: 20,
+    backgroundColor: 'rgba(64, 52, 109, 1)',
   },
   buttonsContainerStyle: {
     flex: 1,
     justifyContent: 'space-around',
     alignItems: 'center',
   },
+  triggerAimStyle: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
   map: {
     height: 300,
     width: 300,
-  },
-  button: {
-    height: 50,
-    width: 200,
-    marginBottom: 10
+    marginTop: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(64, 52, 109, 1)',
   },
   cardSectionStyle: {
   justifyContent: 'center'
-},
-textStyle: {
-  flex: 1,
-  fontSize: 18,
-  textAlign: 'center',
-  lineHeight: 40
-},
-containerStyle: {
-  backgroundColor: 'rgba(0, 0, 0, 0.75)',
-  position: 'relative',
-  flex: 1,
-  justifyContent: 'center'
-}
+  },
+  textStyle: {
+    flex: 1,
+    fontSize: 18,
+    textAlign: 'center',
+    lineHeight: 40
+  },
+  modalStyle: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    position: 'relative',
+    flex: 1,
+    justifyContent: 'center'
+  }
 });
