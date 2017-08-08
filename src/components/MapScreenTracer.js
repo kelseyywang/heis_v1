@@ -111,7 +111,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   setCurrentDistance() {
-    console.log("SETCURRENTDISTANCE - TRACER");
     let traitorLat;
     let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
@@ -128,6 +127,7 @@ export default class MapScreenTracer extends React.Component {
         lastClickLonTracer: this.state.longitude,
         lastClickLatTraitor: snapshot.val().latitude,
         lastClickLonTraitor: snapshot.val().longitude,
+        showTriggerCircle: false,
       }, this.setFirebase);
     });
   }
@@ -150,7 +150,8 @@ export default class MapScreenTracer extends React.Component {
         showCircle: false,
         showPolyline: true,
         lastClickLatTracer: this.state.latitude,
-        lastClickLonTracer: this.state.longitude
+        lastClickLonTracer: this.state.longitude,
+        showTriggerCircle: false,
       }, this.setFirebase);
     });
   }
@@ -162,6 +163,12 @@ export default class MapScreenTracer extends React.Component {
   }
 
   triggerPulled() {
+    this.state.triggersRemaining = this.state.triggersRemaining - 1;
+    if (this.state.triggersRemaining === 0) {
+      //TODO: add prop that tells traitor won
+      //and upload this info to firebase
+      Actions.endScreen();
+    }
     let traitorLat;
     let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
@@ -171,11 +178,21 @@ export default class MapScreenTracer extends React.Component {
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       console.log("current dist is " + dist);
-      //TODO: change this dist to reasonable value for testing!
       if (dist < 5) {
         console.log("game end dist is " + dist);
+        //TODO: add prop that tells tracer won
+        //and upload this info to firebase
         Actions.endScreen();
       }
+      //None of the following is updated to firebase,
+      //preventing traitor from seeing it
+      this.setState({
+        distance: dist,
+        lastClickLatTracer: this.state.latitude,
+        lastClickLonTracer: this.state.longitude,
+        showTriggerCircle: true,
+      });
+      //TODO: change this dist to reasonable value for testing!
     });
   }
 
@@ -258,9 +275,20 @@ export default class MapScreenTracer extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={10}
-              fillColor="rgba(0,0,0,.4)"
-              strokeColor="rgba(0,0,0,.4)"
+              radius={5}
+              fillColor="rgba(0,0,0,.3)"
+              strokeColor="rgba(0,0,0,.3)"
+            />
+          }
+          {this.state.showTriggerCircle &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.lastClickLatTracer,
+                longitude: this.state.lastClickLonTracer
+              }}
+              radius={this.state.distance}
+              fillColor="rgba(193,0,0,.3)"
+              strokeColor="rgba(193,0,0,.3)"
             />
           }
           {this.state.showPolyline &&

@@ -165,7 +165,7 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 }
-
+//TODO: fix layout problems on iOS
 const styles = StyleSheet.create({
   container: {
     height: 500,
@@ -176,5 +176,8 @@ const styles = StyleSheet.create({
   map: {
     height: 300,
     width: 300,
-  }
+    marginTop: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(64, 52, 109, 1)',
+  },
 });
