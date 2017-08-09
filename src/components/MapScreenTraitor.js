@@ -6,12 +6,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
 
-//TODO: add flex styling! fix glitches.
-//And need to test once this stops glitching...
-
+//TODO: clean up console logs and unused imports
 //TODO: decide whether traitor should have option to
 //block or reverse (reflective shield) the trigger and
-//make tracer die instead
+//make tracer die instead - called mirror or deflect or reflect
+//TODO: vibrate notification when display changes
+//TODO (eventually): change rules in firebase
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -29,16 +29,18 @@ export default class MapScreenTraitor extends React.Component {
         longitude: 0,
       }],
       error: null,
-      showPolyline: false,
-      showCircle: false,
+      showDirection: false,
+      showDistance: false,
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
+      shieldOn: false,
     };
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
+    this.endShield = this.endShield.bind(this);
   }
 
   componentDidMount() {
-    this.interval = setInterval(this.callCurrentPosition, 5000);
+    this.interval = setInterval(this.callCurrentPosition, 1500);
   }
 
   componentWillUnmount() {
@@ -52,8 +54,8 @@ export default class MapScreenTraitor extends React.Component {
       //TODO: Is this the best way to do this? Probably will have long wait time
       //since must wait for navigator to find geolocation, then wait for
       //firebase pull... should we do this in series?
-      let fbShowPolyline = snapshot.val().showPolyline;
-      let fbShowCircle = snapshot.val().showCircle;
+      let fbshowDirection = snapshot.val().showDirection;
+      let fbshowDistance = snapshot.val().showDistance;
       let fbDistance = snapshot.val().distance;
       let fbDirectionCoords = snapshot.val().directionCoords;
       let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
@@ -61,8 +63,8 @@ export default class MapScreenTraitor extends React.Component {
 
         this.setState({
           //set to firebase pull from tracer
-          showCircle: fbShowCircle,
-          showPolyline: fbShowPolyline,
+          showDistance: fbshowDistance,
+          showDirection: fbshowDirection,
           distance: fbDistance,
           directionCoords: fbDirectionCoords,
           lastClickLatTraitor: fbLastClickLatTraitor,
@@ -85,7 +87,8 @@ export default class MapScreenTraitor extends React.Component {
         console.log("SET FIREBASE LOC. - TRAITOR");
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
           .set({latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+            longitude: position.coords.longitude,
+            shieldOn: this.state.shieldOn
         })
           .then(() => {
             console.log("TRAITOR location set");
@@ -99,10 +102,25 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 
+  deflectPressed() {
+    this.setState({
+      shieldOn: true,
+    }, () => {
+      this.shieldInterval = setInterval(this.endShield, 10000);
+    });
+  }
+
+  endShield() {
+    clearInterval(this.shieldInterval);
+    this.setState({
+      shieldOn: false,
+    });
+  }
+
   renderCurrentUser() {
     console.log("RENDERCURRENTUSER - TRAITOR");
     return (
-      <View style={styles.container}>
+      <View style={styles.containerStyle}>
         <MapView
           provider="google"
           style={styles.map}
@@ -120,7 +138,7 @@ export default class MapScreenTraitor extends React.Component {
               longitude: this.state.longitude
             }}
           />
-        {this.state.showCircle &&
+        {this.state.showDistance &&
           <MapView.Circle
             center={{
               latitude: this.state.lastClickLatTraitor,
@@ -129,9 +147,10 @@ export default class MapScreenTraitor extends React.Component {
             radius={this.state.distance}
             fillColor="rgba(106,92,165,.3)"
             strokeColor="rgba(106,92,165,.9)"
+            strokeWidth={2}
           />
           }
-          {this.state.showPolyline &&
+          {this.state.showDirection &&
           <MapView.Polyline
             coordinates={
               this.state.directionCoords
@@ -141,6 +160,14 @@ export default class MapScreenTraitor extends React.Component {
           />
         }
         </MapView>
+        <View style={styles.buttonsContainerStyle}>
+          <Button
+            buttonStyle={styles.buttonStyle}
+            color='rgba(64, 52, 109, 1)'
+            onPress={this.deflectPressed.bind(this)}
+            title='Deflect'
+          />
+      </View>
     </View>
     );
   }
@@ -150,16 +177,13 @@ export default class MapScreenTraitor extends React.Component {
     if (this.state.latitude != null && this.state.longitude != null) {
       return this.renderCurrentUser();
     }
-    else {
-      console.log("RENDERCONTENT IS NULL - TRAITOR");
-    }
     return <Spinner size="large" />;
   }
 
   render() {
     console.log("RENDER - TRAITOR");
     return (
-      <View style={styles.container}>
+      <View style={styles.containerStyle}>
         {this.renderContent()}
       </View>
     );
@@ -167,9 +191,8 @@ export default class MapScreenTraitor extends React.Component {
 }
 //TODO: fix layout problems on iOS
 const styles = StyleSheet.create({
-  container: {
-    height: 500,
-    width: 400,
+  containerStyle: {
+    flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
@@ -179,5 +202,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
+  },
+  buttonStyle: {
+    backgroundColor: 'white',
+    borderRadius: 2,
+    marginBottom: 20,
+  },
+  buttonsContainerStyle: {
+    flex: 1,
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
 });

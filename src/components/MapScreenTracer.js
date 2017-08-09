@@ -6,9 +6,10 @@ import React from 'react';
 import { StyleSheet, Text, View, Modal, TouchableHighlight } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
 
-//TODO: add flex styling! fix glitches.
-//And need to test once this stops glitching...
-
+//TODO: think about the delay between tracer and traitor
+//displays. Maybe when trigger is pulled, there is a 1 second
+//delay, or however long it takes to update traitor?
+//TODO: make vibrate when trigger is pulled!?
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -26,14 +27,14 @@ export default class MapScreenTracer extends React.Component {
         longitude: 0,
       }],
       error: null,
-      showPolyline: false,
-      showCircle: false,
+      showDirection: false,
+      showDistance: false,
       lastClickLatTracer: null,
       lastClickLonTracer: null,
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
       modalVisible: true,
-      showAim: false,
+      showAimCircle: false,
       showTriggerCircle: false,
       triggersRemaining: 3,
     };
@@ -43,23 +44,19 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentDidMount() {
-    this.interval = setInterval(this.callCurrentPosition, 5000);
-    this.bitch = setInterval(() => {
-      console.log(this.state.distance);
-    }, 1000);
+    this.interval = setInterval(this.callCurrentPosition, 1500);
   }
 
   componentWillUnmount() {
     clearInterval(this.interval);
-    clearInterval(this.bitch);
   }
 
   setFirebase() {
     console.log("SET FIREBASE STUFF CALLBACK - TRACER");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
-        showPolyline: this.state.showPolyline,
-        showCircle: this.state.showCircle,
+        showDirection: this.state.showDirection,
+        showDistance: this.state.showDistance,
         distance: this.state.distance,
         directionCoords: this.state.directionCoords,
         lastClickLatTraitor: this.state.lastClickLatTraitor,
@@ -121,8 +118,8 @@ export default class MapScreenTracer extends React.Component {
       let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       this.setState({
         distance: dist,
-        showCircle: true,
-        showPolyline: false,
+        showDistance: true,
+        showDirection: false,
         lastClickLatTracer: this.state.latitude,
         lastClickLonTracer: this.state.longitude,
         lastClickLatTraitor: snapshot.val().latitude,
@@ -147,8 +144,8 @@ export default class MapScreenTracer extends React.Component {
         this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       this.setState({
         directionCoords: dirCoords,
-        showCircle: false,
-        showPolyline: true,
+        showDistance: false,
+        showDirection: true,
         lastClickLatTracer: this.state.latitude,
         lastClickLonTracer: this.state.longitude,
         showTriggerCircle: false,
@@ -158,7 +155,7 @@ export default class MapScreenTracer extends React.Component {
 
   setAim() {
     this.setState({
-      showAim: !this.state.showAim,
+      showAimCircle: !this.state.showAimCircle,
     });
   }
 
@@ -258,7 +255,7 @@ export default class MapScreenTracer extends React.Component {
               longitude: this.state.longitude
             }}
           />
-        {this.state.showCircle &&
+        {this.state.showDistance &&
           <MapView.Circle
             center={{
               latitude: this.state.lastClickLatTracer,
@@ -267,9 +264,10 @@ export default class MapScreenTracer extends React.Component {
             radius={this.state.distance}
             fillColor="rgba(64, 52, 109, .1)"
             strokeColor="rgba(64, 52, 109, .9)"
+            strokeWidth={2}
           />
           }
-          {this.state.showAim &&
+          {this.state.showAimCircle &&
             <MapView.Circle
               center={{
                 latitude: this.state.latitude,
@@ -291,7 +289,7 @@ export default class MapScreenTracer extends React.Component {
               strokeColor="rgba(193,0,0,.3)"
             />
           }
-          {this.state.showPolyline &&
+          {this.state.showDirection &&
           <MapView.Polyline
             coordinates={
               this.state.directionCoords
@@ -336,7 +334,7 @@ export default class MapScreenTracer extends React.Component {
     console.log("RENDERCONTENT - TRACER");
     if (this.state.latitude != null && this.state.longitude != null &&
     this.state.distance != null && this.state.directionCoords != null &&
-    this.state.showPolyline != null && this.state.showCircle != null) {
+    this.state.showDirection != null && this.state.showDistance != null) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
