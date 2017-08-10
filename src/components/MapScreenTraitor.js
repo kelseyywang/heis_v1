@@ -7,8 +7,12 @@ import { StyleSheet, Text, View, Vibration } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
 
 //TODO: clean up console logs and unused imports
-//TODO: vibrate notification when display changes
 //TODO (eventually): change rules in firebase
+//TODO: think about whether you want to make this a time-based
+//game, or a win/lose, time-sensitive point-based game.
+//Because you can make it time-based if you let the tracer know
+//every time the traitor deflects, and it's basically just a shield,
+//not necessarily reflective. Or there can be both...??
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -32,39 +36,53 @@ export default class MapScreenTraitor extends React.Component {
       lastClickLonTraitor: null,
       deflectOn: false,
       deflectsRemaining: 3,
+      counter: 0,
+      tracerLoggedIn: false,
     };
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
+    this.updateCounter = this.updateCounter.bind(this);
   }
 
   componentDidMount() {
-    this.interval = setInterval(this.callCurrentPosition, 1500);
+    this.interval = setInterval(this.callCurrentPosition, 1000);
+    this.timerInterval = null;
   }
 
   componentWillUnmount() {
       clearInterval(this.interval);
+      clearInterval(this.timerInterval);
       this.clearFirebaseActions();
   }
 
   callCurrentPosition() {
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
     .once('value', snapshot => {
-      //TODO: Is this the best way to do this? Probably will have long wait time
-      //since must wait for navigator to find geolocation, then wait for
-      //firebase pull... should we do this in series?
       let fbShowDirection = snapshot.val().showDirection;
       let fbShowDistance = snapshot.val().showDistance;
       let fbDistance = snapshot.val().distance;
       let fbDirectionCoords = snapshot.val().directionCoords;
       let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
       let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
+      let fbTracerLoggedIn = snapshot.val().tracerLoggedIn;
       if (this.state.showDirection !== fbShowDirection ||
             this.state.showDistance !== fbShowDistance ||
             this.state.distance !== fbDistance ||
             !this.compareDirectionCoords(this.state.directionCoords, fbDirectionCoords)) {
         Vibration.vibrate();
       }
-
+      if (!this.state.tracerLoggedIn && fbTracerLoggedIn &&
+        this.state.counter === 0 && this.timerInterval === null) {
+        //Timer only starts in traitor when tracer logs in
+        //Right now, timers will not match if the tracer logs in
+        //first. Will be changed in format later though...
+        console.log("timer start!!!");
+        //TODO: solve the problem of the timers being DIFFERENT
+        //on EVERY DEVICE?!?! Really slow on iPhone, but has been
+        //pretty accurate on my Android... but I think it varies by
+        //individual device...
+        this.timerInterval = setInterval(this.updateCounter, 1000);
+      }
         this.setState({
           //set to firebase pull from tracer
           showDistance: fbShowDistance,
@@ -79,8 +97,13 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  updateCounter() {
+    this.setState({
+      counter: this.state.counter + 1
+    });
+  }
+
   compareDirectionCoords(c1, c2) {
-    console.log("lat is "+ c1[0].latitude);
     return (c1[0].latitude === c2[0].latitude &&
       c1[0].longitude === c2[0].longitude &&
       c1[1].latitude === c2[1].latitude &&
@@ -114,7 +137,7 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 
-//TODO: 8/9 add some sort of on screen thing that shows that a deflect
+//TODO: 8/10 add some sort of on screen thing that shows that a deflect
 //is currently being used... also will say, no more deflects when there's 0 left
 //TODO: also maybe vibrate it when you start and stop the deflect
   deflectPressed() {
@@ -122,19 +145,19 @@ export default class MapScreenTraitor extends React.Component {
       //TODO: add stuff here
     }
     else {
-    this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
-    console.log("deflectPressed");
-    Vibration.vibrate();
-    this.setState({
-      deflectOn: true,
-    }, () => {
-      this.deflectInterval = setInterval(this.endDeflect, 10000);
-    });
+      this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
+      console.log("deflectPressed");
+      Vibration.vibrate();
+      this.setState({
+        deflectOn: true,
+      }, () => {
+        this.deflectInterval = setTimeout(this.endDeflect, 10000);
+      });
   }
   }
 
   endDeflect() {
-    clearInterval(this.deflectInterval);
+    clearTimeout(this.deflectInterval);
     console.log("endDeflect");
     Vibration.vibrate();
     this.setState({
@@ -142,9 +165,29 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  returnTimerString(numSeconds) {
+    let minutes;
+    let seconds;
+    if (Math.floor(numSeconds / 60) < 10) {
+     minutes = "0" + Math.floor(numSeconds / 60);
+    }
+    else {
+      minutes = "" + Math.floor(numSeconds / 60);
+    }
+    if (Math.floor(numSeconds % 60) < 10) {
+      seconds = "0" + Math.floor(numSeconds % 60);
+    }
+    else {
+      seconds = "" + Math.floor(numSeconds % 60);
+    }
+    return ("Time: " + minutes + ":" + seconds);
+  }
+
+
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
+        <Text>{this.returnTimerString(this.state.counter)}</Text>
         <MapView
           provider="google"
           style={styles.map}
@@ -228,7 +271,8 @@ export default class MapScreenTraitor extends React.Component {
         }],
         //Arbitrary values here!
         lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0
+        lastClickLonTraitor: 0,
+        tracerLoggedIn: false,
       })
       .then(() => {
         //nothing
@@ -246,9 +290,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   map: {
-    height: 300,
-    width: 260,
-    marginTop: 20,
+    height: 260,
+    width: 300,
+    marginTop: 5,
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
   },

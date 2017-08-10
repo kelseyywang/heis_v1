@@ -46,6 +46,9 @@ export default class MapScreenTracer extends React.Component {
 
   componentDidMount() {
     this.interval = setInterval(this.callCurrentPosition, 1000);
+    let updates = {};
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerLoggedIn/'] = true;
+    firebase.database().ref().update(updates);
   }
 
   componentWillUnmount() {
@@ -78,7 +81,8 @@ export default class MapScreenTracer extends React.Component {
         distance: this.state.distance,
         directionCoords: this.state.directionCoords,
         lastClickLatTraitor: this.state.lastClickLatTraitor,
-        lastClickLonTraitor: this.state.lastClickLonTraitor
+        lastClickLonTraitor: this.state.lastClickLonTraitor,
+        tracerLoggedIn: true,
         })
       .then(() => {
         //nothing
@@ -88,14 +92,14 @@ export default class MapScreenTracer extends React.Component {
       });
   }
 
-  setLastClickTraitorLoc(lastClickLat, lastClickLon) {
+/*  setLastClickTraitorLoc(lastClickLat, lastClickLon) {
     if (lastClickLat != null && lastClickLon != null) {
       var updates = {};
       updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLatTraitor/'] = lastClickLat;
       updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLonTraitor/'] = lastClickLon;
       firebase.database().ref().update(updates);
     }
-  }
+  }*/
 
   calcDistance(lat1, lon1, lat2, lon2) {
     let radlat1 = Math.PI * lat1/180;
@@ -174,7 +178,7 @@ export default class MapScreenTracer extends React.Component {
     Vibration.vibrate();
     this.state.triggersRemaining = this.state.triggersRemaining - 1;
     if (this.state.triggersRemaining === 0) {
-      //TODO: add prop that tells traitor won
+      //TODO: 8/10 add prop that tells traitor won
       //and upload this info to firebase
       Actions.endScreen();
     }
@@ -383,7 +387,8 @@ export default class MapScreenTracer extends React.Component {
         }],
         //Arbitrary values here!
         lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0
+        lastClickLonTraitor: 0,
+        tracerLoggedIn: false,
       })
       .then(() => {
         //nothing
@@ -419,9 +424,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   map: {
-    height: 300,
-    width: 260,
-    marginTop: 20,
+    height: 260,
+    width: 300,
+    marginTop: 5,
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
   },

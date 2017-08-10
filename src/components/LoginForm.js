@@ -86,7 +86,8 @@ class LoginForm extends Component {
         }],
         //Arbitrary values here!
         lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0
+        lastClickLonTraitor: 0,
+        tracerLoggedIn: false,
       })
       .then(() => {
         //nothing
