@@ -34,6 +34,7 @@ export default class MapScreenTraitor extends React.Component {
       showDistance: false,
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
+      showAimCircle: false,
       deflectOn: false,
       deflectsRemaining: 3,
       counter: 0,
@@ -137,9 +138,15 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 
+  setAim() {
+    this.setState({
+      showAimCircle: !this.state.showAimCircle,
+    });
+  }
+
 //TODO: 8/10 add some sort of on screen thing that shows that a deflect
 //is currently being used... also will say, no more deflects when there's 0 left
-//TODO: also maybe vibrate it when you start and stop the deflect
+//TODO: think about do you need to vibrate when you stop the deflect?
   deflectPressed() {
     if (this.state.deflectsRemaining === 0) {
       //TODO: add stuff here
@@ -217,6 +224,28 @@ export default class MapScreenTraitor extends React.Component {
             strokeWidth={2}
           />
           }
+          {this.state.showAimCircle &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }}
+              radius={10}
+              fillColor="rgba(0,0,0,.3)"
+              strokeColor="rgba(0,0,0,.3)"
+            />
+          }
+          {this.state.deflectOn &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }}
+              radius={10}
+              fillColor="rgba(0,206,165,.3)"
+              strokeColor="rgba(0,206,165,.3)"
+            />
+          }
           {this.state.showDirection &&
           <MapView.Polyline
             coordinates={
@@ -228,12 +257,19 @@ export default class MapScreenTraitor extends React.Component {
         }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
-          <Button
-            buttonStyle={styles.buttonStyle}
-            color='rgba(64, 52, 109, 1)'
-            onPress={this.deflectPressed.bind(this)}
-            title={`Deflect (${this.state.deflectsRemaining})`}
-          />
+          <View style={styles.triggerAimStyle}>
+            <Button
+              buttonStyle={styles.buttonAltStyle}
+              fontSize={10}
+              onPress={this.setAim.bind(this)}
+              title='Aim'
+            />
+            <Button
+              buttonStyle={styles.buttonAltStyle}
+              onPress={this.deflectPressed.bind(this)}
+              title={`Deflect (${this.state.deflectsRemaining})`}
+            />
+        </View>
       </View>
     </View>
     );
@@ -296,12 +332,17 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
   },
-  buttonStyle: {
-    backgroundColor: 'white',
+  buttonAltStyle: {
     borderRadius: 2,
+    backgroundColor: 'rgba(64, 52, 109, 1)',
   },
   buttonsContainerStyle: {
     flex: 1,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  triggerAimStyle: {
+    flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
   },

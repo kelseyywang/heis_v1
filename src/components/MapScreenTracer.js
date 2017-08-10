@@ -191,7 +191,8 @@ export default class MapScreenTracer extends React.Component {
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       console.log("current dist is " + dist);
       //TODO: change this dist to reasonable value for testing!
-      if (dist < 5) {
+      //Also change radius of aimCircle in renderCurrentUser
+      if (dist < 10) {
         if (!traitorDeflect) {
           //TODO: add prop that tells tracer won
           //and upload this info to firebase
@@ -296,7 +297,7 @@ export default class MapScreenTracer extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={5}
+              radius={10}
               fillColor="rgba(0,0,0,.3)"
               strokeColor="rgba(0,0,0,.3)"
             />
