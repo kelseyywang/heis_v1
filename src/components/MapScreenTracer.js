@@ -3,7 +3,7 @@ import { Scene, Router, Actions } from 'react-native-router-flux';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View, Modal, TouchableHighlight } from 'react-native';
+import { StyleSheet, Text, View, Modal, TouchableHighlight, Vibration } from 'react-native';
 import { Spinner, Card, CardSection } from './common';
 
 //TODO: think about the delay between tracer and traitor
@@ -37,6 +37,7 @@ export default class MapScreenTracer extends React.Component {
       showAimCircle: false,
       showTriggerCircle: false,
       triggersRemaining: 3,
+      counter: 0,
     };
 
     this.setFirebase = this.setFirebase.bind(this);
@@ -44,15 +45,32 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentDidMount() {
-    this.interval = setInterval(this.callCurrentPosition, 1500);
+    this.interval = setInterval(this.callCurrentPosition, 1000);
   }
 
   componentWillUnmount() {
     clearInterval(this.interval);
+    this.clearFirebaseActions();
+  }
+
+  callCurrentPosition() {
+    this.setState({
+      counter: this.state.counter + 1
+    });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.setState({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          error: null
+        });
+      },
+      (error) => this.setState({ error: error.message }),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+    );
   }
 
   setFirebase() {
-    console.log("SET FIREBASE STUFF CALLBACK - TRACER");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: this.state.showDirection,
@@ -63,7 +81,7 @@ export default class MapScreenTracer extends React.Component {
         lastClickLonTraitor: this.state.lastClickLonTraitor
         })
       .then(() => {
-        console.log("TRACER stuff set success");
+        //nothing
       })
       .catch(() => {
         console.log("location set failed");
@@ -71,8 +89,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   setLastClickTraitorLoc(lastClickLat, lastClickLon) {
-    console.log("SET LAST CLICK TRAITOR LOC - TRACER - VALUES: " +
-      lastClickLat + " " + lastClickLon);
     if (lastClickLat != null && lastClickLon != null) {
       var updates = {};
       updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLatTraitor/'] = lastClickLat;
@@ -108,12 +124,10 @@ export default class MapScreenTracer extends React.Component {
   }
 
   setCurrentDistance() {
-    let traitorLat;
-    let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
-      traitorLat = snapshot.val().latitude;
-      traitorLon = snapshot.val().longitude;
+      let traitorLat = snapshot.val().latitude;
+      let traitorLon = snapshot.val().longitude;
       //this.setLastClickTraitorLoc(traitorLat, traitorLon);
       let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       this.setState({
@@ -133,13 +147,10 @@ export default class MapScreenTracer extends React.Component {
   //approach the poles, due to spherical curvature... need to recalculate
   //Reference this: http://www.movable-type.co.uk/scripts/latlong.html
   setCurrentDirectionCoords() {
-    console.log("SETCURRENTDIRECTIONCOORDS - TRACER");
-    let traitorLat;
-    let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
-      traitorLat = snapshot.val().latitude;
-      traitorLon = snapshot.val().longitude;
+      let traitorLat = snapshot.val().latitude;
+      let traitorLon = snapshot.val().longitude;
       let dirCoords =
         this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       this.setState({
@@ -160,26 +171,33 @@ export default class MapScreenTracer extends React.Component {
   }
 
   triggerPulled() {
+    Vibration.vibrate();
     this.state.triggersRemaining = this.state.triggersRemaining - 1;
     if (this.state.triggersRemaining === 0) {
       //TODO: add prop that tells traitor won
       //and upload this info to firebase
       Actions.endScreen();
     }
-    let traitorLat;
-    let traitorLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
-      traitorLat = snapshot.val().latitude;
-      traitorLon = snapshot.val().longitude;
+      let traitorLat = snapshot.val().latitude;
+      let traitorLon = snapshot.val().longitude;
+      let traitorDeflect = snapshot.val().deflectOn;
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       console.log("current dist is " + dist);
+      //TODO: change this dist to reasonable value for testing!
       if (dist < 5) {
-        console.log("game end dist is " + dist);
-        //TODO: add prop that tells tracer won
-        //and upload this info to firebase
-        Actions.endScreen();
+        if (!traitorDeflect) {
+          //TODO: add prop that tells tracer won
+          //and upload this info to firebase
+          Actions.endScreen();
+        }
+        else {
+          //TODO: add traitor won by deflect
+          console.log("TRAITOR WON BY DEFLECT");
+          Actions.endScreen();
+        }
       }
       //None of the following is updated to firebase,
       //preventing traitor from seeing it
@@ -189,34 +207,35 @@ export default class MapScreenTracer extends React.Component {
         lastClickLonTracer: this.state.longitude,
         showTriggerCircle: true,
       });
-      //TODO: change this dist to reasonable value for testing!
     });
-  }
-
-  callCurrentPosition() {
-    console.log("CALLCURRENTPOSITION - TRACER");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.setState({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          error: null
-        });
-      },
-      (error) => this.setState({ error: error.message }),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-    );
   }
 
   setModalVisible(visible) {
     this.setState({modalVisible: visible});
   }
 
+  returnTimerString(numSeconds) {
+    let minutes;
+    let seconds;
+    if (Math.floor(numSeconds / 60) < 10) {
+     minutes = "0" + Math.floor(numSeconds / 60);
+    }
+    else {
+      minutes = "" + Math.floor(numSeconds / 60);
+    }
+    if (Math.floor(numSeconds % 60) < 10) {
+      seconds = "0" + Math.floor(numSeconds % 60);
+    }
+    else {
+      seconds = "" + Math.floor(numSeconds % 60);
+    }
+    return ("Time: " + minutes + ":" + seconds);
+  }
+
   renderCurrentUser() {
-    console.log("RENDERCURRENTUSER - TRACER");
     return (
       <View style={styles.containerStyle}>
+        <Text>{this.returnTimerString(this.state.counter)}</Text>
 {/*
         <Modal
           visible={this.state.triggerModalVisible}
@@ -331,7 +350,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   renderContent() {
-    console.log("RENDERCONTENT - TRACER");
     if (this.state.latitude != null && this.state.longitude != null &&
     this.state.distance != null && this.state.directionCoords != null &&
     this.state.showDirection != null && this.state.showDistance != null) {
@@ -341,12 +359,38 @@ export default class MapScreenTracer extends React.Component {
   }
 
   render() {
-    console.log("RENDER - TRACER");
     return (
       <View style={styles.containerStyle}>
         {this.renderContent()}
       </View>
     );
+  }
+
+  clearFirebaseActions() {
+    console.log("FIREBASE RESET");
+    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+      .set({
+        showDirection: false,
+        showDistance: false,
+        distance: 0,
+        directionCoords: [{
+          latitude: 0,
+          longitude: 0
+        },
+        {
+          latitude: 0,
+          longitude: 0
+        }],
+        //Arbitrary values here!
+        lastClickLatTraitor: 0,
+        lastClickLonTraitor: 0
+      })
+      .then(() => {
+        //nothing
+      })
+      .catch(() => {
+        console.log("location set failed");
+      });
   }
 }
 
@@ -359,11 +403,9 @@ const styles = StyleSheet.create({
   buttonStyle: {
     backgroundColor: 'white',
     borderRadius: 2,
-    marginBottom: 20,
   },
   buttonAltStyle: {
     borderRadius: 2,
-    marginBottom: 20,
     backgroundColor: 'rgba(64, 52, 109, 1)',
   },
   buttonsContainerStyle: {
@@ -378,7 +420,7 @@ const styles = StyleSheet.create({
   },
   map: {
     height: 300,
-    width: 300,
+    width: 260,
     marginTop: 20,
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',

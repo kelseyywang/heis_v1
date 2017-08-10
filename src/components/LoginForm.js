@@ -73,8 +73,8 @@ class LoginForm extends Component {
     console.log("LOG OUT FIREBASE RESET");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
-        showPolyline: false,
-        showCircle: false,
+        showDirection: false,
+        showDistance: false,
         distance: 0,
         directionCoords: [{
           latitude: 0,
@@ -89,7 +89,7 @@ class LoginForm extends Component {
         lastClickLonTraitor: 0
       })
       .then(() => {
-        console.log("TRACER stuff set success");
+        //nothing
       })
       .catch(() => {
         console.log("location set failed");
