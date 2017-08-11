@@ -45,6 +45,7 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentDidMount() {
+    console.log("COMPONENT MOUNTED BITCH!!!");
     this.interval = setInterval(this.callCurrentPosition, 1000);
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerLoggedIn/'] = true;
@@ -52,6 +53,7 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentWillUnmount() {
+    console.log("COMPONENT UN MOUNTED BITCH!!!");
     clearInterval(this.interval);
     this.clearFirebaseActions();
   }
@@ -177,10 +179,12 @@ export default class MapScreenTracer extends React.Component {
   triggerPulled() {
     Vibration.vibrate();
     this.state.triggersRemaining = this.state.triggersRemaining - 1;
-    if (this.state.triggersRemaining === 0) {
+    if (this.state.triggersRemaining <= 0) {
       //TODO: 8/10 add prop that tells traitor won
       //and upload this info to firebase
-      Actions.endScreen();
+      this.state.triggersRemaining = 0;
+      Actions.endScreen({winner: "Traitor"});
+
     }
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
@@ -196,12 +200,12 @@ export default class MapScreenTracer extends React.Component {
         if (!traitorDeflect) {
           //TODO: add prop that tells tracer won
           //and upload this info to firebase
-          Actions.endScreen();
+          Actions.endScreen({winner: "Tracer"});
         }
         else {
           //TODO: add traitor won by deflect
           console.log("TRAITOR WON BY DEFLECT");
-          Actions.endScreen();
+          Actions.endScreen({winner: "Traitor deflect"});
         }
       }
       //None of the following is updated to firebase,
