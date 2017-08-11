@@ -1,12 +1,17 @@
-import { Grid, Button } from 'react-native-elements';
-import { Scene, Router, Actions } from 'react-native-router-flux';
+import { Button } from 'react-native-elements';
 import firebase from 'firebase';
+import { Actions } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration } from 'react-native';
-import { Spinner, Card, CardSection } from './common';
+import { Spinner } from './common';
 
-//TODO: clean up console logs and unused imports
+//TODO: make Restart
+//TODO: figure out direction coords
+//TODO: push to expo
+//TODO: maybe black out (or just empty map) option for traitor
+//or a thing that disables trigger
+
 //TODO (eventually): change rules in firebase
 //TODO: think about whether you want to make this a time-based
 //game, or a win/lose, time-sensitive point-based game.
@@ -39,6 +44,7 @@ export default class MapScreenTraitor extends React.Component {
       deflectsRemaining: 3,
       counter: 0,
       tracerLoggedIn: false,
+      gameWinner: "none",
     };
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
@@ -66,18 +72,23 @@ export default class MapScreenTraitor extends React.Component {
       let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
       let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
       let fbTracerLoggedIn = snapshot.val().tracerLoggedIn;
+      let fbGameWinner = snapshot.val().gameWinner;
+      //Check if game has ended
+      if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
+        Actions.endScreenTraitor({winner: fbGameWinner});
+        //this.resetState();
+      }
+      //Check if display on map has changed
       if (this.state.showDirection !== fbShowDirection ||
             this.state.showDistance !== fbShowDistance ||
             this.state.distance !== fbDistance ||
             !this.compareDirectionCoords(this.state.directionCoords, fbDirectionCoords)) {
         Vibration.vibrate();
       }
+      //Check if tracer is logged in, and if so, start timer.
+      //TODO: change this so that game doesn't start until both logged in
       if (!this.state.tracerLoggedIn && fbTracerLoggedIn &&
         this.state.counter === 0 && this.timerInterval === null) {
-        //Timer only starts in traitor when tracer logs in
-        //Right now, timers will not match if the tracer logs in
-        //first. Will be changed in format later though...
-        console.log("timer start!!!");
         //TODO: solve the problem of the timers being DIFFERENT
         //on EVERY DEVICE?!?! Really slow on iPhone, but has been
         //pretty accurate on my Android... but I think it varies by
@@ -91,7 +102,8 @@ export default class MapScreenTraitor extends React.Component {
           distance: fbDistance,
           directionCoords: fbDirectionCoords,
           lastClickLatTraitor: fbLastClickLatTraitor,
-          lastClickLonTraitor: fbLastClickLonTraitor
+          lastClickLonTraitor: fbLastClickLonTraitor,
+          gameWinner: fbGameWinner,
           },
           this.getAndSetLocation.bind(this)
         );
@@ -153,7 +165,6 @@ export default class MapScreenTraitor extends React.Component {
     }
     else {
       this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
-      console.log("deflectPressed");
       Vibration.vibrate();
       this.setState({
         deflectOn: true,
@@ -165,7 +176,6 @@ export default class MapScreenTraitor extends React.Component {
 
   endDeflect() {
     clearTimeout(this.deflectInterval);
-    console.log("endDeflect");
     Vibration.vibrate();
     this.setState({
       deflectOn: false,
@@ -291,7 +301,6 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   clearFirebaseActions() {
-    console.log("FIREBASE RESET");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,
@@ -309,6 +318,7 @@ export default class MapScreenTraitor extends React.Component {
         lastClickLatTraitor: 0,
         lastClickLonTraitor: 0,
         tracerLoggedIn: false,
+        gameWinner: "none",
       })
       .then(() => {
         //nothing
@@ -317,8 +327,35 @@ export default class MapScreenTraitor extends React.Component {
         console.log("location set failed");
       });
   }
+
+  resetState() {
+    this.setState({
+      latitude: null,
+      longitude: null,
+      distance: 0,
+      directionCoords: [{
+        latitude: 0,
+        longitude: 0,
+      },
+      {
+        latitude: 0,
+        longitude: 0,
+      }],
+      error: null,
+      showDirection: false,
+      showDistance: false,
+      lastClickLatTraitor: null,
+      lastClickLonTraitor: null,
+      showAimCircle: false,
+      deflectOn: false,
+      deflectsRemaining: 3,
+      counter: 0,
+      tracerLoggedIn: false,
+      gameWinner: "none",
+    });
+  }
 }
-//TODO: fix layout problems on iOS
+
 const styles = StyleSheet.create({
   containerStyle: {
     flex: 1,

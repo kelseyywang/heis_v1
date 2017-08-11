@@ -18,7 +18,6 @@
       "no-lone-blocks": "off",
       "operator-assignment": "off",
       "block-spacing": "off",
-      "no-unused-vars": "off"
 
     }
 }

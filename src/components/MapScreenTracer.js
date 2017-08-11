@@ -1,10 +1,10 @@
-import { Grid, Button } from 'react-native-elements';
-import { Scene, Router, Actions } from 'react-native-router-flux';
+import { Button } from 'react-native-elements';
+import { Actions } from 'react-native-router-flux';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View, Modal, TouchableHighlight, Vibration } from 'react-native';
-import { Spinner, Card, CardSection } from './common';
+import { StyleSheet, Text, View, Vibration } from 'react-native';
+import { Spinner } from './common';
 
 //TODO: think about the delay between tracer and traitor
 //displays. Maybe when trigger is pulled, there is a 1 second
@@ -45,7 +45,7 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentDidMount() {
-    console.log("COMPONENT MOUNTED BITCH!!!");
+    console.log("component mounted tracer!");
     this.interval = setInterval(this.callCurrentPosition, 1000);
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerLoggedIn/'] = true;
@@ -53,7 +53,7 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log("COMPONENT UN MOUNTED BITCH!!!");
+    console.log("component un mounted tracer!");
     clearInterval(this.interval);
     this.clearFirebaseActions();
   }
@@ -85,6 +85,7 @@ export default class MapScreenTracer extends React.Component {
         lastClickLatTraitor: this.state.lastClickLatTraitor,
         lastClickLonTraitor: this.state.lastClickLonTraitor,
         tracerLoggedIn: true,
+        gameWinner: "none",
         })
       .then(() => {
         //nothing
@@ -180,11 +181,12 @@ export default class MapScreenTracer extends React.Component {
     Vibration.vibrate();
     this.state.triggersRemaining = this.state.triggersRemaining - 1;
     if (this.state.triggersRemaining <= 0) {
-      //TODO: 8/10 add prop that tells traitor won
-      //and upload this info to firebase
       this.state.triggersRemaining = 0;
-      Actions.endScreen({winner: "Traitor"});
-
+      let updates = {};
+      updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Traitor";
+      firebase.database().ref().update(updates);
+      Actions.endScreenTracer({winner: "Traitor"});
+      //this.callReset();
     }
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
@@ -193,20 +195,21 @@ export default class MapScreenTracer extends React.Component {
       let traitorDeflect = snapshot.val().deflectOn;
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      console.log("current dist is " + dist);
       //TODO: change this dist to reasonable value for testing!
       //Also change radius of aimCircle in renderCurrentUser
-      if (dist < 10) {
+      if (dist < 20) {
+        let updates = {};
         if (!traitorDeflect) {
-          //TODO: add prop that tells tracer won
-          //and upload this info to firebase
-          Actions.endScreen({winner: "Tracer"});
+          updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Tracer";
+          Actions.endScreenTracer({winner: "Tracer", endDistance: Math.round(dist)});
+          //this.callReset();
         }
         else {
-          //TODO: add traitor won by deflect
-          console.log("TRAITOR WON BY DEFLECT");
-          Actions.endScreen({winner: "Traitor deflect"});
+          updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Traitor deflect";
+          Actions.endScreenTracer({winner: "Traitor deflect"});
+          //this.callReset();
         }
+        firebase.database().ref().update(updates);
       }
       //None of the following is updated to firebase,
       //preventing traitor from seeing it
@@ -301,7 +304,7 @@ export default class MapScreenTracer extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={10}
+              radius={20}
               fillColor="rgba(0,0,0,.3)"
               strokeColor="rgba(0,0,0,.3)"
             />
@@ -376,7 +379,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   clearFirebaseActions() {
-    console.log("FIREBASE RESET");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,
@@ -394,6 +396,7 @@ export default class MapScreenTracer extends React.Component {
         lastClickLatTraitor: 0,
         lastClickLonTraitor: 0,
         tracerLoggedIn: false,
+        gameWinner: "none",
       })
       .then(() => {
         //nothing
@@ -401,6 +404,40 @@ export default class MapScreenTracer extends React.Component {
       .catch(() => {
         console.log("location set failed");
       });
+  }
+
+  callReset() {
+    //This delay is necessary for the winner info to be sent to firebase,
+    //and for the traitor to pick up on it
+    this.resetInterval = setTimeout(this.resetStateAndFirebase.bind(this), 2000);
+  }
+
+  resetStateAndFirebase() {
+    clearTimeout(this.resetInterval);
+    this.setState({
+      latitude: null,
+      longitude: null,
+      distance: 0,
+      directionCoords: [{
+        latitude: 0,
+        longitude: 0,
+      },
+      {
+        latitude: 0,
+        longitude: 0,
+      }],
+      error: null,
+      showDirection: false,
+      showDistance: false,
+      lastClickLatTraitor: null,
+      lastClickLonTraitor: null,
+      showAimCircle: false,
+      deflectOn: false,
+      deflectsRemaining: 3,
+      counter: 0,
+      tracerLoggedIn: false,
+      gameWinner: "none",
+    }, this.setFirebase);
   }
 }
 

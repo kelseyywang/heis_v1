@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 
-export default class MapScreen extends React.Component {
+export default class EndScreenTraitor extends React.Component {
   //TODO: make a Restart button.
   //Upload #wins info to firebase so every time user
   //logs in, he has #wins against a specific opponent
@@ -24,19 +24,19 @@ export default class MapScreen extends React.Component {
   printMessage() {
     const winner = this.props.winner;
     if (winner === "Tracer") {
-      return "Tracer wins! Caught that traitorous lil bitch!";
+      return `Tracer wins! You got caught, LOSER!!`;
     }
     else if (winner === "Traitor") {
-      return "Traitor wins! Tracer ran out of triggers... how irresponsible and SAD.";
+      return "guud, you won! Tracer ran out of triggers... how irresponsible and SAD.";
     }
     else if (winner === "Traitor deflect") {
-      return "Traitor wins! Deflected the trigger - how does it feel to have your weapon used against you!?";
+      return "nice, you deflected and won! woOoOooooOOOOOO";
     }
     return "There's something wrong here because I didn't get my winner prop.";
   }
 
   goBack() {
-    Actions.pop();
+    Actions.mapScreenTraitor();
   }
 }
 

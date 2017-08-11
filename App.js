@@ -4,7 +4,8 @@ import {Scene, Router, Actions} from 'react-native-router-flux';
 import LoginForm from './src/components/LoginForm';
 import MapScreenTraitor from './src/components/MapScreenTraitor';
 import MapScreenTracer from './src/components/MapScreenTracer';
-import EndScreen from './src/components/EndScreen';
+import EndScreenTracer from './src/components/EndScreenTracer';
+import EndScreenTraitor from './src/components/EndScreenTraitor';
 import { Header } from './src/components/common';
 
 export default class App extends React.Component {
@@ -16,7 +17,8 @@ export default class App extends React.Component {
           <Scene key="login" component={LoginForm} title="Login" initial />
           <Scene key="mapScreenTraitor" component={MapScreenTraitor} title="Traitor Map" />
           <Scene key="mapScreenTracer" component={MapScreenTracer} title="Tracer Map" />
-          <Scene key="endScreen" component={EndScreen} title="Game Over, My Friend ;^)" />
+          <Scene key="endScreenTraitor" component={EndScreenTraitor} title="Game Over, Traitor ;^)" />
+          <Scene key="endScreenTracer" component={EndScreenTracer} title="Game Over, Tracer ;^)" />
         </Scene>
       </Router>
     );

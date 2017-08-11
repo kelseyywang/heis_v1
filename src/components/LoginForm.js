@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { View, Text } from 'react-native';
 import firebase from 'firebase';
 import { Actions } from 'react-native-router-flux';
-import { Button, Card, CardSection, Input, Spinner, Header}  from './common';
+import { Button, Card, CardSection, Input, Spinner } from './common';
 
 class LoginForm extends Component {
 
@@ -70,7 +70,6 @@ class LoginForm extends Component {
   }
 
   logOutActions() {
-    console.log("LOG OUT FIREBASE RESET");
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,
@@ -88,6 +87,7 @@ class LoginForm extends Component {
         lastClickLatTraitor: 0,
         lastClickLonTraitor: 0,
         tracerLoggedIn: false,
+        gameWinner: "none",
       })
       .then(() => {
         //nothing
