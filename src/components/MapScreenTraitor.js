@@ -6,8 +6,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Vibration } from 'react-native';
 import { Spinner } from './common';
 
-//TODO: make Restart
-//TODO: figure out direction coords
+//TODO: make Restart better
 //TODO: push to expo
 //TODO: maybe black out (or just empty map) option for traitor
 //or a thing that disables trigger
@@ -51,6 +50,8 @@ export default class MapScreenTraitor extends React.Component {
     this.updateCounter = this.updateCounter.bind(this);
   }
 
+  //Sets interval to callCurrentPosition every second and
+  //sets timerInterval to null
   componentDidMount() {
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
@@ -62,6 +63,10 @@ export default class MapScreenTraitor extends React.Component {
       this.clearFirebaseActions();
   }
 
+  //Pulls all info from firebase, and checks stuff about
+  //the current status of the game and current display.
+  //Sets state to all this current info, with callback to
+  //getAndSetLocation
   callCurrentPosition() {
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
     .once('value', snapshot => {
@@ -76,7 +81,6 @@ export default class MapScreenTraitor extends React.Component {
       //Check if game has ended
       if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
         Actions.endScreenTraitor({winner: fbGameWinner});
-        //this.resetState();
       }
       //Check if display on map has changed
       if (this.state.showDirection !== fbShowDirection ||
@@ -96,7 +100,6 @@ export default class MapScreenTraitor extends React.Component {
         this.timerInterval = setInterval(this.updateCounter, 1000);
       }
         this.setState({
-          //set to firebase pull from tracer
           showDistance: fbShowDistance,
           showDirection: fbShowDirection,
           distance: fbDistance,
@@ -110,6 +113,7 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  //Updates timer
   updateCounter() {
     this.setState({
       counter: this.state.counter + 1
@@ -124,6 +128,9 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 
+  //Callback function after state variables are set,
+  //this again sets state to current traitor position
+  //and uploads that to firebase
   getAndSetLocation() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -132,15 +139,11 @@ export default class MapScreenTraitor extends React.Component {
           longitude: position.coords.longitude,
           error: null
         });
-        //TODO: decompose into function:
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
           .set({latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             deflectOn: this.state.deflectOn
         })
-          .then(() => {
-            //nothing
-          })
           .catch(() => {
             console.log("location set failed");
           });
@@ -150,20 +153,18 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 
+  //Shows Aim circle, which does nothing but help
+  //the traitor decide whether they should deflect
   setAim() {
     this.setState({
       showAimCircle: !this.state.showAimCircle,
     });
   }
 
-//TODO: 8/10 add some sort of on screen thing that shows that a deflect
-//is currently being used... also will say, no more deflects when there's 0 left
-//TODO: think about do you need to vibrate when you stop the deflect?
+  //Vibrates phone when deflect is pressed, and sets the
+  //state and the deflect interval
   deflectPressed() {
-    if (this.state.deflectsRemaining === 0) {
-      //TODO: add stuff here
-    }
-    else {
+    if (this.state.deflectsRemaining > 0) {
       this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
       Vibration.vibrate();
       this.setState({
@@ -171,9 +172,10 @@ export default class MapScreenTraitor extends React.Component {
       }, () => {
         this.deflectInterval = setTimeout(this.endDeflect, 10000);
       });
-  }
+    }
   }
 
+  //Vibrates and sets new state when deflect ends
   endDeflect() {
     clearTimeout(this.deflectInterval);
     Vibration.vibrate();
@@ -182,6 +184,7 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  //Returns what timer should appear as
   returnTimerString(numSeconds) {
     let minutes;
     let seconds;
@@ -199,7 +202,6 @@ export default class MapScreenTraitor extends React.Component {
     }
     return ("Time: " + minutes + ":" + seconds);
   }
-
 
   renderCurrentUser() {
     return (
@@ -240,7 +242,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={10}
+              radius={50}
               fillColor="rgba(0,0,0,.3)"
               strokeColor="rgba(0,0,0,.3)"
             />
@@ -300,7 +302,7 @@ export default class MapScreenTraitor extends React.Component {
     );
   }
 
-  clearFirebaseActions() {
+  /*clearFirebaseActions() {
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,
@@ -320,40 +322,10 @@ export default class MapScreenTraitor extends React.Component {
         tracerLoggedIn: false,
         gameWinner: "none",
       })
-      .then(() => {
-        //nothing
-      })
       .catch(() => {
         console.log("location set failed");
       });
-  }
-
-  resetState() {
-    this.setState({
-      latitude: null,
-      longitude: null,
-      distance: 0,
-      directionCoords: [{
-        latitude: 0,
-        longitude: 0,
-      },
-      {
-        latitude: 0,
-        longitude: 0,
-      }],
-      error: null,
-      showDirection: false,
-      showDistance: false,
-      lastClickLatTraitor: null,
-      lastClickLonTraitor: null,
-      showAimCircle: false,
-      deflectOn: false,
-      deflectsRemaining: 3,
-      counter: 0,
-      tracerLoggedIn: false,
-      gameWinner: "none",
-    });
-  }
+  }*/
 }
 
 const styles = StyleSheet.create({

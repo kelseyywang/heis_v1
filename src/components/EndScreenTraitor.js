@@ -4,10 +4,7 @@ import { Actions } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 
 export default class EndScreenTraitor extends React.Component {
-  //TODO: make a Restart button.
-  //Upload #wins info to firebase so every time user
-  //logs in, he has #wins against a specific opponent
-  //and total #wins and losses.
+  //TODO: refer to TODOs on EndScreenTracer
   render() {
     return (
       <View style={styles.containerStyle}>
@@ -39,10 +36,11 @@ export default class EndScreenTraitor extends React.Component {
     //TODO: fix bc super glitchy... even when traitor pressed this
     //the scene goes back to the end screen and vibrates like crazy
     //bc of the logic in mapscreentraitor... need to unmount and reset...
+    //it only works if the tracer goes back to game and presses distance
+    //or direction.
     Actions.mapScreenTraitor();
   }
 }
-
 
 const styles = StyleSheet.create({
   containerStyle: {

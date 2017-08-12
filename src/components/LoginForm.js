@@ -15,8 +15,9 @@ class LoginForm extends Component {
       error: '',
       loading: false,
       loggedIn: false,
-    }
+    };
 
+    //Firebase configuration
     const config = {
       apiKey: "AIzaSyCyCJdHSlhJmgVUf9G-9IPAxJPOAhRDlOQ",
       authDomain: "heis-v1.firebaseapp.com",
@@ -31,6 +32,7 @@ class LoginForm extends Component {
     this.onLoginFail = this.onLoginFail.bind(this);
   }
 
+  //Check if logged in already
   componentWillMount(){
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
@@ -41,6 +43,7 @@ class LoginForm extends Component {
     });
   }
 
+  //Attempts to sign in
   onButtonPress() {
       const {email, password} = this.state;
       this.setState({ error: '', loading: true });
@@ -53,6 +56,7 @@ class LoginForm extends Component {
     this.setState({ error: 'Authentication Failed', loading: false });
   }
 
+  //Sends user to appropriate tracer/traitor screen
   onLoginSuccess() {
     const { currentUser } = firebase.auth();
     if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
@@ -69,6 +73,7 @@ class LoginForm extends Component {
     });
   }
 
+  //Clears tracer's firebase stuff when logged out
   logOutActions() {
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
@@ -88,9 +93,6 @@ class LoginForm extends Component {
         lastClickLonTraitor: 0,
         tracerLoggedIn: false,
         gameWinner: "none",
-      })
-      .then(() => {
-        //nothing
       })
       .catch(() => {
         console.log("location set failed");

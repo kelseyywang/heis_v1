@@ -4,8 +4,8 @@ import { Actions } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 
 export default class EndScreenTracer extends React.Component {
-  //TODO: make a Restart button.
-  //Upload #wins info to firebase so every time user
+  //TODO: improve Restart button.
+  //TODO: Upload #wins info to firebase so every time user
   //logs in, he has #wins against a specific opponent
   //and total #wins and losses.
   render() {
@@ -39,7 +39,6 @@ export default class EndScreenTracer extends React.Component {
     Actions.mapScreenTracer();
   }
 }
-
 
 const styles = StyleSheet.create({
   containerStyle: {
