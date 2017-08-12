@@ -36,6 +36,9 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   goBack() {
+    //TODO: fix bc super glitchy... even when traitor pressed this
+    //the scene goes back to the end screen and vibrates like crazy
+    //bc of the logic in mapscreentraitor... need to unmount and reset...
     Actions.mapScreenTraitor();
   }
 }

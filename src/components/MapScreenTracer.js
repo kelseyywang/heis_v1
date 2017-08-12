@@ -6,10 +6,6 @@ import React from 'react';
 import { StyleSheet, Text, View, Vibration } from 'react-native';
 import { Spinner } from './common';
 
-//TODO: think about the delay between tracer and traitor
-//displays. Maybe when trigger is pulled, there is a 1 second
-//delay, or however long it takes to update traitor?
-//TODO: make vibrate when trigger is pulled!?
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -45,7 +41,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentDidMount() {
-    console.log("component mounted tracer!");
     this.interval = setInterval(this.callCurrentPosition, 1000);
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerLoggedIn/'] = true;
@@ -53,7 +48,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log("component un mounted tracer!");
     clearInterval(this.interval);
     this.clearFirebaseActions();
   }
@@ -95,15 +89,6 @@ export default class MapScreenTracer extends React.Component {
       });
   }
 
-/*  setLastClickTraitorLoc(lastClickLat, lastClickLon) {
-    if (lastClickLat != null && lastClickLon != null) {
-      var updates = {};
-      updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLatTraitor/'] = lastClickLat;
-      updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/lastClickLonTraitor/'] = lastClickLon;
-      firebase.database().ref().update(updates);
-    }
-  }*/
-
   calcDistance(lat1, lon1, lat2, lon2) {
     let radlat1 = Math.PI * lat1/180;
   	let radlat2 = Math.PI * lat2/180;
@@ -119,7 +104,7 @@ export default class MapScreenTracer extends React.Component {
   }
 
   calcDirectionCoords(lat1, lon1, lat2, lon2) {
-    const multiplier = 1000;
+    const multiplier = 500 / this.calcDistance(lat1, lon1, lat2, lon2);
     return ([{
       latitude: lat1 + ((lat2 - lat1) * multiplier),
       longitude: lon1 + ((lon2 - lon1) * multiplier)
@@ -166,6 +151,8 @@ export default class MapScreenTracer extends React.Component {
         showDirection: true,
         lastClickLatTracer: this.state.latitude,
         lastClickLonTracer: this.state.longitude,
+        lastClickLatTraitor: snapshot.val().latitude,
+        lastClickLonTraitor: snapshot.val().longitude,
         showTriggerCircle: false,
       }, this.setFirebase);
     });
@@ -329,6 +316,21 @@ export default class MapScreenTracer extends React.Component {
             strokeWidth={2}
           />
           }
+          <MapView.Polyline
+            coordinates=
+            {
+                [{
+                latitude: (this.state.lastClickLatTraitor || 0),
+                longitude: (this.state.lastClickLonTraitor || 0),
+              },
+              {
+                latitude: (this.state.lastClickLatTracer || 0),
+                longitude: (this.state.lastClickLonTracer || 0),
+              }]
+            }
+            strokeColor="rgba(255, 0, 0, 1)"
+            strokeWidth={4}
+          />
         </MapView>
         <View style={styles.buttonsContainerStyle}>
           <Button
