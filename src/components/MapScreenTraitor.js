@@ -294,7 +294,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={50}
+              radius={70}
               fillColor="rgba(255,235,20,.3)"
               strokeColor="rgba(255,235,20,.3)"
             />
@@ -305,7 +305,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={10}
+              radius={70}
               fillColor="rgba(0,206,165,.3)"
               strokeColor="rgba(0,206,165,.3)"
             />

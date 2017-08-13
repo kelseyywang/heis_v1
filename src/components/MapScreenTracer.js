@@ -42,11 +42,13 @@ export default class MapScreenTracer extends React.Component {
       showTriggerCircle: false,
       triggersRemaining: 3,
       counter: 0,
-      disguiseOn: false
+      disguiseOn: false,
+      pauseBetweenClicks: false
     };
 
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
+    this.resumeClicks = this.resumeClicks.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -146,63 +148,85 @@ export default class MapScreenTracer extends React.Component {
 
   //Called when Distance button pressed
   setCurrentDistance() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .once('value', snapshot => {
-      let traitorLat = snapshot.val().latitude;
-      let traitorLon = snapshot.val().longitude;
-      let traitorDisguiseOn = snapshot.val().disguiseOn;
-      if (traitorDisguiseOn) {
-        this.setState({
-          disguiseOn: true,
-        });
-      }
-      else {
-        let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-        this.setState({
-          distance: dist,
-          showDistance: true,
-          showDirection: false,
-          lastClickLatTracer: this.state.latitude,
-          lastClickLonTracer: this.state.longitude,
-          lastClickLatTraitor: snapshot.val().latitude,
-          lastClickLonTraitor: snapshot.val().longitude,
-          showTriggerCircle: false,
-          disguiseOn: false,
-        }, this.setFirebase);
-      }
-    });
+    if (!this.state.pauseBetweenClicks) {
+      firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+      .once('value', snapshot => {
+        let traitorLat = snapshot.val().latitude;
+        let traitorLon = snapshot.val().longitude;
+        let traitorDisguiseOn = snapshot.val().disguiseOn;
+        if (traitorDisguiseOn) {
+          this.setState({
+            disguiseOn: true,
+          });
+        }
+        else {
+          let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+          this.setState({
+            distance: dist,
+            showDistance: true,
+            showDirection: false,
+            lastClickLatTracer: this.state.latitude,
+            lastClickLonTracer: this.state.longitude,
+            lastClickLatTraitor: snapshot.val().latitude,
+            lastClickLonTraitor: snapshot.val().longitude,
+            showTriggerCircle: false,
+            disguiseOn: false,
+          }, this.setFirebase);
+        }
+      });
+      this.setPauseBetweenClicks();
+    }
   }
 
   //Called when Direction button pressed
   setCurrentDirectionCoords() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .once('value', snapshot => {
-      let traitorLat = snapshot.val().latitude;
-      let traitorLon = snapshot.val().longitude;
-      let traitorDisguiseOn = snapshot.val().disguiseOn;
-      if (traitorDisguiseOn) {
-        this.setState({
-          disguiseOn: true,
-        });
-      }
-      else {
-        let dirCoords =
-          this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-        let dirCoordsForTraitor =
-          this.calcDirectionCoordsForTraitor(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-        this.setState({
-          directionCoords: dirCoords,
-          directionCoordsForTraitor: dirCoordsForTraitor,
-          showDistance: false,
-          showDirection: true,
-          lastClickLatTracer: this.state.latitude,
-          lastClickLonTracer: this.state.longitude,
-          lastClickLatTraitor: snapshot.val().latitude,
-          lastClickLonTraitor: snapshot.val().longitude,
-          showTriggerCircle: false,
-          disguiseOn: false,
-        }, this.setFirebase);
-      }
+    if (!this.state.pauseBetweenClicks) {
+      firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+      .once('value', snapshot => {
+        let traitorLat = snapshot.val().latitude;
+        let traitorLon = snapshot.val().longitude;
+        let traitorDisguiseOn = snapshot.val().disguiseOn;
+        if (traitorDisguiseOn) {
+          this.setState({
+            disguiseOn: true,
+          });
+        }
+        else {
+          let dirCoords =
+            this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+          let dirCoordsForTraitor =
+            this.calcDirectionCoordsForTraitor(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+          this.setState({
+            directionCoords: dirCoords,
+            directionCoordsForTraitor: dirCoordsForTraitor,
+            showDistance: false,
+            showDirection: true,
+            lastClickLatTracer: this.state.latitude,
+            lastClickLonTracer: this.state.longitude,
+            lastClickLatTraitor: snapshot.val().latitude,
+            lastClickLonTraitor: snapshot.val().longitude,
+            showTriggerCircle: false,
+            disguiseOn: false,
+          }, this.setFirebase);
+        }
+      });
+      this.setPauseBetweenClicks();
+    }
+  }
+
+  //Requires tracer to wait a little between getting new
+  //distance and direction clues
+  setPauseBetweenClicks() {
+    this.setState({
+      pauseBetweenClicks: true
+    });
+    this.pauseBetweenClicksInterval = setTimeout(this.resumeClicks, 5000);
+  }
+
+  resumeClicks() {
+    clearTimeout(this.pauseBetweenClicksInterval);
+    this.setState({
+      pauseBetweenClicks: false
     });
   }
 
@@ -235,9 +259,9 @@ export default class MapScreenTracer extends React.Component {
       let traitorDeflect = snapshot.val().deflectOn;
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      //TODO: change this dist to reasonable value if 50 isn't!
+      //TODO: change this dist to reasonable value if 70 isn't!
       //Also change radius of aimCircle
-      if (dist < 50) {
+      if (dist < 70) {
         let updates = {};
         if (!traitorDeflect) {
           //Tracer won
@@ -320,7 +344,7 @@ export default class MapScreenTracer extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={50}
+              radius={70}
               fillColor="rgba(255,235,20,.3)"
               strokeColor="rgba(255,235,20,.3)"
             />
