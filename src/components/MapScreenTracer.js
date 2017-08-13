@@ -22,6 +22,14 @@ export default class MapScreenTracer extends React.Component {
         latitude: 0,
         longitude: 0,
       }],
+      directionCoordsForTraitor: [{
+        latitude: 0,
+        longitude: 0,
+      },
+      {
+        latitude: 0,
+        longitude: 0,
+      }],
       error: null,
       showDirection: false,
       showDistance: false,
@@ -34,6 +42,7 @@ export default class MapScreenTracer extends React.Component {
       showTriggerCircle: false,
       triggersRemaining: 3,
       counter: 0,
+      disguiseOn: false
     };
 
     this.setFirebase = this.setFirebase.bind(this);
@@ -51,10 +60,11 @@ export default class MapScreenTracer extends React.Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
-    this.clearFirebaseActions();
+    //this.clearFirebaseActions();
   }
 
   //Updates timer and tracer's position
+  //Also pulls disguise info from firebase
   callCurrentPosition() {
     this.setState({
       counter: this.state.counter + 1
@@ -79,7 +89,7 @@ export default class MapScreenTracer extends React.Component {
         showDirection: this.state.showDirection,
         showDistance: this.state.showDistance,
         distance: this.state.distance,
-        directionCoords: this.state.directionCoords,
+        directionCoordsForTraitor: this.state.directionCoordsForTraitor,
         lastClickLatTraitor: this.state.lastClickLatTraitor,
         lastClickLonTraitor: this.state.lastClickLonTraitor,
         tracerLoggedIn: true,
@@ -110,14 +120,27 @@ export default class MapScreenTracer extends React.Component {
   //but is a fixed length
   calcDirectionCoords(lat1, lon1, lat2, lon2) {
     //Line will be around 1000m long or something
-    const multiplier = 500 / this.calcDistance(lat1, lon1, lat2, lon2);
+    const multiplier = 1000 / this.calcDistance(lat1, lon1, lat2, lon2);
     return ([{
       latitude: lat1 + ((lat2 - lat1) * multiplier),
       longitude: lon1 + ((lon2 - lon1) * multiplier)
     },
     {
-      latitude: lat1 + ((lat1 - lat2) * multiplier),
-      longitude: lon1 + ((lon1 - lon2) * multiplier)
+      latitude: lat1,
+      longitude: lon1
+    }]);
+  }
+
+  calcDirectionCoordsForTraitor(lat1, lon1, lat2, lon2) {
+    //Line will be around 1000m long or something
+    const multiplier = 1000 / this.calcDistance(lat1, lon1, lat2, lon2);
+    return ([{
+      latitude: lat2 + ((lat1 - lat2) * multiplier),
+      longitude: lon2 + ((lon1 - lon2) * multiplier)
+    },
+    {
+      latitude: lat2,
+      longitude: lon2
     }]);
   }
 
@@ -127,18 +150,26 @@ export default class MapScreenTracer extends React.Component {
     .once('value', snapshot => {
       let traitorLat = snapshot.val().latitude;
       let traitorLon = snapshot.val().longitude;
-      //this.setLastClickTraitorLoc(traitorLat, traitorLon);
-      let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({
-        distance: dist,
-        showDistance: true,
-        showDirection: false,
-        lastClickLatTracer: this.state.latitude,
-        lastClickLonTracer: this.state.longitude,
-        lastClickLatTraitor: snapshot.val().latitude,
-        lastClickLonTraitor: snapshot.val().longitude,
-        showTriggerCircle: false,
-      }, this.setFirebase);
+      let traitorDisguiseOn = snapshot.val().disguiseOn;
+      if (traitorDisguiseOn) {
+        this.setState({
+          disguiseOn: true,
+        });
+      }
+      else {
+        let dist = this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+        this.setState({
+          distance: dist,
+          showDistance: true,
+          showDirection: false,
+          lastClickLatTracer: this.state.latitude,
+          lastClickLonTracer: this.state.longitude,
+          lastClickLatTraitor: snapshot.val().latitude,
+          lastClickLonTraitor: snapshot.val().longitude,
+          showTriggerCircle: false,
+          disguiseOn: false,
+        }, this.setFirebase);
+      }
     });
   }
 
@@ -148,18 +179,30 @@ export default class MapScreenTracer extends React.Component {
     .once('value', snapshot => {
       let traitorLat = snapshot.val().latitude;
       let traitorLon = snapshot.val().longitude;
-      let dirCoords =
-        this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      this.setState({
-        directionCoords: dirCoords,
-        showDistance: false,
-        showDirection: true,
-        lastClickLatTracer: this.state.latitude,
-        lastClickLonTracer: this.state.longitude,
-        lastClickLatTraitor: snapshot.val().latitude,
-        lastClickLonTraitor: snapshot.val().longitude,
-        showTriggerCircle: false,
-      }, this.setFirebase);
+      let traitorDisguiseOn = snapshot.val().disguiseOn;
+      if (traitorDisguiseOn) {
+        this.setState({
+          disguiseOn: true,
+        });
+      }
+      else {
+        let dirCoords =
+          this.calcDirectionCoords(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+        let dirCoordsForTraitor =
+          this.calcDirectionCoordsForTraitor(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
+        this.setState({
+          directionCoords: dirCoords,
+          directionCoordsForTraitor: dirCoordsForTraitor,
+          showDistance: false,
+          showDirection: true,
+          lastClickLatTracer: this.state.latitude,
+          lastClickLonTracer: this.state.longitude,
+          lastClickLatTraitor: snapshot.val().latitude,
+          lastClickLonTraitor: snapshot.val().longitude,
+          showTriggerCircle: false,
+          disguiseOn: false,
+        }, this.setFirebase);
+      }
     });
   }
 
@@ -278,8 +321,8 @@ export default class MapScreenTracer extends React.Component {
                 longitude: this.state.longitude
               }}
               radius={50}
-              fillColor="rgba(0,0,0,.3)"
-              strokeColor="rgba(0,0,0,.3)"
+              fillColor="rgba(255,235,20,.3)"
+              strokeColor="rgba(255,235,20,.3)"
             />
           }
           {this.state.showTriggerCircle &&
@@ -291,6 +334,17 @@ export default class MapScreenTracer extends React.Component {
               radius={this.state.distance}
               fillColor="rgba(193,0,0,.3)"
               strokeColor="rgba(193,0,0,.3)"
+            />
+          }
+          {this.state.disguiseOn &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.lastClickLatTracer,
+                longitude: this.state.lastClickLonTracer
+              }}
+              radius={100000}
+              fillColor="rgba(0,0,0,.3)"
+              strokeColor="rgba(0,0,0,.3)"
             />
           }
           {this.state.showDirection &&
@@ -350,31 +404,6 @@ export default class MapScreenTracer extends React.Component {
       </View>
     );
   }
-
-  /*clearFirebaseActions() {
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-      .set({
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoords: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
-        tracerLoggedIn: false,
-        gameWinner: "none",
-      })
-      .catch(() => {
-        console.log("location set failed");
-      });
-  }*/
 }
 
 const styles = StyleSheet.create({

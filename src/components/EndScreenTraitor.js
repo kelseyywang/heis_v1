@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
+import firebase from 'firebase';
+
 
 export default class EndScreenTraitor extends React.Component {
   //TODO: refer to TODOs on EndScreenTracer
@@ -38,7 +40,36 @@ export default class EndScreenTraitor extends React.Component {
     //bc of the logic in mapscreentraitor... need to unmount and reset...
     //it only works if the tracer goes back to game and presses distance
     //or direction.
+    this.clearFirebaseActions();
     Actions.mapScreenTraitor();
+  }
+
+  clearFirebaseActions() {
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = false;
+    firebase.database().ref().update(updates);
+    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+      .set({
+        showDirection: false,
+        showDistance: false,
+        distance: 0,
+        directionCoordsForTraitor: [{
+          latitude: 0,
+          longitude: 0
+        },
+        {
+          latitude: 0,
+          longitude: 0
+        }],
+        //Arbitrary values here!
+        lastClickLatTraitor: 0,
+        lastClickLonTraitor: 0,
+        tracerLoggedIn: false,
+        gameWinner: "none",
+      })
+      .catch(() => {
+        console.log("location set failed");
+      });
   }
 }
 

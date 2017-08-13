@@ -80,7 +80,7 @@ class LoginForm extends Component {
         showDirection: false,
         showDistance: false,
         distance: 0,
-        directionCoords: [{
+        directionCoordsForTraitor: [{
           latitude: 0,
           longitude: 0
         },

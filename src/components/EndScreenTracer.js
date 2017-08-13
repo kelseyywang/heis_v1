@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
+import firebase from 'firebase';
 
 export default class EndScreenTracer extends React.Component {
   //TODO: improve Restart button.
@@ -36,7 +37,36 @@ export default class EndScreenTracer extends React.Component {
   }
 
   goBack() {
+    this.clearFirebaseActions();
     Actions.mapScreenTracer();
+  }
+
+  clearFirebaseActions() {
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = false;
+    firebase.database().ref().update(updates);
+    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+      .set({
+        showDirection: false,
+        showDistance: false,
+        distance: 0,
+        directionCoordsForTraitor: [{
+          latitude: 0,
+          longitude: 0
+        },
+        {
+          latitude: 0,
+          longitude: 0
+        }],
+        //Arbitrary values here!
+        lastClickLatTraitor: 0,
+        lastClickLonTraitor: 0,
+        tracerLoggedIn: false,
+        gameWinner: "none",
+      })
+      .catch(() => {
+        console.log("location set failed");
+      });
   }
 }
 

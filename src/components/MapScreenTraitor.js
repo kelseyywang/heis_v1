@@ -25,7 +25,7 @@ export default class MapScreenTraitor extends React.Component {
       latitude: null,
       longitude: null,
       distance: 0,
-      directionCoords: [{
+      directionCoordsForTraitor: [{
         latitude: 0,
         longitude: 0,
       },
@@ -38,6 +38,8 @@ export default class MapScreenTraitor extends React.Component {
       showDistance: false,
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
+      disguiseOn: false,
+      disguisesRemaining: 3,
       showAimCircle: false,
       deflectOn: false,
       deflectsRemaining: 3,
@@ -47,6 +49,7 @@ export default class MapScreenTraitor extends React.Component {
     };
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
+    this.endDisguise = this.endDisguise.bind(this);
     this.updateCounter = this.updateCounter.bind(this);
   }
 
@@ -60,7 +63,7 @@ export default class MapScreenTraitor extends React.Component {
   componentWillUnmount() {
       clearInterval(this.interval);
       clearInterval(this.timerInterval);
-      this.clearFirebaseActions();
+      //this.clearFirebaseActions();
   }
 
   //Pulls all info from firebase, and checks stuff about
@@ -73,24 +76,27 @@ export default class MapScreenTraitor extends React.Component {
       let fbShowDirection = snapshot.val().showDirection;
       let fbShowDistance = snapshot.val().showDistance;
       let fbDistance = snapshot.val().distance;
-      let fbDirectionCoords = snapshot.val().directionCoords;
+      let fbDirectionCoordsForTraitor = snapshot.val().directionCoordsForTraitor;
       let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
       let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
       let fbTracerLoggedIn = snapshot.val().tracerLoggedIn;
       let fbGameWinner = snapshot.val().gameWinner;
       //Check if game has ended
       if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
+        clearTimeout(this.deflectInterval);
         Actions.endScreenTraitor({winner: fbGameWinner});
       }
       //Check if display on map has changed
       if (this.state.showDirection !== fbShowDirection ||
             this.state.showDistance !== fbShowDistance ||
             this.state.distance !== fbDistance ||
-            !this.compareDirectionCoords(this.state.directionCoords, fbDirectionCoords)) {
+            !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor, fbDirectionCoordsForTraitor)) {
         Vibration.vibrate();
       }
       //Check if tracer is logged in, and if so, start timer.
       //TODO: change this so that game doesn't start until both logged in
+      //This is also really glitchy... i.e. won't start until tracer presses
+      //distance or direction button in some cases...
       if (!this.state.tracerLoggedIn && fbTracerLoggedIn &&
         this.state.counter === 0 && this.timerInterval === null) {
         //TODO: solve the problem of the timers being DIFFERENT
@@ -103,7 +109,7 @@ export default class MapScreenTraitor extends React.Component {
           showDistance: fbShowDistance,
           showDirection: fbShowDirection,
           distance: fbDistance,
-          directionCoords: fbDirectionCoords,
+          directionCoordsForTraitor: fbDirectionCoordsForTraitor,
           lastClickLatTraitor: fbLastClickLatTraitor,
           lastClickLonTraitor: fbLastClickLonTraitor,
           gameWinner: fbGameWinner,
@@ -120,7 +126,7 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
-  compareDirectionCoords(c1, c2) {
+  compareDirectionCoordsForTraitor(c1, c2) {
     return (c1[0].latitude === c2[0].latitude &&
       c1[0].longitude === c2[0].longitude &&
       c1[1].latitude === c2[1].latitude &&
@@ -142,7 +148,8 @@ export default class MapScreenTraitor extends React.Component {
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
           .set({latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-            deflectOn: this.state.deflectOn
+            deflectOn: this.state.deflectOn,
+            disguiseOn: this.state.disguiseOn
         })
           .catch(() => {
             console.log("location set failed");
@@ -151,6 +158,34 @@ export default class MapScreenTraitor extends React.Component {
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+  }
+
+  //Causes gray circle overlay. This prevents the tracer
+  //from receiving any distance/direction updates for 10 sec.
+  disguisePressed() {
+    if (this.state.disguisesRemaining > 0) {
+      this.state.disguisesRemaining = this.state.disguisesRemaining - 1;
+      let updates = {};
+      updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = true;
+      firebase.database().ref().update(updates);
+      Vibration.vibrate();
+      this.setState({
+        disguiseOn: true,
+      }, () => {
+        this.disguiseInterval = setTimeout(this.endDisguise, 10000);
+      });
+    }
+  }
+
+  endDisguise() {
+    clearTimeout(this.disguiseInterval);
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = false;
+    firebase.database().ref().update(updates);
+    Vibration.vibrate();
+    this.setState({
+      disguiseOn: false,
+    });
   }
 
   //Shows Aim circle, which does nothing but help
@@ -166,6 +201,9 @@ export default class MapScreenTraitor extends React.Component {
   deflectPressed() {
     if (this.state.deflectsRemaining > 0) {
       this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
+      let updates = {};
+      updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = true;
+      firebase.database().ref().update(updates);
       Vibration.vibrate();
       this.setState({
         deflectOn: true,
@@ -178,6 +216,9 @@ export default class MapScreenTraitor extends React.Component {
   //Vibrates and sets new state when deflect ends
   endDeflect() {
     clearTimeout(this.deflectInterval);
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = false;
+    firebase.database().ref().update(updates);
     Vibration.vibrate();
     this.setState({
       deflectOn: false,
@@ -236,6 +277,17 @@ export default class MapScreenTraitor extends React.Component {
             strokeWidth={2}
           />
           }
+          {this.state.disguiseOn &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }}
+              radius={100000}
+              fillColor="rgba(0,0,0,.3)"
+              strokeColor="rgba(0,0,0,.3)"
+            />
+          }
           {this.state.showAimCircle &&
             <MapView.Circle
               center={{
@@ -243,8 +295,8 @@ export default class MapScreenTraitor extends React.Component {
                 longitude: this.state.longitude
               }}
               radius={50}
-              fillColor="rgba(0,0,0,.3)"
-              strokeColor="rgba(0,0,0,.3)"
+              fillColor="rgba(255,235,20,.3)"
+              strokeColor="rgba(255,235,20,.3)"
             />
           }
           {this.state.deflectOn &&
@@ -261,7 +313,7 @@ export default class MapScreenTraitor extends React.Component {
           {this.state.showDirection &&
           <MapView.Polyline
             coordinates={
-              this.state.directionCoords
+              this.state.directionCoordsForTraitor
             }
             strokeColor="rgba(106,92,165,.9)"
             strokeWidth={2}
@@ -269,7 +321,13 @@ export default class MapScreenTraitor extends React.Component {
         }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
-          <View style={styles.triggerAimStyle}>
+          <Button
+            buttonStyle={styles.buttonStyle}
+            color='rgba(64, 52, 109, 1)'
+            onPress={this.disguisePressed.bind(this)}
+            title={`Disguise (${this.state.disguisesRemaining})`}
+          />
+          <View style={styles.deflectAimStyle}>
             <Button
               buttonStyle={styles.buttonAltStyle}
               fontSize={10}
@@ -301,31 +359,6 @@ export default class MapScreenTraitor extends React.Component {
       </View>
     );
   }
-
-  /*clearFirebaseActions() {
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-      .set({
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoords: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
-        tracerLoggedIn: false,
-        gameWinner: "none",
-      })
-      .catch(() => {
-        console.log("location set failed");
-      });
-  }*/
 }
 
 const styles = StyleSheet.create({
@@ -341,6 +374,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
   },
+  buttonStyle: {
+    backgroundColor: 'white',
+    borderRadius: 2,
+  },
   buttonAltStyle: {
     borderRadius: 2,
     backgroundColor: 'rgba(64, 52, 109, 1)',
@@ -350,7 +387,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  triggerAimStyle: {
+  deflectAimStyle: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
