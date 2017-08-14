@@ -20,7 +20,6 @@ import { Spinner } from './common';
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
-    console.log("constructor traitor");
     this.state = {
       latitude: null,
       longitude: null,

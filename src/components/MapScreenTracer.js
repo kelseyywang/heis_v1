@@ -9,7 +9,6 @@ import { Spinner } from './common';
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
-    console.log("constructor tracer");
 
     this.state = {
       latitude: null,
