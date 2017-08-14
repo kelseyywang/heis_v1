@@ -20,7 +20,7 @@ import { Spinner } from './common';
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
-
+    console.log("constructor traitor");
     this.state = {
       latitude: null,
       longitude: null,
@@ -61,9 +61,8 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
-      clearInterval(this.interval);
-      clearInterval(this.timerInterval);
-      //this.clearFirebaseActions();
+    clearInterval(this.interval);
+    clearInterval(this.timerInterval);
   }
 
   //Pulls all info from firebase, and checks stuff about
@@ -84,6 +83,14 @@ export default class MapScreenTraitor extends React.Component {
       //Check if game has ended
       if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
         clearTimeout(this.deflectInterval);
+        clearInterval(this.interval);
+        clearInterval(this.timerInterval);
+        if (this.state.disguiseOn) {
+          clearTimeout(this.disguiseInterval);
+        }
+        if (this.state.deflectOn) {
+          clearTimeout(this.deflectInterval);
+        }
         Actions.endScreenTraitor({winner: fbGameWinner});
       }
       //Check if display on map has changed

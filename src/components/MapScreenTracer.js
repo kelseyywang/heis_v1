@@ -9,6 +9,7 @@ import { Spinner } from './common';
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
+    console.log("constructor tracer");
 
     this.state = {
       latitude: null,
@@ -62,7 +63,6 @@ export default class MapScreenTracer extends React.Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
-    //this.clearFirebaseActions();
   }
 
   //Updates timer and tracer's position
@@ -248,6 +248,7 @@ export default class MapScreenTracer extends React.Component {
       let updates = {};
       updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Traitor";
       firebase.database().ref().update(updates);
+      clearInterval(this.interval);
       Actions.endScreenTracer({winner: "Traitor"});
     }
     //Check whether tracer got traitor or if traitor has
@@ -266,11 +267,13 @@ export default class MapScreenTracer extends React.Component {
         if (!traitorDeflect) {
           //Tracer won
           updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Tracer";
+          clearInterval(this.interval);
           Actions.endScreenTracer({winner: "Tracer", endDistance: Math.round(dist)});
         }
         else {
           //Traitor won by deflect
           updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Traitor deflect";
+          clearInterval(this.interval);
           Actions.endScreenTracer({winner: "Traitor deflect"});
         }
         firebase.database().ref().update(updates);
@@ -363,8 +366,8 @@ export default class MapScreenTracer extends React.Component {
           {this.state.disguiseOn &&
             <MapView.Circle
               center={{
-                latitude: this.state.lastClickLatTracer,
-                longitude: this.state.lastClickLonTracer
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
               }}
               radius={100000}
               fillColor="rgba(0,0,0,.3)"
