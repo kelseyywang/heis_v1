@@ -16,7 +16,7 @@ export default class EndScreenTracer extends React.Component {
         <Button
           buttonStyle={styles.buttonAltStyle}
           onPress={this.goBack.bind(this)}
-          title='Back to game'
+          title='New game'
         />
       </View>
     );
@@ -48,11 +48,11 @@ export default class EndScreenTracer extends React.Component {
         disguiseOn: false,
         latitude: 0,
         longitude: 0,
+        traitorInGame: false,
       })
       .catch(() => {
         console.log("firebase reset failed");
       });
-
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,
@@ -69,7 +69,7 @@ export default class EndScreenTracer extends React.Component {
         //Arbitrary values here!
         lastClickLatTraitor: 0,
         lastClickLonTraitor: 0,
-        tracerLoggedIn: false,
+        tracerInGame: false,
         gameWinner: "none",
       })
       .catch(() => {

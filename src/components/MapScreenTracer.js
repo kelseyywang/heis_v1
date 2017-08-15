@@ -42,34 +42,48 @@ export default class MapScreenTracer extends React.Component {
       showTriggerCircle: false,
       triggersRemaining: 3,
       counter: 0,
+      traitorInGame: false,
       disguiseOn: false,
       pauseBetweenClicks: false
     };
-
+    this.range = 70;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
+    this.updateCounter = this.updateCounter.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
-  //sets firebase tracerLoggedIn to true
+  //sets firebase tracerInGame to true
   componentDidMount() {
     this.interval = setInterval(this.callCurrentPosition, 1000);
+    this.timerInterval = null;
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerLoggedIn/'] = true;
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = true;
     firebase.database().ref().update(updates);
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
+    this.endGameActions();
   }
 
   //Updates timer and tracer's position
   //Also pulls disguise info from firebase
   callCurrentPosition() {
-    this.setState({
-      counter: this.state.counter + 1
+    //Check if traitor is in game, if so, start timer
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .once('value', snapshot => {
+      let fbTraitorInGame = snapshot.val().traitorInGame;
+      if (!this.state.traitorInGame && fbTraitorInGame &&
+        this.state.counter === 0 && this.timerInterval === null) {
+          console.log("interval set");
+        this.timerInterval = setInterval(this.updateCounter, 1000);
+      }
+      this.setState({
+        traitorInGame: fbTraitorInGame,
+      });
     });
+    //Set tracer's location to state
     navigator.geolocation.getCurrentPosition(
       (position) => {
         this.setState({
@@ -93,7 +107,7 @@ export default class MapScreenTracer extends React.Component {
         directionCoordsForTraitor: this.state.directionCoordsForTraitor,
         lastClickLatTraitor: this.state.lastClickLatTraitor,
         lastClickLonTraitor: this.state.lastClickLonTraitor,
-        tracerLoggedIn: true,
+        tracerInGame: true,
         gameWinner: "none",
         })
       .catch(() => {
@@ -132,6 +146,8 @@ export default class MapScreenTracer extends React.Component {
     }]);
   }
 
+  //Returns direction coordinates for traitor's direction
+  //line, which is in the opposite direction as the tracer's
   calcDirectionCoordsForTraitor(lat1, lon1, lat2, lon2) {
     //Line will be around 1000m long or something
     const multiplier = 1000 / this.calcDistance(lat1, lon1, lat2, lon2);
@@ -225,7 +241,7 @@ export default class MapScreenTracer extends React.Component {
   resumeClicks() {
     clearTimeout(this.pauseBetweenClicksInterval);
     this.setState({
-      pauseBetweenClicks: false
+      pauseBetweenClicks: false,
     });
   }
 
@@ -244,14 +260,14 @@ export default class MapScreenTracer extends React.Component {
     if (this.state.triggersRemaining <= 0) {
       //Traitor won as tracer ran out of triggers
       this.state.triggersRemaining = 0;
-      let updates = {};
-      updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Traitor";
-      firebase.database().ref().update(updates);
-      clearInterval(this.interval);
-      Actions.endScreenTracer({winner: "Traitor"});
+      this.gameWonActions("Traitor", null);
     }
-    //Check whether tracer got traitor or if traitor has
-    //deflect on
+    this.determineWinner();
+  }
+
+  //Determines whether traitor is in range and
+  //whether deflect was pulled. If no winner, resets state
+  determineWinner() {
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
       let traitorLat = snapshot.val().latitude;
@@ -259,23 +275,16 @@ export default class MapScreenTracer extends React.Component {
       let traitorDeflect = snapshot.val().deflectOn;
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      //TODO: change this dist to reasonable value if 70 isn't!
-      //Also change radius of aimCircle
-      if (dist < 70) {
-        let updates = {};
+      if (dist < this.range) {
         if (!traitorDeflect) {
           //Tracer won
-          updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Tracer";
-          clearInterval(this.interval);
-          Actions.endScreenTracer({winner: "Tracer", endDistance: Math.round(dist)});
+          this.gameWonActions("Tracer", Math.round(dist));
         }
         else {
           //Traitor won by deflect
-          updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "Traitor deflect";
-          clearInterval(this.interval);
-          Actions.endScreenTracer({winner: "Traitor deflect"});
+          //TODO 8/14: can I send null as the prop?
+          this.gameWonActions("Traitor deflect", null);
         }
-        firebase.database().ref().update(updates);
       }
       //None of the following is updated to firebase,
       //preventing traitor from seeing it
@@ -286,6 +295,32 @@ export default class MapScreenTracer extends React.Component {
         showTriggerCircle: true,
       });
     });
+  }
+
+  //Helper function to set winner to Firebase
+  //and send to end screen
+  gameWonActions(winnerString, endDist) {
+    let updates = {};
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = winnerString;
+    firebase.database().ref().update(updates);
+    this.endGameActions();
+    Actions.endScreenTracer({winner: winnerString, endDistance: endDist});
+  }
+
+  //Updates timer
+  updateCounter() {
+    this.setState({
+      counter: this.state.counter + 1
+    });
+  }
+
+  //Resets intervals and stuff at the end of game
+  endGameActions() {
+    clearInterval(this.interval);
+    clearInterval(this.timerInterval);
+    let updates = {};
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = false;
+    firebase.database().ref().update(updates);
   }
 
   //Returns what timer should appear as
@@ -346,7 +381,7 @@ export default class MapScreenTracer extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={70}
+              radius={this.range}
               fillColor="rgba(255,235,20,.3)"
               strokeColor="rgba(255,235,20,.3)"
             />
@@ -410,6 +445,9 @@ export default class MapScreenTracer extends React.Component {
             />
           </View>
         </View>
+        {!this.state.traitorInGame &&
+          <Text>Traitor Not in Game </Text>
+        }
     </View>
     );
   }

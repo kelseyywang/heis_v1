@@ -75,28 +75,43 @@ class LoginForm extends Component {
 
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-      .set({
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoordsForTraitor: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
-        tracerLoggedIn: false,
-        gameWinner: "none",
-      })
-      .catch(() => {
-        console.log("location set failed");
-      });
+    if (firebase.auth().uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
+      firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+        .set({
+          showDirection: false,
+          showDistance: false,
+          distance: 0,
+          directionCoordsForTraitor: [{
+            latitude: 0,
+            longitude: 0
+          },
+          {
+            latitude: 0,
+            longitude: 0
+          }],
+          //Arbitrary values here!
+          lastClickLatTraitor: 0,
+          lastClickLonTraitor: 0,
+          tracerInGame: false,
+          gameWinner: "none",
+        })
+        .catch(() => {
+          console.log("location set failed");
+        });
+      }
+      else {
+        firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
+          .set({
+            deflectOn: false,
+            disguiseOn: false,
+            latitude: 0,
+            longitude: 0,
+            traitorInGame: false,
+          })
+          .catch(() => {
+            console.log("firebase reset failed");
+          });
+      }
       firebase.auth().signOut();
   }
 

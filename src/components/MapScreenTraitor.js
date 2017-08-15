@@ -43,9 +43,10 @@ export default class MapScreenTraitor extends React.Component {
       deflectOn: false,
       deflectsRemaining: 3,
       counter: 0,
-      tracerLoggedIn: false,
+      tracerInGame: false,
       gameWinner: "none",
     };
+    this.range = 70;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
@@ -57,6 +58,9 @@ export default class MapScreenTraitor extends React.Component {
   componentDidMount() {
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInGame/'] = true;
+    firebase.database().ref().update(updates);
   }
 
   componentWillUnmount() {
@@ -77,21 +81,9 @@ export default class MapScreenTraitor extends React.Component {
       let fbDirectionCoordsForTraitor = snapshot.val().directionCoordsForTraitor;
       let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
       let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
-      let fbTracerLoggedIn = snapshot.val().tracerLoggedIn;
+      let fbTracerInGame = snapshot.val().tracerInGame;
       let fbGameWinner = snapshot.val().gameWinner;
-      //Check if game has ended
-      if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
-        clearTimeout(this.deflectInterval);
-        clearInterval(this.interval);
-        clearInterval(this.timerInterval);
-        if (this.state.disguiseOn) {
-          clearTimeout(this.disguiseInterval);
-        }
-        if (this.state.deflectOn) {
-          clearTimeout(this.deflectInterval);
-        }
-        Actions.endScreenTraitor({winner: fbGameWinner});
-      }
+      this.hasGameEnded(fbGameWinner);
       //Check if display on map has changed
       if (this.state.showDirection !== fbShowDirection ||
             this.state.showDistance !== fbShowDistance ||
@@ -100,10 +92,7 @@ export default class MapScreenTraitor extends React.Component {
         Vibration.vibrate();
       }
       //Check if tracer is logged in, and if so, start timer.
-      //TODO: change this so that game doesn't start until both logged in
-      //This is also really glitchy... i.e. won't start until tracer presses
-      //distance or direction button in some cases...
-      if (!this.state.tracerLoggedIn && fbTracerLoggedIn &&
+      if (!this.state.tracerInGame && fbTracerInGame &&
         this.state.counter === 0 && this.timerInterval === null) {
         //TODO: solve the problem of the timers being DIFFERENT
         //on EVERY DEVICE?!?! Really slow on iPhone, but has been
@@ -119,10 +108,24 @@ export default class MapScreenTraitor extends React.Component {
           lastClickLatTraitor: fbLastClickLatTraitor,
           lastClickLonTraitor: fbLastClickLonTraitor,
           gameWinner: fbGameWinner,
+          tracerInGame: fbTracerInGame,
           },
           this.getAndSetLocation.bind(this)
         );
     });
+  }
+  //Check if game has ended
+  hasGameEnded(fbGameWinner) {
+    if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
+      this.endGameActions();
+      if (this.state.disguiseOn) {
+        clearTimeout(this.disguiseInterval);
+      }
+      if (this.state.deflectOn) {
+        clearTimeout(this.deflectInterval);
+      }
+      Actions.endScreenTraitor({winner: fbGameWinner});
+    }
   }
 
   //Updates timer
@@ -155,7 +158,8 @@ export default class MapScreenTraitor extends React.Component {
           .set({latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             deflectOn: this.state.deflectOn,
-            disguiseOn: this.state.disguiseOn
+            disguiseOn: this.state.disguiseOn,
+            traitorInGame: true,
         })
           .catch(() => {
             console.log("location set failed");
@@ -231,6 +235,15 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  //Resets intervals and stuff at the end of game
+  endGameActions() {
+    clearInterval(this.interval);
+    clearInterval(this.timerInterval);
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInGame/'] = false;
+    firebase.database().ref().update(updates);
+  }
+
   //Returns what timer should appear as
   returnTimerString(numSeconds) {
     let minutes;
@@ -300,7 +313,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={70}
+              radius={this.range}
               fillColor="rgba(255,235,20,.3)"
               strokeColor="rgba(255,235,20,.3)"
             />
@@ -311,7 +324,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={70}
+              radius={this.range}
               fillColor="rgba(0,206,165,.3)"
               strokeColor="rgba(0,206,165,.3)"
             />
@@ -347,6 +360,9 @@ export default class MapScreenTraitor extends React.Component {
             />
         </View>
       </View>
+      {!this.state.tracerInGame &&
+        <Text>Tracer Not in Game </Text>
+      }
     </View>
     );
   }
