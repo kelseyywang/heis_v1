@@ -45,6 +45,7 @@ export default class MapScreenTraitor extends React.Component {
       counter: 0,
       tracerInGame: false,
       gameWinner: "none",
+      display: "",
     };
     this.range = 70;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
@@ -131,6 +132,7 @@ export default class MapScreenTraitor extends React.Component {
   //Updates timer
   updateCounter() {
     this.setState({
+      display: new Date().toLocaleTimeString(),
       counter: this.state.counter + 1
     });
   }
@@ -154,16 +156,27 @@ export default class MapScreenTraitor extends React.Component {
           longitude: position.coords.longitude,
           error: null
         });
+        let fbTraitorInGame;
+        firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+        .once('value', snapshot => {
+          //Get current value of traitorInGame and keep it that way
+          fbTraitorInGame = snapshot.val().traitorInGame;
+        })
+        .then(() => {
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
           .set({latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             deflectOn: this.state.deflectOn,
             disguiseOn: this.state.disguiseOn,
-            traitorInGame: true,
+            traitorInGame: fbTraitorInGame,
+        })
+        .then(() => {
+          console.log("set loc traitor");
         })
           .catch(() => {
             console.log("location set failed");
           });
+        });
       },
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
@@ -267,6 +280,7 @@ export default class MapScreenTraitor extends React.Component {
     return (
       <View style={styles.containerStyle}>
         <Text>{this.returnTimerString(this.state.counter)}</Text>
+          <Text>{this.state.display}</Text>
         <MapView
           provider="google"
           style={styles.map}
@@ -291,7 +305,7 @@ export default class MapScreenTraitor extends React.Component {
               longitude: this.state.lastClickLonTraitor
             }}
             radius={this.state.distance}
-            fillColor="rgba(106,92,165,.3)"
+            fillColor="rgba(106,92,165,.1)"
             strokeColor="rgba(106,92,165,.9)"
             strokeWidth={2}
           />

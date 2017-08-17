@@ -42,17 +42,25 @@ export default class EndScreenTracer extends React.Component {
   }
 
   clearFirebaseActions() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-      .set({
-        deflectOn: false,
-        disguiseOn: false,
-        latitude: 0,
-        longitude: 0,
-        traitorInGame: false,
-      })
-      .catch(() => {
-        console.log("firebase reset failed");
-      });
+    let fbTraitorInGame;
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .once('value', snapshot => {
+      //Get current value of traitorInGame and keep it that way
+      fbTraitorInGame = snapshot.val().traitorInGame;
+    })
+    .then(() => {
+      firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
+        .set({
+          deflectOn: false,
+          disguiseOn: false,
+          latitude: 0,
+          longitude: 0,
+          traitorInGame: fbTraitorInGame,
+        })
+        .catch(() => {
+          console.log("firebase reset failed");
+        });
+    });
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,

@@ -44,7 +44,8 @@ export default class MapScreenTracer extends React.Component {
       counter: 0,
       traitorInGame: false,
       disguiseOn: false,
-      pauseBetweenClicks: false
+      pauseBetweenClicks: false,
+      currentTime: "",
     };
     this.range = 70;
     this.setFirebase = this.setFirebase.bind(this);
@@ -76,7 +77,6 @@ export default class MapScreenTracer extends React.Component {
       let fbTraitorInGame = snapshot.val().traitorInGame;
       if (!this.state.traitorInGame && fbTraitorInGame &&
         this.state.counter === 0 && this.timerInterval === null) {
-          console.log("interval set");
         this.timerInterval = setInterval(this.updateCounter, 1000);
       }
       this.setState({
@@ -308,8 +308,10 @@ export default class MapScreenTracer extends React.Component {
   }
 
   //Updates timer
-  updateCounter() {
+  updateCounter()
+  //TODO: figure out stuff with currentTime - it's much more accurate than the device time.
     this.setState({
+      currentTime: new Date().toLocaleTimeString(),
       counter: this.state.counter + 1
     });
   }
@@ -346,6 +348,7 @@ export default class MapScreenTracer extends React.Component {
     return (
       <View style={styles.containerStyle}>
         <Text>{this.returnTimerString(this.state.counter)}</Text>
+        <Text>{this.state.currentTime}</Text>
         <MapView
           provider="google"
           style={styles.map}

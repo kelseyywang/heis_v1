@@ -57,27 +57,35 @@ export default class EndScreenTraitor extends React.Component {
         console.log("firebase reset failed");
       });
 
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-      .set({
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoordsForTraitor: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
-        tracerInGame: false,
-        gameWinner: "none",
+      let fbTracerInGame;
+      firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
+      .once('value', snapshot => {
+        //Get current value of tracerInGame and keep it that way
+        fbTracerInGame = snapshot.val().tracerInGame;
       })
-      .catch(() => {
-        console.log("firebase reset failed");
+      .then(() => {
+        firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+          .set({
+            showDirection: false,
+            showDistance: false,
+            distance: 0,
+            directionCoordsForTraitor: [{
+              latitude: 0,
+              longitude: 0
+            },
+            {
+              latitude: 0,
+              longitude: 0
+            }],
+            //Arbitrary values here!
+            lastClickLatTraitor: 0,
+            lastClickLonTraitor: 0,
+            tracerInGame: fbTracerInGame,
+            gameWinner: "none",
+          })
+          .catch(() => {
+            console.log("firebase reset failed");
+          });
       });
   }
 }

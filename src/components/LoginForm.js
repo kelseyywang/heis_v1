@@ -75,7 +75,7 @@ class LoginForm extends Component {
 
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    if (firebase.auth().uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
+    if (firebase.auth().currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
       firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
         .set({
           showDirection: false,
@@ -100,6 +100,9 @@ class LoginForm extends Component {
         });
       }
       else {
+        let updates = {};
+        updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "none";
+        firebase.database().ref().update(updates);
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
           .set({
             deflectOn: false,
