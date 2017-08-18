@@ -42,16 +42,15 @@ export default class MapScreenTraitor extends React.Component {
       showAimCircle: false,
       deflectOn: false,
       deflectsRemaining: 3,
-      counter: 0,
       tracerInGame: false,
       gameWinner: "none",
-      display: "",
+      currentTime: 0,
     };
     this.range = 70;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
-    this.updateCounter = this.updateCounter.bind(this);
+    this.updateTime = this.updateTime.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -94,12 +93,13 @@ export default class MapScreenTraitor extends React.Component {
       }
       //Check if tracer is logged in, and if so, start timer.
       if (!this.state.tracerInGame && fbTracerInGame &&
-        this.state.counter === 0 && this.timerInterval === null) {
+        this.state.currentTime === 0 && this.timerInterval === null) {
         //TODO: solve the problem of the timers being DIFFERENT
         //on EVERY DEVICE?!?! Really slow on iPhone, but has been
         //pretty accurate on my Android... but I think it varies by
         //individual device...
-        this.timerInterval = setInterval(this.updateCounter, 1000);
+        this.timerStart = new Date().getTime();
+        this.timerInterval = setInterval(this.updateTime, 1000);
       }
         this.setState({
           showDistance: fbShowDistance,
@@ -130,10 +130,10 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   //Updates timer
-  updateCounter() {
+  updateTime() {
+    let currTime = new Date().getTime() - this.timerStart;
     this.setState({
-      display: new Date().toLocaleTimeString(),
-      counter: this.state.counter + 1
+      currentTime: currTime / 1000,
     });
   }
 
@@ -279,8 +279,8 @@ export default class MapScreenTraitor extends React.Component {
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
-        <Text>{this.returnTimerString(this.state.counter)}</Text>
-          <Text>{this.state.display}</Text>
+        <Text>{this.returnTimerString(this.state.currentTime)}</Text>
+          <Text>{this.state.currentTime}</Text>
         <MapView
           provider="google"
           style={styles.map}
