@@ -94,10 +94,6 @@ export default class MapScreenTraitor extends React.Component {
       //Check if tracer is logged in, and if so, start timer.
       if (!this.state.tracerInGame && fbTracerInGame &&
         this.state.currentTime === 0 && this.timerInterval === null) {
-        //TODO: solve the problem of the timers being DIFFERENT
-        //on EVERY DEVICE?!?! Really slow on iPhone, but has been
-        //pretty accurate on my Android... but I think it varies by
-        //individual device...
         this.timerStart = new Date().getTime();
         this.timerInterval = setInterval(this.updateTime, 1000);
       }
@@ -280,7 +276,6 @@ export default class MapScreenTraitor extends React.Component {
     return (
       <View style={styles.containerStyle}>
         <Text>{this.returnTimerString(this.state.currentTime)}</Text>
-          <Text>{this.state.currentTime}</Text>
         <MapView
           provider="google"
           style={styles.map}

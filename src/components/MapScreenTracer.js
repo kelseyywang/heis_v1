@@ -283,7 +283,6 @@ export default class MapScreenTracer extends React.Component {
         }
         else {
           //Traitor won by deflect
-          //TODO 8/14: can I send null as the prop?
           this.gameWonActions("Traitor deflect", null);
         }
       }
@@ -348,7 +347,6 @@ export default class MapScreenTracer extends React.Component {
     return (
       <View style={styles.containerStyle}>
         <Text>{this.returnTimerString(this.state.currentTime)}</Text>
-        <Text>{this.state.currentTime}</Text>
         <MapView
           provider="google"
           style={styles.map}
