@@ -14,11 +14,46 @@ export default class App extends React.Component {
     return (
       <Router>
         <Scene key="root">
-          <Scene key="login" component={LoginForm} title="Login" initial />
-          <Scene key="mapScreenTraitor" renderLeftButton={() => (null)} onBack={() => {}} component={MapScreenTraitor} title="Traitor Map" />
-          <Scene key="mapScreenTracer" renderLeftButton={() => (null)} onBack={() => {}} component={MapScreenTracer} title="Tracer Map" />
-          <Scene key="endScreenTraitor" renderLeftButton={() => (null)} onBack={() => {}} component={EndScreenTraitor} title="Game Over, Traitor ;^)" />
-          <Scene key="endScreenTracer" renderLeftButton={() => (null)} onBack={() => {}} component={EndScreenTracer} title="Game Over, Tracer ;^)" />
+          <Scene
+            key="login"
+            component={LoginForm}
+            title="Login"
+            initial
+          />
+          <Scene
+            key="mapScreenTraitor"
+            component={MapScreenTraitor}
+            title="Traitor Map"
+            hideBackImage
+            renderLeftButton={() => (null)}
+            onRight={()=>{console.log("right pressed");}}
+            rightTitle={"Log out"}
+            panHandlers={null}
+          />
+          <Scene
+            key="mapScreenTracer"
+            component={MapScreenTracer}
+            title="Tracer Map"
+            hideBackImage
+            renderLeftButton={() => (null)}
+            onRight={()=>{console.log("right pressed");}}
+            rightTitle={"Log out"}
+            panHandlers={null}
+          />
+          <Scene
+            key="endScreenTraitor"
+            renderLeftButton={() => (null)}
+            onBack={() => {}}
+            component={EndScreenTraitor}
+            title="Game Over, Traitor ;^)"
+          />
+          <Scene
+            key="endScreenTracer"
+            renderLeftButton={() => (null)}
+            onBack={() => {}}
+            component={EndScreenTracer}
+            title="Game Over, Tracer ;^)"
+          />
         </Scene>
       </Router>
     );

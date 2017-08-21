@@ -128,10 +128,7 @@ class LoginForm extends Component {
       </Button>
     );
   }
-//TODO 8/19: clean up log out stuff here - don't need.
-//Also make logout button component and add it to all screens
-//or look into react native router flux to see how to add things to navbar
-//https://stackoverflow.com/questions/39471733/is-it-possible-to-add-custom-buttons-to-navbar-in-react-native-router-flux
+//TODO 8/21: clean up log out stuff here - don't need.
   renderContent() {
     switch (this.state.loggedIn) {
       case true:
