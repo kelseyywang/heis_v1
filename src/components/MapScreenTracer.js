@@ -6,6 +6,8 @@ import React from 'react';
 import { StyleSheet, Text, View, Vibration } from 'react-native';
 import { Spinner } from './common';
 
+//TODO: see if component unmounts when reset, if do then im repeating shit prob. Do for
+//traitor too.
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);

@@ -10,8 +10,8 @@ class LoginForm extends Component {
     super(props);
 
     this.state = {
-      email: '',
-      password: '',
+      email: 'tracer@test.com',
+      password: 'password',
       error: '',
       loading: false,
       loggedIn: false,
@@ -26,8 +26,10 @@ class LoginForm extends Component {
       storageBucket: "heis-v1.appspot.com",
       messagingSenderId: "1042195751384"
     };
-    firebase.initializeApp(config);
-
+    //Check if app has already been initialized
+    if (!firebase.apps.length) {
+      firebase.initializeApp(config);
+    }
     this.onLoginSuccess = this.onLoginSuccess.bind(this);
     this.onLoginFail = this.onLoginFail.bind(this);
   }

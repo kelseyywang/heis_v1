@@ -5,7 +5,6 @@ import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 
 export default class EndScreenTracer extends React.Component {
-  //TODO: improve Restart button.
   //TODO: Upload #wins info to firebase so every time user
   //logs in, he has #wins against a specific opponent
   //and total #wins and losses.
