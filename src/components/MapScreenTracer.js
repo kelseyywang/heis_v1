@@ -1,13 +1,14 @@
 import { Button } from 'react-native-elements';
-import { Actions } from 'react-native-router-flux';
+import { Actions, ActionConst } from 'react-native-router-flux';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration } from 'react-native';
 import { Spinner } from './common';
 
-//TODO: see if component unmounts when reset, if do then im repeating shit prob. Do for
-//traitor too.
+//TODO 8/23+: make start game button/screen and countdown screen.
+//Time is determined by how far the traitor and tracer are initially
+//from each other when they press start game...
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -46,6 +47,7 @@ export default class MapScreenTracer extends React.Component {
       traitorInGame: false,
       disguiseOn: false,
       pauseBetweenClicks: false,
+      showPauseText: false,
       currentTime: 0,
     };
     this.range = 70;
@@ -79,7 +81,6 @@ export default class MapScreenTracer extends React.Component {
       if (!this.state.traitorInGame && fbTraitorInGame &&
         this.state.currentTime === 0 && this.timerInterval === null) {
         this.timerStart = new Date().getTime();
-        console.log("timerStart tracer " + this.timerStart);
         this.timerInterval = setInterval(this.updateTime, 1000);
       }
       this.setState({
@@ -194,6 +195,11 @@ export default class MapScreenTracer extends React.Component {
       });
       this.setPauseBetweenClicks();
     }
+    else {
+      this.setState({
+        showPauseText: true,
+      });
+    }
   }
 
   //Called when Direction button pressed
@@ -230,6 +236,11 @@ export default class MapScreenTracer extends React.Component {
       });
       this.setPauseBetweenClicks();
     }
+    else {
+      this.setState({
+        showPauseText: true,
+      });
+    }
   }
 
   //Requires tracer to wait a little between getting new
@@ -245,6 +256,7 @@ export default class MapScreenTracer extends React.Component {
     clearTimeout(this.pauseBetweenClicksInterval);
     this.setState({
       pauseBetweenClicks: false,
+      showPauseText: false,
     });
   }
 
@@ -265,7 +277,9 @@ export default class MapScreenTracer extends React.Component {
       this.state.triggersRemaining = 0;
       this.gameWonActions("Traitor", null);
     }
-    this.determineWinner();
+    else {
+      this.determineWinner();
+    }
   }
 
   //Determines whether traitor is in range and
@@ -305,8 +319,8 @@ export default class MapScreenTracer extends React.Component {
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = winnerString;
     firebase.database().ref().update(updates);
-    this.endGameActions();
-    Actions.endScreenTracer({winner: winnerString, endDistance: endDist});
+    //TODO: delete this.endGameActions();
+    Actions.endScreenTracer({winner: winnerString, endDistance: endDist, type: ActionConst.RESET});
   }
 
   //Updates timer
@@ -422,6 +436,9 @@ export default class MapScreenTracer extends React.Component {
           }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
+          {this.state.showPauseText &&
+            <Text>Must wait 5 sec. between clues</Text>
+          }
           <Button
             buttonStyle={styles.buttonStyle}
             color='rgba(64, 52, 109, 1)'

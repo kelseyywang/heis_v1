@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Actions } from 'react-native-router-flux';
+import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 
@@ -8,18 +8,6 @@ export default class EndScreenTracer extends React.Component {
   //TODO: Upload #wins info to firebase so every time user
   //logs in, he has #wins against a specific opponent
   //and total #wins and losses.
-  render() {
-    return (
-      <View style={styles.containerStyle}>
-        <Text style={styles.textStyle}>{this.printMessage()}</Text>
-        <Button
-          buttonStyle={styles.buttonAltStyle}
-          onPress={this.goBack.bind(this)}
-          title='New game'
-        />
-      </View>
-    );
-  }
 
   printMessage() {
     const winner = this.props.winner;
@@ -37,7 +25,7 @@ export default class EndScreenTracer extends React.Component {
 
   goBack() {
     this.clearFirebaseActions();
-    Actions.mapScreenTracer({reset: true});
+    Actions.mapScreenTracer({type: ActionConst.RESET});
   }
 
   clearFirebaseActions() {
@@ -82,6 +70,19 @@ export default class EndScreenTracer extends React.Component {
       .catch(() => {
         console.log("firebase reset failed");
       });
+  }
+
+  render() {
+    return (
+      <View style={styles.containerStyle}>
+        <Text style={styles.textStyle}>{this.printMessage()}</Text>
+        <Button
+          buttonStyle={styles.buttonAltStyle}
+          onPress={this.goBack.bind(this)}
+          title='New game'
+        />
+      </View>
+    );
   }
 }
 

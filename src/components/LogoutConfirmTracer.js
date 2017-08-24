@@ -8,7 +8,6 @@ export default class LogoutConfirmTracer extends React.Component {
 
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    console.log("uid is " + firebase.auth().currentUser.uid);
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
       .set({
         showDirection: false,
@@ -29,7 +28,7 @@ export default class LogoutConfirmTracer extends React.Component {
         gameWinner: "none",
       })
       .catch(() => {
-        console.log("location set failed");
+        console.log("firebase reset failed");
       });
     firebase.auth().signOut();
     Actions.loginForm({type: ActionConst.RESET});

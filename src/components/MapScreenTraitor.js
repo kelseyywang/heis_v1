@@ -1,15 +1,10 @@
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
-import { Actions } from 'react-native-router-flux';
+import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration } from 'react-native';
 import { Spinner } from './common';
-
-//TODO: make Restart better
-//TODO: push to expo
-//TODO: maybe black out (or just empty map) option for traitor
-//or a thing that disables trigger
 
 //TODO (eventually): change rules in firebase
 //TODO: think about whether you want to make this a time-based
@@ -17,6 +12,7 @@ import { Spinner } from './common';
 //Because you can make it time-based if you let the tracer know
 //every time the traitor deflects, and it's basically just a shield,
 //not necessarily reflective. Or there can be both...??
+//Prob should be time based bc traitor will be bored after using all their weapons
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -64,8 +60,7 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
-    clearInterval(this.timerInterval);
+    this.endGameActions();
   }
 
   //Pulls all info from firebase, and checks stuff about
@@ -114,14 +109,13 @@ export default class MapScreenTraitor extends React.Component {
   //Check if game has ended
   hasGameEnded(fbGameWinner) {
     if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
-      this.endGameActions();
       if (this.state.disguiseOn) {
         clearTimeout(this.disguiseInterval);
       }
       if (this.state.deflectOn) {
         clearTimeout(this.deflectInterval);
       }
-      Actions.endScreenTraitor({winner: fbGameWinner});
+      Actions.endScreenTraitor({winner: fbGameWinner, type: ActionConst.RESET});
     }
   }
 
@@ -165,9 +159,6 @@ export default class MapScreenTraitor extends React.Component {
             deflectOn: this.state.deflectOn,
             disguiseOn: this.state.disguiseOn,
             traitorInGame: fbTraitorInGame,
-        })
-        .then(() => {
-          console.log("set loc traitor");
         })
           .catch(() => {
             console.log("location set failed");

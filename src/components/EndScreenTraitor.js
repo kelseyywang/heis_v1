@@ -1,24 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Actions } from 'react-native-router-flux';
+import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 
 
 export default class EndScreenTraitor extends React.Component {
   //TODO: refer to TODOs on EndScreenTracer
-  render() {
-    return (
-      <View style={styles.containerStyle}>
-        <Text style={styles.textStyle}>{this.printMessage()}</Text>
-        <Button
-          buttonStyle={styles.buttonAltStyle}
-          onPress={this.goBack.bind(this)}
-          title='New game'
-        />
-      </View>
-    );
-  }
 
   printMessage() {
     const winner = this.props.winner;
@@ -35,13 +23,8 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   goBack() {
-    //TODO: fix bc super glitchy... even when traitor pressed this
-    //the scene goes back to the end screen and vibrates like crazy
-    //bc of the logic in mapscreentraitor... need to unmount and reset...
-    //it only works if the tracer goes back to game and presses distance
-    //or direction.
     this.clearFirebaseActions();
-    Actions.mapScreenTraitor({reset: true});
+    Actions.mapScreenTraitor({type: ActionConst.RESET});
   }
 
   clearFirebaseActions() {
@@ -87,6 +70,19 @@ export default class EndScreenTraitor extends React.Component {
             console.log("firebase reset failed");
           });
       });
+  }
+
+  render() {
+    return (
+      <View style={styles.containerStyle}>
+        <Text style={styles.textStyle}>{this.printMessage()}</Text>
+        <Button
+          buttonStyle={styles.buttonAltStyle}
+          onPress={this.goBack.bind(this)}
+          title='New game'
+        />
+      </View>
+    );
   }
 }
 

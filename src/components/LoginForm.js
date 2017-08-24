@@ -5,6 +5,7 @@ import { Actions } from 'react-native-router-flux';
 import { Button, Card, CardSection, Input, Spinner } from './common';
 
 class LoginForm extends Component {
+  //TODO 8/23: get rid of big Logout button
 
   constructor(props) {
     super(props);
@@ -44,7 +45,9 @@ class LoginForm extends Component {
         }
     });
   }
-
+  componentWillUnmount(){
+    console.log("LoginForm unmount");
+  }
   //Attempts to sign in
   onButtonPress() {
       const {email, password} = this.state;
@@ -130,7 +133,7 @@ class LoginForm extends Component {
       </Button>
     );
   }
-//TODO 8/21: clean up log out stuff here - don't need.
+
   renderContent() {
     switch (this.state.loggedIn) {
       case true:

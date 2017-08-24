@@ -1,10 +1,30 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Actions } from 'react-native-router-flux';
+import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 
 export default class LogoutConfirmTraitor extends React.Component {
+
+  //Clears tracer's firebase stuff when logged out
+  logOutActions() {
+    let updates = {};
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "none";
+    firebase.database().ref().update(updates);
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
+      .set({
+        deflectOn: false,
+        disguiseOn: false,
+        latitude: 0,
+        longitude: 0,
+        traitorInGame: false,
+      })
+      .catch(() => {
+        console.log("firebase reset failed");
+      });
+    firebase.auth().signOut();
+    Actions.loginForm({type: ActionConst.RESET});
+  }
 
   render() {
     return (
@@ -13,12 +33,12 @@ export default class LogoutConfirmTraitor extends React.Component {
         <View style={styles.buttonsRowStyle}>
           <Button
             buttonStyle={styles.buttonAltStyle}
-            onPress={() => {console.log("traitor yes");}}
+            onPress={this.logOutActions.bind(this)}
             title='Yes'
           />
           <Button
             buttonStyle={styles.buttonAltStyle}
-            onPress={() => {console.log("traitor no");}}
+            onPress={() => {Actions.pop();}}
             title='No'
           />
         </View>
