@@ -3,8 +3,8 @@ import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View, Vibration } from 'react-native';
-import { Spinner } from './common';
+import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
+import { Spinner, CardSection } from './common';
 
 //TODO (eventually): change rules in firebase
 //TODO: think about whether you want to make this a time-based
@@ -39,6 +39,7 @@ export default class MapScreenTraitor extends React.Component {
       deflectOn: false,
       deflectsRemaining: 3,
       tracerInGame: false,
+      timerModalVisible: true,
       gameWinner: "none",
       currentTime: 0,
     };
@@ -47,6 +48,7 @@ export default class MapScreenTraitor extends React.Component {
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
     this.updateTime = this.updateTime.bind(this);
+    this.exitTimeModal = this.exitTimeModal.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -60,6 +62,8 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
+    console.log("mapScreenTraitor unmount");
+    console.log("traitor state" + this.state);
     this.endGameActions();
   }
 
@@ -70,50 +74,56 @@ export default class MapScreenTraitor extends React.Component {
   callCurrentPosition() {
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
     .once('value', snapshot => {
-      let fbShowDirection = snapshot.val().showDirection;
-      let fbShowDistance = snapshot.val().showDistance;
-      let fbDistance = snapshot.val().distance;
-      let fbDirectionCoordsForTraitor = snapshot.val().directionCoordsForTraitor;
-      let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
-      let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
-      let fbTracerInGame = snapshot.val().tracerInGame;
       let fbGameWinner = snapshot.val().gameWinner;
-      this.hasGameEnded(fbGameWinner);
-      //Check if display on map has changed
-      if (this.state.showDirection !== fbShowDirection ||
-            this.state.showDistance !== fbShowDistance ||
-            this.state.distance !== fbDistance ||
-            !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor, fbDirectionCoordsForTraitor)) {
-        Vibration.vibrate();
+      if (fbGameWinner !== "none") {
+        this.hasGameEnded(fbGameWinner);
       }
-      //Check if tracer is logged in, and if so, start timer.
-      if (!this.state.tracerInGame && fbTracerInGame &&
-        this.state.currentTime === 0 && this.timerInterval === null) {
-        this.timerStart = new Date().getTime();
-        this.timerInterval = setInterval(this.updateTime, 1000);
+      else {
+        let fbShowDirection = snapshot.val().showDirection;
+        let fbShowDistance = snapshot.val().showDistance;
+        let fbDistance = snapshot.val().distance;
+        let fbDirectionCoordsForTraitor = snapshot.val().directionCoordsForTraitor;
+        let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
+        let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
+        let fbTracerInGame = snapshot.val().tracerInGame;
+        //Check if display on map has changed
+        if (this.state.showDirection !== fbShowDirection ||
+              this.state.showDistance !== fbShowDistance ||
+              this.state.distance !== fbDistance ||
+              !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor, fbDirectionCoordsForTraitor)) {
+          Vibration.vibrate();
+        }
+        //Check if tracer is logged in, and if so, start timer.
+        //TODO: see if it's necessary to have timerInterval === null?
+        if (!this.state.tracerInGame && fbTracerInGame &&
+          this.state.currentTime === 0 && this.timerInterval === null) {
+          this.timerStart = new Date().getTime();
+          this.timerInterval = setInterval(this.updateTime, 1000);
+        }
+          this.setState({
+            showDistance: fbShowDistance,
+            showDirection: fbShowDirection,
+            distance: fbDistance,
+            directionCoordsForTraitor: fbDirectionCoordsForTraitor,
+            lastClickLatTraitor: fbLastClickLatTraitor,
+            lastClickLonTraitor: fbLastClickLonTraitor,
+            gameWinner: fbGameWinner,
+            tracerInGame: fbTracerInGame,
+            },
+            this.getAndSetLocation.bind(this)
+          );
       }
-        this.setState({
-          showDistance: fbShowDistance,
-          showDirection: fbShowDirection,
-          distance: fbDistance,
-          directionCoordsForTraitor: fbDirectionCoordsForTraitor,
-          lastClickLatTraitor: fbLastClickLatTraitor,
-          lastClickLonTraitor: fbLastClickLonTraitor,
-          gameWinner: fbGameWinner,
-          tracerInGame: fbTracerInGame,
-          },
-          this.getAndSetLocation.bind(this)
-        );
     });
   }
   //Check if game has ended
   hasGameEnded(fbGameWinner) {
-    if (fbGameWinner !== "none" && this.state.gameWinner === "none") {
+    //TODO 8/24: don't need these state checks bc not im unmounting components...
+    if (this.state.gameWinner === "none") {
       if (this.state.disguiseOn) {
-        clearTimeout(this.disguiseInterval);
+        clearTimeout(this.disguiseTimeout);
       }
       if (this.state.deflectOn) {
-        clearTimeout(this.deflectInterval);
+        clearTimeout(this.deflectTimeout);
       }
       Actions.endScreenTraitor({winner: fbGameWinner, type: ActionConst.RESET});
     }
@@ -173,7 +183,7 @@ export default class MapScreenTraitor extends React.Component {
   //Causes gray circle overlay. This prevents the tracer
   //from receiving any distance/direction updates for 10 sec.
   disguisePressed() {
-    if (this.state.disguisesRemaining > 0) {
+    if (this.state.disguisesRemaining > 0 && this.state.tracerInGame) {
       this.state.disguisesRemaining = this.state.disguisesRemaining - 1;
       let updates = {};
       updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = true;
@@ -182,13 +192,13 @@ export default class MapScreenTraitor extends React.Component {
       this.setState({
         disguiseOn: true,
       }, () => {
-        this.disguiseInterval = setTimeout(this.endDisguise, 10000);
+        this.disguiseTimeout = setTimeout(this.endDisguise, 10000);
       });
     }
   }
 
   endDisguise() {
-    clearTimeout(this.disguiseInterval);
+    clearTimeout(this.disguiseTimeout);
     let updates = {};
     updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = false;
     firebase.database().ref().update(updates);
@@ -209,7 +219,7 @@ export default class MapScreenTraitor extends React.Component {
   //Vibrates phone when deflect is pressed, and sets the
   //state and the deflect interval
   deflectPressed() {
-    if (this.state.deflectsRemaining > 0) {
+    if (this.state.deflectsRemaining > 0 && this.state.tracerInGame) {
       this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
       let updates = {};
       updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = true;
@@ -218,14 +228,14 @@ export default class MapScreenTraitor extends React.Component {
       this.setState({
         deflectOn: true,
       }, () => {
-        this.deflectInterval = setTimeout(this.endDeflect, 10000);
+        this.deflectTimeout = setTimeout(this.endDeflect, 10000);
       });
     }
   }
 
   //Vibrates and sets new state when deflect ends
   endDeflect() {
-    clearTimeout(this.deflectInterval);
+    clearTimeout(this.deflectTimeout);
     let updates = {};
     updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = false;
     firebase.database().ref().update(updates);
@@ -237,8 +247,11 @@ export default class MapScreenTraitor extends React.Component {
 
   //Resets intervals and stuff at the end of game
   endGameActions() {
+    console.log("endgameactions traitor")
     clearInterval(this.interval);
     clearInterval(this.timerInterval);
+    clearInterval(this.deflectTimeout);
+    clearInterval(this.disguiseTimeout);
     let updates = {};
     updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInGame/'] = false;
     firebase.database().ref().update(updates);
@@ -263,10 +276,39 @@ export default class MapScreenTraitor extends React.Component {
     return ("Time: " + minutes + ":" + seconds);
   }
 
+  //User wants to exit modal
+  exitTimeModal() {
+    this.setState({
+      timerModalVisible: false,
+    });
+  }
+
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
         <Text>{this.returnTimerString(this.state.currentTime)}</Text>
+        <Modal
+          visible={!this.state.tracerInGame && this.state.timerModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {}}
+        >
+          <View style={styles.modalStyle}>
+            <CardSection style={styles.cardSectionStyle}>
+              <Text style={styles.textStyle}>
+                Timer won't start until tracer is in game.
+              </Text>
+            </CardSection>
+            <CardSection style={styles.cardSectionStyle}>
+              <Button
+                style={styles.buttonStyle}
+                onPress={this.exitTimeModal}
+                title='OKAY'
+              >
+              </Button>
+            </CardSection>
+          </View>
+        </Modal>
         <MapView
           provider="google"
           style={styles.map}
@@ -368,7 +410,7 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   renderContent() {
-    if (this.state.latitude != null && this.state.longitude != null) {
+    if (this.state.latitude !== null && this.state.longitude !== null) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
@@ -413,5 +455,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
+  },
+  cardSectionStyle: {
+    justifyContent: 'center'
+  },
+  textStyle: {
+    flex: 1,
+    fontSize: 18,
+    textAlign: 'center',
+    lineHeight: 40
+  },
+  modalStyle: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    position: 'relative',
+    flex: 1,
+    justifyContent: 'center'
   },
 });

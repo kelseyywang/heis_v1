@@ -37,7 +37,7 @@ export default class LogoutConfirmTracer extends React.Component {
   render() {
     return (
       <View style={styles.containerStyle}>
-        <Text style={styles.textStyle}>WUZZUP WANNA LOG OUT!?</Text>
+        <Text style={styles.textStyle}>Do you really want to log out?</Text>
         <View style={styles.buttonsRowStyle}>
           <Button
             buttonStyle={styles.buttonAltStyle}

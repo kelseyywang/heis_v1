@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import { View, Text } from 'react-native';
 import firebase from 'firebase';
-import { Actions } from 'react-native-router-flux';
+import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button, Card, CardSection, Input, Spinner } from './common';
 
 class LoginForm extends Component {
-  //TODO 8/23: get rid of big Logout button
-
   constructor(props) {
     super(props);
 
@@ -36,25 +34,28 @@ class LoginForm extends Component {
   }
 
   //Check if logged in already
-  componentWillMount(){
-    firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-            this.setState({loggedIn: true});
-        } else {
-            this.setState({loggedIn: false});
-        }
-    });
+  componentWillMount() {
+    //TODO: if already logged in, bring to start page or something.
+    // const { currentUser } = firebase.auth();
+    // if (currentUser !== null) {
+    //   if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
+    //     this.resetForm();
+    //     Actions.mapScreenTracer({type: ActionConst.RESET});
+    //   }
+    // }
   }
-  componentWillUnmount(){
+
+  componentWillUnmount() {
+    console.log("login state" + JSON.stringify(this.state));
     console.log("LoginForm unmount");
   }
   //Attempts to sign in
   onButtonPress() {
-      const {email, password} = this.state;
-      this.setState({ error: '', loading: true });
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(this.onLoginSuccess)
-        .catch(this.onLoginFail);
+    const {email, password} = this.state;
+    this.setState({ error: '', loading: true });
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(this.onLoginSuccess)
+      .catch(this.onLoginFail);
   }
 
   onLoginFail() {
@@ -65,11 +66,16 @@ class LoginForm extends Component {
   onLoginSuccess() {
     const { currentUser } = firebase.auth();
     if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
-      Actions.mapScreenTracer();
+      this.resetForm();
+      Actions.mapScreenTracer({type: ActionConst.RESET});
     }
     else if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
-      Actions.mapScreenTraitor();
+      this.resetForm();
+      Actions.mapScreenTraitor({type: ActionConst.RESET});
     }
+  }
+
+  resetForm() {
     this.setState({
       email: '',
       password: '',
@@ -134,21 +140,6 @@ class LoginForm extends Component {
     );
   }
 
-  renderContent() {
-    switch (this.state.loggedIn) {
-      case true:
-        return (
-          <Button onPress={this.logOutActions.bind(this)}>
-            Log Out
-          </Button>
-        );
-      case false:
-        return this.renderForm();
-      default:
-        return <Spinner size="large" />;
-    }
-  }
-
   renderForm() {
     return (
       <Card>
@@ -167,7 +158,7 @@ class LoginForm extends Component {
             secureTextEntry
             placeholder="password"
             value={this.state.password}
-            onChangeText={ password => this.setState({ password }) }
+            onChangeText={password => this.setState({ password })}
             label="Password"
           />
         </CardSection>
@@ -185,7 +176,7 @@ class LoginForm extends Component {
   render() {
     return (
       <View style={styles.container}>
-        {this.renderContent()}
+        {this.renderForm()}
       </View>
     );
   }

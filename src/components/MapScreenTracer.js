@@ -3,12 +3,14 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View, Vibration } from 'react-native';
-import { Spinner } from './common';
+import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
+import { Spinner, CardSection } from './common';
 
 //TODO 8/23+: make start game button/screen and countdown screen.
 //Time is determined by how far the traitor and tracer are initially
 //from each other when they press start game...
+//TODO 8/25: change modal style here and in traitor too
+
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -40,11 +42,11 @@ export default class MapScreenTracer extends React.Component {
       lastClickLonTracer: null,
       lastClickLatTraitor: null,
       lastClickLonTraitor: null,
-      modalVisible: true,
       showAimCircle: false,
       showTriggerCircle: false,
       triggersRemaining: 3,
       traitorInGame: false,
+      timerModalVisible: true,
       disguiseOn: false,
       pauseBetweenClicks: false,
       showPauseText: false,
@@ -55,6 +57,7 @@ export default class MapScreenTracer extends React.Component {
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
     this.updateTime = this.updateTime.bind(this);
+    this.exitTimeModal = this.exitTimeModal.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -68,6 +71,8 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentWillUnmount() {
+    console.log("mapScreenTracer unmount");
+    console.log("tracer state" + this.state);
     this.endGameActions();
   }
 
@@ -167,7 +172,7 @@ export default class MapScreenTracer extends React.Component {
 
   //Called when Distance button pressed
   setCurrentDistance() {
-    if (!this.state.pauseBetweenClicks) {
+    if (!this.state.pauseBetweenClicks && this.state.traitorInGame) {
       firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
       .once('value', snapshot => {
         let traitorLat = snapshot.val().latitude;
@@ -204,7 +209,7 @@ export default class MapScreenTracer extends React.Component {
 
   //Called when Direction button pressed
   setCurrentDirectionCoords() {
-    if (!this.state.pauseBetweenClicks) {
+    if (!this.state.pauseBetweenClicks && this.state.traitorInGame) {
       firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
       .once('value', snapshot => {
         let traitorLat = snapshot.val().latitude;
@@ -249,11 +254,11 @@ export default class MapScreenTracer extends React.Component {
     this.setState({
       pauseBetweenClicks: true
     });
-    this.pauseBetweenClicksInterval = setTimeout(this.resumeClicks, 5000);
+    this.pauseBetweenClicksTimeout = setTimeout(this.resumeClicks, 5000);
   }
 
   resumeClicks() {
-    clearTimeout(this.pauseBetweenClicksInterval);
+    clearTimeout(this.pauseBetweenClicksTimeout);
     this.setState({
       pauseBetweenClicks: false,
       showPauseText: false,
@@ -271,14 +276,16 @@ export default class MapScreenTracer extends React.Component {
   //Called when trigger pressed
   triggerPulled() {
     Vibration.vibrate();
-    this.state.triggersRemaining = this.state.triggersRemaining - 1;
-    if (this.state.triggersRemaining <= 0) {
-      //Traitor won as tracer ran out of triggers
-      this.state.triggersRemaining = 0;
-      this.gameWonActions("Traitor", null);
-    }
-    else {
-      this.determineWinner();
+    if (this.state.traitorInGame) {
+      this.state.triggersRemaining = this.state.triggersRemaining - 1;
+      if (this.state.triggersRemaining <= 0) {
+        //Traitor won as tracer ran out of triggers
+        this.state.triggersRemaining = 0;
+        this.gameWonActions("Traitor", null);
+      }
+      else {
+        this.determineWinner();
+      }
     }
   }
 
@@ -302,14 +309,16 @@ export default class MapScreenTracer extends React.Component {
           this.gameWonActions("Traitor deflect", null);
         }
       }
-      //None of the following is updated to firebase,
-      //preventing traitor from seeing it
-      this.setState({
-        distance: dist,
-        lastClickLatTracer: this.state.latitude,
-        lastClickLonTracer: this.state.longitude,
-        showTriggerCircle: true,
-      });
+      else {
+        //None of the following is updated to firebase,
+        //preventing traitor from seeing it
+        this.setState({
+          distance: dist,
+          lastClickLatTracer: this.state.latitude,
+          lastClickLonTracer: this.state.longitude,
+          showTriggerCircle: true,
+        });
+      }
     });
   }
 
@@ -319,7 +328,6 @@ export default class MapScreenTracer extends React.Component {
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = winnerString;
     firebase.database().ref().update(updates);
-    //TODO: delete this.endGameActions();
     Actions.endScreenTracer({winner: winnerString, endDistance: endDist, type: ActionConst.RESET});
   }
 
@@ -335,6 +343,7 @@ export default class MapScreenTracer extends React.Component {
   endGameActions() {
     clearInterval(this.interval);
     clearInterval(this.timerInterval);
+    clearTimeout(this.pauseBetweenClicksTimeout);
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = false;
     firebase.database().ref().update(updates);
@@ -359,10 +368,39 @@ export default class MapScreenTracer extends React.Component {
     return ("Time: " + minutes + ":" + seconds);
   }
 
+  //User wants to exit modal
+  exitTimeModal() {
+    this.setState({
+      timerModalVisible: false,
+    });
+  }
+
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
         <Text>{this.returnTimerString(this.state.currentTime)}</Text>
+        <Modal
+          visible={!this.state.traitorInGame && this.state.timerModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {}}
+        >
+          <View style={styles.modalStyle}>
+            <CardSection style={styles.cardSectionStyle}>
+              <Text style={styles.textStyle}>
+                Timer won't start until traitor is in game.
+              </Text>
+            </CardSection>
+            <CardSection style={styles.cardSectionStyle}>
+              <Button
+                style={styles.buttonStyle}
+                onPress={this.exitTimeModal}
+                title='OKAY'
+              >
+              </Button>
+            </CardSection>
+          </View>
+        </Modal>
         <MapView
           provider="google"
           style={styles.map}
@@ -436,7 +474,7 @@ export default class MapScreenTracer extends React.Component {
           }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
-          {this.state.showPauseText &&
+          {this.state.showPauseText && this.state.traitorInGame &&
             <Text>Must wait 5 sec. between clues</Text>
           }
           <Button
@@ -473,9 +511,9 @@ export default class MapScreenTracer extends React.Component {
   }
 
   renderContent() {
-    if (this.state.latitude != null && this.state.longitude != null &&
-    this.state.distance != null && this.state.directionCoords != null &&
-    this.state.showDirection != null && this.state.showDistance != null) {
+    if (this.state.latitude !== null && this.state.longitude !== null &&
+    this.state.distance !== null && this.state.directionCoords !== null &&
+    this.state.showDirection !== null && this.state.showDistance !== null) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
@@ -522,7 +560,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(64, 52, 109, 1)',
   },
   cardSectionStyle: {
-  justifyContent: 'center'
+    justifyContent: 'center'
   },
   textStyle: {
     flex: 1,
@@ -535,5 +573,5 @@ const styles = StyleSheet.create({
     position: 'relative',
     flex: 1,
     justifyContent: 'center'
-  }
+  },
 });

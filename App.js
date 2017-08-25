@@ -8,6 +8,13 @@ import EndScreenTraitor from './src/components/EndScreenTraitor';
 import LogoutConfirmTraitor from './src/components/LogoutConfirmTraitor';
 import LogoutConfirmTracer from './src/components/LogoutConfirmTracer';
 
+//PROBLEM TODO:
+//1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
+//and tracer triggers. Causes error "Can only update a mounted or mounting component"
+//I've also seen the same error on MapScreenTraitor after logout or login?
+
+
+
 import { Header } from './src/components/common';
 
 export default class App extends React.Component {
@@ -29,7 +36,7 @@ export default class App extends React.Component {
             title="Traitor Map"
             hideBackImage
             renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTraitor({type: ActionConst.RESET});}}
+            onRight={() => {Actions.logoutConfirmTraitor();}}
             onBack={() => {}}
             rightTitle={"Log out"}
             panHandlers={null}
@@ -40,7 +47,7 @@ export default class App extends React.Component {
             title="Tracer Map"
             hideBackImage
             renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer({type: ActionConst.RESET});}}
+            onRight={() => {Actions.logoutConfirmTracer();}}
             onBack={() => {}}
             rightTitle={"Log out"}
             panHandlers={null}
@@ -51,7 +58,7 @@ export default class App extends React.Component {
             title="Game Over, Traitor ;^)"
             hideBackImage
             renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTraitor({type: ActionConst.RESET});}}
+            onRight={() => {Actions.logoutConfirmTraitor();}}
             onBack={() => {}}
             rightTitle={"Log out"}
             onBack={() => {}}
@@ -64,7 +71,7 @@ export default class App extends React.Component {
             title="Game Over, Tracer ;^)"
             hideBackImage
             renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer({type: ActionConst.RESET});}}
+            onRight={() => {Actions.logoutConfirmTracer();}}
             onBack={() => {}}
             rightTitle={"Log out"}
             panHandlers={null}
