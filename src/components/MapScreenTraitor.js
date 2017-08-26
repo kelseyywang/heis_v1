@@ -96,7 +96,7 @@ export default class MapScreenTraitor extends React.Component {
         //Check if tracer is logged in, and if so, start timer.
         //TODO: see if it's necessary to have timerInterval === null?
         if (!this.state.tracerInGame && fbTracerInGame &&
-          this.state.currentTime === 0 && this.timerInterval === null) {
+          this.state.currentTime === 0) {
           this.timerStart = new Date().getTime();
           this.timerInterval = setInterval(this.updateTime, 1000);
         }

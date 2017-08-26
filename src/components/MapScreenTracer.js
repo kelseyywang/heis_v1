@@ -51,8 +51,11 @@ export default class MapScreenTracer extends React.Component {
       pauseBetweenClicks: false,
       showPauseText: false,
       currentTime: 0,
+      showCountdown: false,
     };
     this.range = 70;
+    this.countdownTotal = 0;
+    this.currentCountdownAmount = 0;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -65,28 +68,34 @@ export default class MapScreenTracer extends React.Component {
   componentDidMount() {
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
+    this.countdownInterval = null;
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = true;
     firebase.database().ref().update(updates);
   }
 
   componentWillUnmount() {
-    console.log("mapScreenTracer unmount");
-    console.log("tracer state" + this.state);
     this.endGameActions();
   }
 
   //Updates timer and tracer's position
   //Also pulls disguise info from firebase
   callCurrentPosition() {
-    //Check if traitor is in game, if so, start timer
+    //Check if traitor is in game, if so, start countdown
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
       let fbTraitorInGame = snapshot.val().traitorInGame;
-      if (!this.state.traitorInGame && fbTraitorInGame &&
-        this.state.currentTime === 0 && this.timerInterval === null) {
-        this.timerStart = new Date().getTime();
-        this.timerInterval = setInterval(this.updateTime, 1000);
+      if (fbTraitorInGame &&
+        this.currentCountdownAmount === 0 && this.countdownInterval === null/*this.state.currentTime === 0 && this.timerInterval === null*/) {
+          console.log("This should only be called once!");
+          this.startCountdown();
+          //TODO: this currently works as in it only calls this once a game no matter
+          //who enters game first. You need to update the countdown stuff and determine
+          //countdown time.
+          //TODO 8/26: think about if you can use countdownInterval and set it using the
+          //locations with this method, and maybe upload the countdown time to firebase?
+          //But what if traitor logs in after tracer? Or more importantly, traitor logs in before tracer?
+          //this.startTimer();
       }
       this.setState({
         traitorInGame: fbTraitorInGame,
@@ -104,6 +113,30 @@ export default class MapScreenTracer extends React.Component {
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+  }
+
+  //Starts countdown after both players are in game
+  startCountdown() {
+    this.setCountdownTotal();
+    this.countdownInterval = setInterval(this.updateCountdown, 1000);
+    this.setState({
+      showCountdown: true,
+    });
+  }
+
+  updateCountdown() {
+    console.log("update countdown");
+    this.currentCountdownAmount += 1;
+  }
+
+  setCountdownTotal() {
+    console.log("set countdown total");
+  }
+
+  //Starts timer after countdown ends
+  startTimer() {
+    this.timerStart = new Date().getTime();
+    this.timerInterval = setInterval(this.updateTime, 1000);
   }
 
   //Sets current state variables to firebase

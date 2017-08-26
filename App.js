@@ -1,5 +1,5 @@
 import React from 'react';
-import {Scene, Router, Actions, ActionConst} from 'react-native-router-flux';
+import {Scene, Router, Actions } from 'react-native-router-flux';
 import LoginForm from './src/components/LoginForm';
 import MapScreenTraitor from './src/components/MapScreenTraitor';
 import MapScreenTracer from './src/components/MapScreenTracer';
@@ -7,15 +7,15 @@ import EndScreenTracer from './src/components/EndScreenTracer';
 import EndScreenTraitor from './src/components/EndScreenTraitor';
 import LogoutConfirmTraitor from './src/components/LogoutConfirmTraitor';
 import LogoutConfirmTracer from './src/components/LogoutConfirmTracer';
+import StartGameTraitor from './src/components/StartGameTraitor';
+import StartGameTracer from './src/components/StartGameTracer';
+import { Header } from './src/components/common';
 
 //PROBLEM TODO:
 //1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 //and tracer triggers. Causes error "Can only update a mounted or mounting component"
 //I've also seen the same error on MapScreenTraitor after logout or login?
 
-
-
-import { Header } from './src/components/common';
 
 export default class App extends React.Component {
 
@@ -29,6 +29,28 @@ export default class App extends React.Component {
             title="Login"
             onBack={() => {}}
             initial
+          />
+          <Scene
+            key="startGameTraitor"
+            component={StartGameTraitor}
+            title="Start Game?"
+            hideBackImage
+            renderLeftButton={() => (null)}
+            onRight={() => {Actions.logoutConfirmTraitor();}}
+            onBack={() => {}}
+            rightTitle={"Log out"}
+            panHandlers={null}
+          />
+          <Scene
+            key="startGameTracer"
+            component={StartGameTracer}
+            title="Start Game?"
+            hideBackImage
+            renderLeftButton={() => (null)}
+            onRight={() => {Actions.logoutConfirmTracer();}}
+            onBack={() => {}}
+            rightTitle={"Log out"}
+            panHandlers={null}
           />
           <Scene
             key="mapScreenTraitor"

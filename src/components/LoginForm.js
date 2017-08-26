@@ -67,11 +67,11 @@ class LoginForm extends Component {
     const { currentUser } = firebase.auth();
     if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
       this.resetForm();
-      Actions.mapScreenTracer({type: ActionConst.RESET});
+      Actions.startGameTracer({type: ActionConst.RESET});
     }
     else if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
       this.resetForm();
-      Actions.mapScreenTraitor({type: ActionConst.RESET});
+      Actions.startGameTraitor({type: ActionConst.RESET});
     }
   }
 
