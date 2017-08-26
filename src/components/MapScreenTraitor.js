@@ -4,7 +4,7 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
-import { Spinner, CardSection } from './common';
+import { Spinner } from './common';
 
 //TODO (eventually): change rules in firebase
 //TODO: think about whether you want to make this a time-based
@@ -294,19 +294,17 @@ export default class MapScreenTraitor extends React.Component {
           onRequestClose={() => {}}
         >
           <View style={styles.modalStyle}>
-            <CardSection style={styles.cardSectionStyle}>
+            <View style={styles.cardSectionStyle}>
               <Text style={styles.textStyle}>
-                Timer won't start until tracer is in game.
+                Tracer is not in the game
               </Text>
-            </CardSection>
-            <CardSection style={styles.cardSectionStyle}>
               <Button
                 style={styles.buttonStyle}
                 onPress={this.exitTimeModal}
                 title='OKAY'
               >
               </Button>
-            </CardSection>
+            </View>
           </View>
         </Modal>
         <MapView
@@ -402,9 +400,6 @@ export default class MapScreenTraitor extends React.Component {
             />
         </View>
       </View>
-      {!this.state.tracerInGame &&
-        <Text>Tracer Not in Game </Text>
-      }
     </View>
     );
   }
@@ -457,7 +452,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardSectionStyle: {
-    justifyContent: 'center'
+    borderBottomWidth: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+    borderColor: '#ddd',
+    height: 150,
   },
   textStyle: {
     flex: 1,
@@ -468,7 +469,9 @@ const styles = StyleSheet.create({
   modalStyle: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     position: 'relative',
-    flex: 1,
-    justifyContent: 'center'
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1
   },
 });

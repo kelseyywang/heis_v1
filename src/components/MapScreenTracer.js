@@ -4,7 +4,7 @@ import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
-import { Spinner, CardSection } from './common';
+import { Spinner } from './common';
 
 //TODO 8/23+: make start game button/screen and countdown screen.
 //Time is determined by how far the traitor and tracer are initially
@@ -386,19 +386,18 @@ export default class MapScreenTracer extends React.Component {
           onRequestClose={() => {}}
         >
           <View style={styles.modalStyle}>
-            <CardSection style={styles.cardSectionStyle}>
+            <View style={styles.cardSectionStyle}>
               <Text style={styles.textStyle}>
-                Timer won't start until traitor is in game.
+                Traitor is not in the game
               </Text>
-            </CardSection>
-            <CardSection style={styles.cardSectionStyle}>
               <Button
                 style={styles.buttonStyle}
                 onPress={this.exitTimeModal}
                 title='OKAY'
               >
               </Button>
-            </CardSection>
+            </View>
+
           </View>
         </Modal>
         <MapView
@@ -503,10 +502,7 @@ export default class MapScreenTracer extends React.Component {
             />
           </View>
         </View>
-        {!this.state.traitorInGame &&
-          <Text>Traitor Not in Game </Text>
-        }
-    </View>
+      </View>
     );
   }
 
@@ -560,7 +556,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(64, 52, 109, 1)',
   },
   cardSectionStyle: {
-    justifyContent: 'center'
+    borderBottomWidth: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+    borderColor: '#ddd',
+    height: 150
   },
   textStyle: {
     flex: 1,
@@ -571,7 +573,9 @@ const styles = StyleSheet.create({
   modalStyle: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     position: 'relative',
-    flex: 1,
-    justifyContent: 'center'
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1
   },
 });
