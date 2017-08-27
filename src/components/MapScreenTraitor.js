@@ -13,6 +13,9 @@ import { Spinner } from './common';
 //every time the traitor deflects, and it's basically just a shield,
 //not necessarily reflective. Or there can be both...??
 //Prob should be time based bc traitor will be bored after using all their weapons
+
+
+//TODO 8/27: make new modal, make countdown time based on location
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -41,7 +44,8 @@ export default class MapScreenTraitor extends React.Component {
       tracerInGame: false,
       timerModalVisible: true,
       gameWinner: "none",
-      currentTime: 0,
+      currentTime: 60,
+      showCountdown: true,
     };
     this.range = 70;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
@@ -62,8 +66,6 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log("mapScreenTraitor unmount");
-    console.log("traitor state" + this.state);
     this.endGameActions();
   }
 
@@ -93,12 +95,24 @@ export default class MapScreenTraitor extends React.Component {
               !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor, fbDirectionCoordsForTraitor)) {
           Vibration.vibrate();
         }
-        //Check if tracer is logged in, and if so, start timer.
-        //TODO: see if it's necessary to have timerInterval === null?
+        //Check if tracer is logged in, and if so, start countdown.
+        let fbCountdownTotal = snapshot.val().countdownTotal;
         if (!this.state.tracerInGame && fbTracerInGame &&
-          this.state.currentTime === 0) {
-          this.timerStart = new Date().getTime();
-          this.timerInterval = setInterval(this.updateTime, 1000);
+          this.state.currentTime === 0 && fbCountdownTotal > 0) {
+            //TODO 8/26: change !== 5 above
+            //fbCountdownTotal has a value, so set countdownTotal
+            console.log("fbcountdowntotal traitor" + fbCountdownTotal);
+            this.countdownTotal = fbCountdownTotal;
+            this.startCountdown();
+        }
+        console.log("countdowntotal " + this.countdownTotal + " ffbTracer in game " + fbTracerInGame);
+        //TODO 8/26: change the !== 5 and == =5
+        if (this.countdownTotal !== 20 && fbTracerInGame && fbCountdownTotal > 0) {
+          //If countdownTotal hasn't been set because of asynchronous
+          //firebase uploading by tracer, then pull from firebase again
+          console.log("second fbcountdowntotal traitor" + fbCountdownTotal);
+          this.countdownTotal = fbCountdownTotal;
+          this.startCountdown();
         }
           this.setState({
             showDistance: fbShowDistance,
@@ -115,6 +129,19 @@ export default class MapScreenTraitor extends React.Component {
       }
     });
   }
+
+  //Determines countdown amount and starts countdown after both players are in game
+  startCountdown() {
+    this.timerStart = new Date().getTime();
+    this.countdownInterval = setInterval(this.updateTime, 1000);
+  }
+
+  //Starts timer after countdown ends
+  startTimer() {
+    this.timerStart = new Date().getTime();
+    this.timerInterval = setInterval(this.updateTime, 1000);
+  }
+
   //Check if game has ended
   hasGameEnded(fbGameWinner) {
     //TODO 8/24: don't need these state checks bc not im unmounting components...
@@ -131,10 +158,32 @@ export default class MapScreenTraitor extends React.Component {
 
   //Updates timer
   updateTime() {
-    let currTime = new Date().getTime() - this.timerStart;
-    this.setState({
-      currentTime: currTime / 1000,
-    });
+    if (this.state.showCountdown){
+      if (this.state.currentTime < 1) {
+        //End countdown
+        this.timerStart = new Date().getTime();
+        this.setState({
+          showCountdown: false,
+          currentTime: 0,
+        });
+        this.startTimer();
+      }
+      else {
+        //Get the time remaining in countdown
+        let currCountdownTime = 1 + this.countdownTotal -
+          ((new Date().getTime() - this.timerStart) / 1000);
+          this.setState({
+            currentTime: currCountdownTime,
+          });
+      }
+    }
+    else {
+      //Get game time
+      let currTime = new Date().getTime() - this.timerStart;
+        this.setState({
+          currentTime: currTime / 1000,
+        });
+    }
   }
 
   compareDirectionCoordsForTraitor(c1, c2) {
@@ -273,7 +322,7 @@ export default class MapScreenTraitor extends React.Component {
     else {
       seconds = "" + Math.floor(numSeconds % 60);
     }
-    return ("Time: " + minutes + ":" + seconds);
+    return (minutes + ":" + seconds);
   }
 
   //User wants to exit modal
@@ -286,7 +335,8 @@ export default class MapScreenTraitor extends React.Component {
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
-        <Text>{this.returnTimerString(this.state.currentTime)}</Text>
+        {!this.state.showCountdown &&
+          <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
         <Modal
           visible={!this.state.tracerInGame && this.state.timerModalVisible}
           transparent
@@ -380,6 +430,9 @@ export default class MapScreenTraitor extends React.Component {
         }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
+          {this.state.showCountdown &&
+            <Text>{"Countdown: " + this.returnTimerString(this.state.currentTime)}</Text>
+          }
           <Button
             buttonStyle={styles.buttonStyle}
             color='rgba(64, 52, 109, 1)'

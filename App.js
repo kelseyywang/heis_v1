@@ -33,7 +33,7 @@ export default class App extends React.Component {
           <Scene
             key="startGameTraitor"
             component={StartGameTraitor}
-            title="Start Game?"
+            title="Traitor Start Game?"
             hideBackImage
             renderLeftButton={() => (null)}
             onRight={() => {Actions.logoutConfirmTraitor();}}
@@ -44,7 +44,7 @@ export default class App extends React.Component {
           <Scene
             key="startGameTracer"
             component={StartGameTracer}
-            title="Start Game?"
+            title="Tracer Start Game?"
             hideBackImage
             renderLeftButton={() => (null)}
             onRight={() => {Actions.logoutConfirmTracer();}}

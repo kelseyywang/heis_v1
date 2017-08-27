@@ -9,7 +9,6 @@ import { Spinner } from './common';
 //TODO 8/23+: make start game button/screen and countdown screen.
 //Time is determined by how far the traitor and tracer are initially
 //from each other when they press start game...
-//TODO 8/25: change modal style here and in traitor too
 
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
@@ -50,12 +49,10 @@ export default class MapScreenTracer extends React.Component {
       disguiseOn: false,
       pauseBetweenClicks: false,
       showPauseText: false,
-      currentTime: 0,
-      showCountdown: false,
+      currentTime: 60,
+      showCountdown: true,
     };
     this.range = 70;
-    this.countdownTotal = 0;
-    this.currentCountdownAmount = 0;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -85,17 +82,9 @@ export default class MapScreenTracer extends React.Component {
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
       let fbTraitorInGame = snapshot.val().traitorInGame;
-      if (fbTraitorInGame &&
-        this.currentCountdownAmount === 0 && this.countdownInterval === null/*this.state.currentTime === 0 && this.timerInterval === null*/) {
-          console.log("This should only be called once!");
-          this.startCountdown();
-          //TODO: this currently works as in it only calls this once a game no matter
-          //who enters game first. You need to update the countdown stuff and determine
-          //countdown time.
-          //TODO 8/26: think about if you can use countdownInterval and set it using the
-          //locations with this method, and maybe upload the countdown time to firebase?
-          //But what if traitor logs in after tracer? Or more importantly, traitor logs in before tracer?
-          //this.startTimer();
+      if (fbTraitorInGame && this.countdownInterval === null/*this.state.currentTime === 0 && this.timerInterval === null*/) {
+        console.log("This should only be called once!");
+        this.startCountdown();
       }
       this.setState({
         traitorInGame: fbTraitorInGame,
@@ -115,22 +104,19 @@ export default class MapScreenTracer extends React.Component {
     );
   }
 
-  //Starts countdown after both players are in game
+  //Determines countdown amount and starts countdown after both players are in game
   startCountdown() {
     this.setCountdownTotal();
-    this.countdownInterval = setInterval(this.updateCountdown, 1000);
-    this.setState({
-      showCountdown: true,
-    });
-  }
-
-  updateCountdown() {
-    console.log("update countdown");
-    this.currentCountdownAmount += 1;
+    this.timerStart = new Date().getTime();
+    this.countdownInterval = setInterval(this.updateTime, 1000);
   }
 
   setCountdownTotal() {
-    console.log("set countdown total");
+    //TODO 8/26: get locations from firebase and find distance, compute countdownTotal
+    let updates = {};
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/countdownTotal/'] = 20;
+    this.countdownTotal = 20;
+    firebase.database().ref().update(updates);
   }
 
   //Starts timer after countdown ends
@@ -366,10 +352,39 @@ export default class MapScreenTracer extends React.Component {
 
   //Updates timer
   updateTime() {
-  let currTime = new Date().getTime() - this.timerStart;
-    this.setState({
-      currentTime: currTime / 1000,
-    });
+    console.log("showCountdown is " + this.state.showCountdown);
+    if (this.state.showCountdown){
+      console.log("1 tracer countdownTotal is " + this.countdownTotal);
+      console.log("currentTime is " + this.state.currentTime);
+      if (this.state.currentTime < 1) {
+        //End countdown
+        //TODO 8/26: CAN I RESET timerStart like this after countdown ends?
+        //console.log("timerStart for real timer: " + this.timerStart);
+        this.timerStart = new Date().getTime();
+        console.log("timer start is " + this.timerStart);
+        this.setState({
+          showCountdown: false,
+          currentTime: 0,
+        });
+        this.startTimer();
+      }
+      else {
+        //Get the time remaining in countdown
+        console.log("tracer countdownTotal is " + this.countdownTotal);
+        let currCountdownTime = 1 + this.countdownTotal -
+          ((new Date().getTime() - this.timerStart) / 1000);
+          this.setState({
+            currentTime: currCountdownTime,
+          });
+      }
+    }
+    else {
+      //Get game time
+      let currTime = new Date().getTime() - this.timerStart;
+        this.setState({
+          currentTime: currTime / 1000,
+        });
+    }
   }
 
   //Resets intervals and stuff at the end of game
@@ -377,6 +392,7 @@ export default class MapScreenTracer extends React.Component {
     clearInterval(this.interval);
     clearInterval(this.timerInterval);
     clearTimeout(this.pauseBetweenClicksTimeout);
+    clearInterval(this.countdownInterval);
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = false;
     firebase.database().ref().update(updates);
@@ -398,7 +414,7 @@ export default class MapScreenTracer extends React.Component {
     else {
       seconds = "" + Math.floor(numSeconds % 60);
     }
-    return ("Time: " + minutes + ":" + seconds);
+    return (minutes + ":" + seconds);
   }
 
   //User wants to exit modal
@@ -411,7 +427,8 @@ export default class MapScreenTracer extends React.Component {
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
-        <Text>{this.returnTimerString(this.state.currentTime)}</Text>
+        {!this.state.showCountdown &&
+          <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
         <Modal
           visible={!this.state.traitorInGame && this.state.timerModalVisible}
           transparent
@@ -430,7 +447,6 @@ export default class MapScreenTracer extends React.Component {
               >
               </Button>
             </View>
-
           </View>
         </Modal>
         <MapView
@@ -508,6 +524,9 @@ export default class MapScreenTracer extends React.Component {
         <View style={styles.buttonsContainerStyle}>
           {this.state.showPauseText && this.state.traitorInGame &&
             <Text>Must wait 5 sec. between clues</Text>
+          }
+          {this.state.showCountdown &&
+            <Text>{"Countdown: " + this.returnTimerString(this.state.currentTime)}</Text>
           }
           <Button
             buttonStyle={styles.buttonStyle}
