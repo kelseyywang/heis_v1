@@ -11,13 +11,13 @@ export default class EndScreenTraitor extends React.Component {
   printMessage() {
     const winner = this.props.winner;
     if (winner === "Tracer") {
-      return `Tracer wins! You got caught, LOSER!!`;
+      return `u lose bitch - got caught by tracer. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor") {
-      return "guud, you won! Tracer ran out of triggers... how irresponsible and SAD.";
+      return `gud shit you won bc tracer ran out of triggers. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor deflect") {
-      return "nice, you deflected and won! woOoOooooOOOOOO";
+      return `yoo you deflected and won. Game time: ${Math.floor(this.props.endTime)}`;
     }
     return "There's something wrong here because I didn't get my winner prop.";
   }
@@ -89,7 +89,7 @@ export default class EndScreenTraitor extends React.Component {
 
 const styles = StyleSheet.create({
   containerStyle: {
-    marginTop: 20,
+    margin: 20,
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',

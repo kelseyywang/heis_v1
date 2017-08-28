@@ -12,13 +12,13 @@ export default class EndScreenTracer extends React.Component {
   printMessage() {
     const winner = this.props.winner;
     if (winner === "Tracer") {
-      return `Nice, you won! You fired at a range of ${this.props.endDistance} meters n caught that traitorous lil bitch!`;
+      return `u win! u fired at a range of ${this.props.endDistance} meters n caught that traitorous lil bitch! Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor") {
-      return "Traitor wins! You ran out of triggers... how irresponsible and SAD.";
+      return `u lose u peasant bc u ran out of triggers. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor deflect") {
-      return "Traitor wins by deflect! How does it feel to have your weapon used against you, LOSER!?";
+      return `u lose bc traitor deflected ur trigger bitch. Game time: ${Math.floor(this.props.endTime)}`;
     }
     return "There's something wrong here because I didn't get my winner prop.";
   }
@@ -89,7 +89,7 @@ export default class EndScreenTracer extends React.Component {
 
 const styles = StyleSheet.create({
   containerStyle: {
-    marginTop: 20,
+    margin: 20,
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',

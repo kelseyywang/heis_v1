@@ -17,8 +17,6 @@ import { Spinner } from './common';
 
 //TODO 8/27: make new modal
 //TODO 8/27 send game time prop when someone wins
-//TODO 8/27: if you log out, the interval isn't cleared so the location
-//is still updated on firebase sometimes and it's not 0 as it should be
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -48,7 +46,7 @@ export default class MapScreenTraitor extends React.Component {
       timerModalVisible: true,
       gameWinner: "none",
       currentTime: 60,
-      showCountdown: true,
+      showCountdown: false,
     };
     this.range = 70;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
@@ -104,6 +102,9 @@ export default class MapScreenTraitor extends React.Component {
           this.state.currentTime === 0 && fbCountdownTotal > 0) {
             //fbCountdownTotal has a value, so set countdownTotal
             this.countdownTotal = fbCountdownTotal;
+            this.setState({
+              showCountdown: true,
+            });
             this.startCountdown();
         }
         //TODO 8/26: change the !== 5 and == =5
@@ -111,6 +112,9 @@ export default class MapScreenTraitor extends React.Component {
           //If countdownTotal hasn't been set because of asynchronous
           //firebase uploading by tracer, then pull from firebase again
           this.countdownTotal = fbCountdownTotal;
+          this.setState({
+            showCountdown: true,
+          });
           this.startCountdown();
         }
           this.setState({
@@ -151,7 +155,7 @@ export default class MapScreenTraitor extends React.Component {
       if (this.state.deflectOn) {
         clearTimeout(this.deflectTimeout);
       }
-      Actions.endScreenTraitor({winner: fbGameWinner, type: ActionConst.RESET});
+      Actions.endScreenTraitor({winner: fbGameWinner, endTime: this.state.currentTime, type: ActionConst.RESET});
     }
   }
 
@@ -340,13 +344,13 @@ export default class MapScreenTraitor extends React.Component {
         {!this.state.showCountdown &&
           <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
         <Modal
-          visible={!this.state.tracerInGame && this.state.timerModalVisible}
+          visible={!this.state.showCountdown && !this.state.tracerInGame && this.state.timerModalVisible}
           transparent
           animationType="slide"
           onRequestClose={() => {}}
         >
           <View style={styles.modalStyle}>
-            <View style={styles.cardSectionStyle}>
+            <View style={styles.modalSectionStyle}>
               <Text style={styles.textStyle}>
                 Tracer is not in the game
               </Text>
@@ -359,6 +363,20 @@ export default class MapScreenTraitor extends React.Component {
             </View>
           </View>
         </Modal>
+        <Modal
+        visible={this.state.showCountdown}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {}}
+        >
+        <View style={styles.modalStyle}>
+          <View style={styles.modalShortSectionStyle}>
+            <Text style={styles.textStyle}>
+              {"Run! Countdown: " + this.returnTimerString(this.state.currentTime)}
+            </Text>
+          </View>
+        </View>
+      </Modal>
         <MapView
           provider="google"
           style={styles.map}
@@ -432,9 +450,6 @@ export default class MapScreenTraitor extends React.Component {
         }
         </MapView>
         <View style={styles.buttonsContainerStyle}>
-          {this.state.showCountdown &&
-            <Text>{"Countdown: " + this.returnTimerString(this.state.currentTime)}</Text>
-          }
           <Button
             buttonStyle={styles.buttonStyle}
             color='rgba(64, 52, 109, 1)'
@@ -506,7 +521,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  cardSectionStyle: {
+  modalSectionStyle: {
     borderBottomWidth: 1,
     padding: 15,
     backgroundColor: '#fff',
@@ -515,11 +530,20 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     height: 150,
   },
+  modalShortSectionStyle: {
+    borderBottomWidth: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+    borderColor: '#ddd',
+    height: 70,
+  },
   textStyle: {
     flex: 1,
     fontSize: 18,
     textAlign: 'center',
-    lineHeight: 40
+    lineHeight: 40,
   },
   modalStyle: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
@@ -527,6 +551,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1
+    flex: 1,
   },
 });

@@ -15,6 +15,10 @@ import { Header } from './src/components/common';
 //1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 //and tracer triggers. Causes error "Can only update a mounted or mounting component"
 //I've also seen the same error on MapScreenTraitor after logout or login?
+//2. 8/27 - MapScreenTraitor - if you log out, the interval isn't cleared so the location
+//is still updated on firebase sometimes and it's not 0 as it should be
+//GENERAL TODO:
+//make option to switch to tracer or traitor!
 
 
 export default class App extends React.Component {

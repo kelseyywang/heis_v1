@@ -50,7 +50,7 @@ export default class MapScreenTracer extends React.Component {
       pauseBetweenClicks: false,
       showPauseText: false,
       currentTime: 60,
-      showCountdown: true,
+      showCountdown: false,
     };
     this.range = 70;
     //The following instance vars are to determine countdown time
@@ -94,7 +94,9 @@ export default class MapScreenTracer extends React.Component {
     .once('value', snapshot => {
       let fbTraitorInGame = snapshot.val().traitorInGame;
       if (fbTraitorInGame && this.countdownInterval === null) {
-        console.log("This should only be called once!");
+        this.setState({
+          showCountdown: true,
+        });
         this.startCountdown();
       }
       this.setState({
@@ -134,23 +136,18 @@ export default class MapScreenTracer extends React.Component {
     .then(() => {
       if (traitorStartLat === 0 || traitorStartLon === 0) {
         //traitor's position hasn't been uploaded to firebase yet, need to wait
-        console.log("traitor is 0");
         this.getTraitorPosTimeout = setTimeout(this.setCountdownTotal.bind(this), 500);
       }
       else {
         clearTimeout(this.getTraitorPosTimeout);
         //traitor's position has been uploaded to firebase
-        console.log("traitorStartLat is " + traitorStartLat);
-        console.log("tracer start lat is "+ this.state.latitude);
         let startDistance = this.calcDistance(this.state.latitude, this.state.longitude, traitorStartLat, traitorStartLon);
-        console.log("start dist" + startDistance);
         this.countdownTotal = this.calcCountdownAmount(startDistance);
         let updates = {};
         updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/countdownTotal/'] = this.countdownTotal;
         firebase.database().ref().update(updates);
       }
     });
-
   }
 
   calcCountdownAmount(myDist) {
@@ -400,7 +397,7 @@ export default class MapScreenTracer extends React.Component {
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = winnerString;
     firebase.database().ref().update(updates);
-    Actions.endScreenTracer({winner: winnerString, endDistance: endDist, type: ActionConst.RESET});
+    Actions.endScreenTracer({winner: winnerString, endDistance: endDist, endTime: this.state.currentTime, type: ActionConst.RESET});
   }
 
   //Updates timer
@@ -471,36 +468,23 @@ export default class MapScreenTracer extends React.Component {
       timerModalVisible: false,
     });
   }
-/*
-{this.state.showCountdown &&
-  <Modal
-  visible={true}
-  transparent
-  animationType="slide"
-  onRequestClose={() => {}}
-  >
-  <View style={styles.modalStyle}>
-    <View style={styles.cardSectionStyle}>
-      <Text style={styles.textStyle}>
-        {"Countdown: " + this.returnTimerString(this.state.currentTime)}
-      </Text>
-    </View>
-  </View>
-</Modal>}
-*/
+
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
         {!this.state.showCountdown &&
           <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
+
+        {this.state.showCountdown &&
+          <Text>{"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}</Text>}
         <Modal
-          visible={!this.state.traitorInGame && this.state.timerModalVisible}
+          visible={!this.state.showCountdown && !this.state.traitorInGame && this.state.timerModalVisible}
           transparent
           animationType="slide"
           onRequestClose={() => {}}
         >
           <View style={styles.modalStyle}>
-            <View style={styles.cardSectionStyle}>
+            <View style={styles.modalSectionStyle}>
               <Text style={styles.textStyle}>
                 Traitor is not in the game
               </Text>
@@ -513,6 +497,20 @@ export default class MapScreenTracer extends React.Component {
             </View>
           </View>
         </Modal>
+        <Modal
+        visible={this.state.showCountdown}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {}}
+        >
+        <View style={styles.modalStyle}>
+          <View style={styles.modalShortSectionStyle}>
+            <Text style={styles.textStyle}>
+              {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
+            </Text>
+          </View>
+        </View>
+      </Modal>
         <MapView
           provider="google"
           style={styles.map}
@@ -589,9 +587,6 @@ export default class MapScreenTracer extends React.Component {
           {this.state.showPauseText && this.state.traitorInGame &&
             !this.state.showCountdown &&
             <Text>Must wait 5 sec. between clues</Text>
-          }
-          {this.state.showCountdown &&
-            <Text>{"Countdown: " + this.returnTimerString(this.state.currentTime)}</Text>
           }
           <Button
             buttonStyle={styles.buttonStyle}
@@ -672,7 +667,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
   },
-  cardSectionStyle: {
+  modalSectionStyle: {
     borderBottomWidth: 1,
     padding: 15,
     backgroundColor: '#fff',
@@ -680,6 +675,15 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderColor: '#ddd',
     height: 150
+  },
+  modalShortSectionStyle: {
+    borderBottomWidth: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+    borderColor: '#ddd',
+    height: 70
   },
   textStyle: {
     flex: 1,
