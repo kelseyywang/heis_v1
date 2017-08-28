@@ -15,7 +15,10 @@ import { Spinner } from './common';
 //Prob should be time based bc traitor will be bored after using all their weapons
 
 
-//TODO 8/27: make new modal, make countdown time based on location
+//TODO 8/27: make new modal
+//TODO 8/27 send game time prop when someone wins
+//TODO 8/27: if you log out, the interval isn't cleared so the location
+//is still updated on firebase sometimes and it's not 0 as it should be
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -99,18 +102,14 @@ export default class MapScreenTraitor extends React.Component {
         let fbCountdownTotal = snapshot.val().countdownTotal;
         if (!this.state.tracerInGame && fbTracerInGame &&
           this.state.currentTime === 0 && fbCountdownTotal > 0) {
-            //TODO 8/26: change !== 5 above
             //fbCountdownTotal has a value, so set countdownTotal
-            console.log("fbcountdowntotal traitor" + fbCountdownTotal);
             this.countdownTotal = fbCountdownTotal;
             this.startCountdown();
         }
-        console.log("countdowntotal " + this.countdownTotal + " ffbTracer in game " + fbTracerInGame);
         //TODO 8/26: change the !== 5 and == =5
-        if (this.countdownTotal !== 20 && fbTracerInGame && fbCountdownTotal > 0) {
+        if (!(this.countdownTotal > 0) && fbTracerInGame && fbCountdownTotal > 0) {
           //If countdownTotal hasn't been set because of asynchronous
           //firebase uploading by tracer, then pull from firebase again
-          console.log("second fbcountdowntotal traitor" + fbCountdownTotal);
           this.countdownTotal = fbCountdownTotal;
           this.startCountdown();
         }
@@ -161,6 +160,7 @@ export default class MapScreenTraitor extends React.Component {
     if (this.state.showCountdown){
       if (this.state.currentTime < 1) {
         //End countdown
+        clearInterval(this.countdownInterval);
         this.timerStart = new Date().getTime();
         this.setState({
           showCountdown: false,
@@ -232,7 +232,8 @@ export default class MapScreenTraitor extends React.Component {
   //Causes gray circle overlay. This prevents the tracer
   //from receiving any distance/direction updates for 10 sec.
   disguisePressed() {
-    if (this.state.disguisesRemaining > 0 && this.state.tracerInGame) {
+    if (this.state.disguisesRemaining > 0 && this.state.tracerInGame
+      && !this.state.showCountdown) {
       this.state.disguisesRemaining = this.state.disguisesRemaining - 1;
       let updates = {};
       updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = true;
@@ -268,7 +269,8 @@ export default class MapScreenTraitor extends React.Component {
   //Vibrates phone when deflect is pressed, and sets the
   //state and the deflect interval
   deflectPressed() {
-    if (this.state.deflectsRemaining > 0 && this.state.tracerInGame) {
+    if (this.state.deflectsRemaining > 0 && this.state.tracerInGame
+      && !this.state.showCountdown) {
       this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
       let updates = {};
       updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = true;
@@ -296,9 +298,9 @@ export default class MapScreenTraitor extends React.Component {
 
   //Resets intervals and stuff at the end of game
   endGameActions() {
-    console.log("endgameactions traitor")
     clearInterval(this.interval);
     clearInterval(this.timerInterval);
+    clearInterval(this.countdownInterval);
     clearInterval(this.deflectTimeout);
     clearInterval(this.disguiseTimeout);
     let updates = {};

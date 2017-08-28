@@ -53,6 +53,17 @@ export default class MapScreenTracer extends React.Component {
       showCountdown: true,
     };
     this.range = 70;
+    //The following instance vars are to determine countdown time
+    //where minDist or less get minTime, maxTime or more get maxTime,
+    //and anything in between gets a countdown value
+    //linearly correlated to its distance, and set to the nearest
+    //time increment
+    this.minTime = 60;
+    this.maxTime = 240;
+    this.timeIncrements = 30;
+    this.minDist = 200;
+    this.maxDist = 2000;
+
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -82,7 +93,7 @@ export default class MapScreenTracer extends React.Component {
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
       let fbTraitorInGame = snapshot.val().traitorInGame;
-      if (fbTraitorInGame && this.countdownInterval === null/*this.state.currentTime === 0 && this.timerInterval === null*/) {
+      if (fbTraitorInGame && this.countdownInterval === null) {
         console.log("This should only be called once!");
         this.startCountdown();
       }
@@ -113,10 +124,49 @@ export default class MapScreenTracer extends React.Component {
 
   setCountdownTotal() {
     //TODO 8/26: get locations from firebase and find distance, compute countdownTotal
-    let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/countdownTotal/'] = 20;
-    this.countdownTotal = 20;
-    firebase.database().ref().update(updates);
+    let traitorStartLat;
+    let traitorStartLon;
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .once('value', snapshot => {
+      traitorStartLat = snapshot.val().latitude;
+      traitorStartLon = snapshot.val().longitude;
+    })
+    .then(() => {
+      if (traitorStartLat === 0 || traitorStartLon === 0) {
+        //traitor's position hasn't been uploaded to firebase yet, need to wait
+        console.log("traitor is 0");
+        this.getTraitorPosTimeout = setTimeout(this.setCountdownTotal.bind(this), 500);
+      }
+      else {
+        clearTimeout(this.getTraitorPosTimeout);
+        //traitor's position has been uploaded to firebase
+        console.log("traitorStartLat is " + traitorStartLat);
+        console.log("tracer start lat is "+ this.state.latitude);
+        let startDistance = this.calcDistance(this.state.latitude, this.state.longitude, traitorStartLat, traitorStartLon);
+        console.log("start dist" + startDistance);
+        this.countdownTotal = this.calcCountdownAmount(startDistance);
+        let updates = {};
+        updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/countdownTotal/'] = this.countdownTotal;
+        firebase.database().ref().update(updates);
+      }
+    });
+
+  }
+
+  calcCountdownAmount(myDist) {
+    if (myDist < this.minDist) {
+      return this.minTime;
+    }
+    else if (myDist > this.maxDist) {
+      return this.maxTime;
+    }
+    else {
+      let numCountdownTimes = 1 + Math.floor((this.maxTime - this.minTime) / this.timeIncrements);
+      //Calculate range of distance for each time increment
+      let incrementDistAmts = Math.floor((this.maxDist - this.minDist) / (numCountdownTimes - 2));
+      let numTimeIncrements = 1 + Math.floor((myDist - this.minDist) / incrementDistAmts);
+      return (Math.floor(this.minTime + this.timeIncrements * numTimeIncrements));
+    }
   }
 
   //Starts timer after countdown ends
@@ -137,6 +187,7 @@ export default class MapScreenTracer extends React.Component {
         lastClickLonTraitor: this.state.lastClickLonTraitor,
         tracerInGame: true,
         gameWinner: "none",
+        countdownTotal: -1,
         })
       .catch(() => {
         console.log("location set failed");
@@ -191,7 +242,8 @@ export default class MapScreenTracer extends React.Component {
 
   //Called when Distance button pressed
   setCurrentDistance() {
-    if (!this.state.pauseBetweenClicks && this.state.traitorInGame) {
+    if (!this.state.pauseBetweenClicks && this.state.traitorInGame
+      && !this.state.showCountdown) {
       firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
       .once('value', snapshot => {
         let traitorLat = snapshot.val().latitude;
@@ -228,7 +280,8 @@ export default class MapScreenTracer extends React.Component {
 
   //Called when Direction button pressed
   setCurrentDirectionCoords() {
-    if (!this.state.pauseBetweenClicks && this.state.traitorInGame) {
+    if (!this.state.pauseBetweenClicks && this.state.traitorInGame
+    && !this.state.showCountdown) {
       firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
       .once('value', snapshot => {
         let traitorLat = snapshot.val().latitude;
@@ -294,8 +347,8 @@ export default class MapScreenTracer extends React.Component {
 
   //Called when trigger pressed
   triggerPulled() {
-    Vibration.vibrate();
-    if (this.state.traitorInGame) {
+    if (this.state.traitorInGame && !this.state.showCountdown) {
+      Vibration.vibrate();
       this.state.triggersRemaining = this.state.triggersRemaining - 1;
       if (this.state.triggersRemaining <= 0) {
         //Traitor won as tracer ran out of triggers
@@ -352,16 +405,11 @@ export default class MapScreenTracer extends React.Component {
 
   //Updates timer
   updateTime() {
-    console.log("showCountdown is " + this.state.showCountdown);
     if (this.state.showCountdown){
-      console.log("1 tracer countdownTotal is " + this.countdownTotal);
-      console.log("currentTime is " + this.state.currentTime);
       if (this.state.currentTime < 1) {
         //End countdown
-        //TODO 8/26: CAN I RESET timerStart like this after countdown ends?
-        //console.log("timerStart for real timer: " + this.timerStart);
+        clearInterval(this.countdownInterval);
         this.timerStart = new Date().getTime();
-        console.log("timer start is " + this.timerStart);
         this.setState({
           showCountdown: false,
           currentTime: 0,
@@ -370,8 +418,7 @@ export default class MapScreenTracer extends React.Component {
       }
       else {
         //Get the time remaining in countdown
-        console.log("tracer countdownTotal is " + this.countdownTotal);
-        let currCountdownTime = 1 + this.countdownTotal -
+        let currCountdownTime = 2 + this.countdownTotal -
           ((new Date().getTime() - this.timerStart) / 1000);
           this.setState({
             currentTime: currCountdownTime,
@@ -393,6 +440,7 @@ export default class MapScreenTracer extends React.Component {
     clearInterval(this.timerInterval);
     clearTimeout(this.pauseBetweenClicksTimeout);
     clearInterval(this.countdownInterval);
+    clearTimeout(this.getTraitorPosTimeout);
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = false;
     firebase.database().ref().update(updates);
@@ -423,7 +471,23 @@ export default class MapScreenTracer extends React.Component {
       timerModalVisible: false,
     });
   }
-
+/*
+{this.state.showCountdown &&
+  <Modal
+  visible={true}
+  transparent
+  animationType="slide"
+  onRequestClose={() => {}}
+  >
+  <View style={styles.modalStyle}>
+    <View style={styles.cardSectionStyle}>
+      <Text style={styles.textStyle}>
+        {"Countdown: " + this.returnTimerString(this.state.currentTime)}
+      </Text>
+    </View>
+  </View>
+</Modal>}
+*/
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
@@ -523,6 +587,7 @@ export default class MapScreenTracer extends React.Component {
         </MapView>
         <View style={styles.buttonsContainerStyle}>
           {this.state.showPauseText && this.state.traitorInGame &&
+            !this.state.showCountdown &&
             <Text>Must wait 5 sec. between clues</Text>
           }
           {this.state.showCountdown &&

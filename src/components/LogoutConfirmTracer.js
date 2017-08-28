@@ -26,6 +26,7 @@ export default class LogoutConfirmTracer extends React.Component {
         lastClickLonTraitor: 0,
         tracerInGame: false,
         gameWinner: "none",
+        countdownTotal: -1,
       })
       .catch(() => {
         console.log("firebase reset failed");

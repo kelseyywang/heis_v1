@@ -65,6 +65,7 @@ export default class EndScreenTraitor extends React.Component {
             lastClickLonTraitor: 0,
             tracerInGame: fbTracerInGame,
             gameWinner: "none",
+            countdownTotal: -1,
           })
           .catch(() => {
             console.log("firebase reset failed");
