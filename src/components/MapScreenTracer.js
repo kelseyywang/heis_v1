@@ -49,7 +49,7 @@ export default class MapScreenTracer extends React.Component {
       disguiseOn: false,
       pauseBetweenClicks: false,
       showPauseText: false,
-      currentTime: 60,
+      currentTime: -10,
       showCountdown: false,
     };
     this.range = 70;
@@ -58,12 +58,13 @@ export default class MapScreenTracer extends React.Component {
     //and anything in between gets a countdown value
     //linearly correlated to its distance, and set to the nearest
     //time increment
-    this.minTime = 60;
-    this.maxTime = 240;
+    this.minTime = 10;
+    this.maxTime = 10;
     this.timeIncrements = 30;
     this.minDist = 200;
     this.maxDist = 2000;
 
+    this.totalGameTime = 6;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -120,12 +121,15 @@ export default class MapScreenTracer extends React.Component {
   //Determines countdown amount and starts countdown after both players are in game
   startCountdown() {
     this.setCountdownTotal();
+    //Wait one second for the display to be more synchronized with traitor
+    //who will have a slight lag
     this.timerStart = new Date().getTime();
     this.countdownInterval = setInterval(this.updateTime, 1000);
   }
 
+  //Uses traitor and tracer's location when they have just both clicked "Ready"
+  //to determine total countdown amount
   setCountdownTotal() {
-    //TODO 8/26: get locations from firebase and find distance, compute countdownTotal
     let traitorStartLat;
     let traitorStartLon;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
@@ -150,18 +154,20 @@ export default class MapScreenTracer extends React.Component {
     });
   }
 
+  //Helps calculate countdown distance using linearly distributed
+  //increments between minTime and maxTime
   calcCountdownAmount(myDist) {
     if (myDist < this.minDist) {
-      return this.minTime;
+      return this.maxTime;
     }
     else if (myDist > this.maxDist) {
-      return this.maxTime;
+      return this.minTime;
     }
     else {
       let numCountdownTimes = 1 + Math.floor((this.maxTime - this.minTime) / this.timeIncrements);
       //Calculate range of distance for each time increment
       let incrementDistAmts = Math.floor((this.maxDist - this.minDist) / (numCountdownTimes - 2));
-      let numTimeIncrements = 1 + Math.floor((myDist - this.minDist) / incrementDistAmts);
+      let numTimeIncrements = numCountdownTimes - 2 - Math.floor((myDist - this.minDist) / incrementDistAmts);
       return (Math.floor(this.minTime + this.timeIncrements * numTimeIncrements));
     }
   }
@@ -397,34 +403,39 @@ export default class MapScreenTracer extends React.Component {
     let updates = {};
     updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = winnerString;
     firebase.database().ref().update(updates);
-    Actions.endScreenTracer({winner: winnerString, endDistance: endDist, endTime: this.state.currentTime, type: ActionConst.RESET});
+    Actions.endScreenTracer({winner: winnerString, endDistance: endDist, endTime: this.totalGameTime - this.state.currentTime, type: ActionConst.RESET});
   }
 
   //Updates timer
   updateTime() {
     if (this.state.showCountdown){
-      if (this.state.currentTime < 1) {
+      //Get the time remaining in countdown
+      //Have to adjust currCountdownTime by 2 to account for lag
+      //that makes traitor slower
+      let currCountdownTime = 2 + this.countdownTotal -
+        ((new Date().getTime() - this.timerStart) / 1000);
+      if (currCountdownTime < 0) {
         //End countdown
         clearInterval(this.countdownInterval);
         this.timerStart = new Date().getTime();
         this.setState({
           showCountdown: false,
-          currentTime: 0,
+          currentTime: this.totalGameTime - 1,
         });
         this.startTimer();
       }
       else {
-        //Get the time remaining in countdown
-        let currCountdownTime = 2 + this.countdownTotal -
-          ((new Date().getTime() - this.timerStart) / 1000);
-          this.setState({
-            currentTime: currCountdownTime,
-          });
+        this.setState({
+          currentTime: currCountdownTime,
+        });
       }
     }
     else {
       //Get game time
-      let currTime = new Date().getTime() - this.timerStart;
+      let currTime = this.totalGameTime * 1000 - (new Date().getTime() - this.timerStart);
+      if (currTime < 1) {
+        this.gameWonActions("Traitor time", null);
+      }
         this.setState({
           currentTime: currTime / 1000,
         });
@@ -447,7 +458,11 @@ export default class MapScreenTracer extends React.Component {
   returnTimerString(numSeconds) {
     let minutes;
     let seconds;
-    if (Math.floor(numSeconds / 60) < 10) {
+    if (numSeconds < 0) {
+      //default value, show 0
+      return "00:00";
+    }
+    else if (Math.floor(numSeconds / 60) < 10) {
      minutes = "0" + Math.floor(numSeconds / 60);
     }
     else {
@@ -474,9 +489,6 @@ export default class MapScreenTracer extends React.Component {
       <View style={styles.containerStyle}>
         {!this.state.showCountdown &&
           <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
-
-        {this.state.showCountdown &&
-          <Text>{"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}</Text>}
         <Modal
           visible={!this.state.showCountdown && !this.state.traitorInGame && this.state.timerModalVisible}
           transparent

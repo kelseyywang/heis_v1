@@ -20,6 +20,9 @@ export default class EndScreenTracer extends React.Component {
     else if (winner === "Traitor deflect") {
       return `u lose bc traitor deflected ur trigger bitch. Game time: ${Math.floor(this.props.endTime)}`;
     }
+    else if (winner === "Traitor time") {
+      return `u lose bc u ran outta time. u slow bro. Game time: ${Math.floor(this.props.endTime)}`;
+    }
     return "There's something wrong here because I didn't get my winner prop.";
   }
 

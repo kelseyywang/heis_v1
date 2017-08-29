@@ -45,10 +45,11 @@ export default class MapScreenTraitor extends React.Component {
       tracerInGame: false,
       timerModalVisible: true,
       gameWinner: "none",
-      currentTime: 60,
+      currentTime: -10,
       showCountdown: false,
     };
     this.range = 70;
+    this.totalGameTime = 6;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
@@ -97,22 +98,24 @@ export default class MapScreenTraitor extends React.Component {
           Vibration.vibrate();
         }
         //Check if tracer is logged in, and if so, start countdown.
+
         let fbCountdownTotal = snapshot.val().countdownTotal;
         if (!this.state.tracerInGame && fbTracerInGame &&
-          this.state.currentTime === 0 && fbCountdownTotal > 0) {
+          this.state.currentTime === -10 && fbCountdownTotal > 0) {
             //fbCountdownTotal has a value, so set countdownTotal
             this.countdownTotal = fbCountdownTotal;
             this.setState({
+              currentTime: this.countdownTotal,
               showCountdown: true,
             });
             this.startCountdown();
         }
-        //TODO 8/26: change the !== 5 and == =5
         if (!(this.countdownTotal > 0) && fbTracerInGame && fbCountdownTotal > 0) {
           //If countdownTotal hasn't been set because of asynchronous
           //firebase uploading by tracer, then pull from firebase again
           this.countdownTotal = fbCountdownTotal;
           this.setState({
+            currentTime: this.countdownTotal,
             showCountdown: true,
           });
           this.startCountdown();
@@ -155,27 +158,28 @@ export default class MapScreenTraitor extends React.Component {
       if (this.state.deflectOn) {
         clearTimeout(this.deflectTimeout);
       }
-      Actions.endScreenTraitor({winner: fbGameWinner, endTime: this.state.currentTime, type: ActionConst.RESET});
+      //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
+      Actions.endScreenTraitor({winner: fbGameWinner, endTime: this.totalGameTime - this.state.currentTime - 2, type: ActionConst.RESET});
     }
   }
 
   //Updates timer
   updateTime() {
     if (this.state.showCountdown){
-      if (this.state.currentTime < 1) {
+      //Get the time remaining in countdown
+      let currCountdownTime = this.countdownTotal -
+        ((new Date().getTime() - this.timerStart) / 1000);
+      if (currCountdownTime < 0) {
         //End countdown
         clearInterval(this.countdownInterval);
         this.timerStart = new Date().getTime();
         this.setState({
           showCountdown: false,
-          currentTime: 0,
+          currentTime: this.totalGameTime - 1,
         });
         this.startTimer();
       }
       else {
-        //Get the time remaining in countdown
-        let currCountdownTime = 1 + this.countdownTotal -
-          ((new Date().getTime() - this.timerStart) / 1000);
           this.setState({
             currentTime: currCountdownTime,
           });
@@ -183,10 +187,10 @@ export default class MapScreenTraitor extends React.Component {
     }
     else {
       //Get game time
-      let currTime = new Date().getTime() - this.timerStart;
-        this.setState({
+      let currTime = this.totalGameTime * 1000 - (new Date().getTime() - this.timerStart);
+      this.setState({
           currentTime: currTime / 1000,
-        });
+      });
     }
   }
 
@@ -316,7 +320,11 @@ export default class MapScreenTraitor extends React.Component {
   returnTimerString(numSeconds) {
     let minutes;
     let seconds;
-    if (Math.floor(numSeconds / 60) < 10) {
+    if (numSeconds < 0) {
+      //default value, show 0
+      return "00:00";
+    }
+    else if (Math.floor(numSeconds / 60) < 10) {
      minutes = "0" + Math.floor(numSeconds / 60);
     }
     else {
