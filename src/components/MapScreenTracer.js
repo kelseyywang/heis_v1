@@ -58,13 +58,16 @@ export default class MapScreenTracer extends React.Component {
     //and anything in between gets a countdown value
     //linearly correlated to its distance, and set to the nearest
     //time increment
-    this.minTime = 10;
-    this.maxTime = 10;
+    this.minTime = 60;
+    this.maxTime = 240;
     this.timeIncrements = 30;
     this.minDist = 200;
     this.maxDist = 2000;
 
-    this.totalGameTime = 6;
+    //The amount of meters the the tracer is permitted to travel from his
+    //initial location during countdown
+    this.countdownBounds = 70;
+    this.totalGameTime = 600;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -99,6 +102,15 @@ export default class MapScreenTracer extends React.Component {
           showCountdown: true,
         });
         this.startCountdown();
+        //Save initial position of tracer to make sure he doesn't move
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            this.initialLat = position.coords.latitude;
+            this.initialLon = position.coords.longitude;
+          },
+          (error) => this.setState({ error: error.message }),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
       }
       this.setState({
         traitorInGame: fbTraitorInGame,
@@ -116,6 +128,14 @@ export default class MapScreenTracer extends React.Component {
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+    //Determine whether tracer has moved too much during countdown
+    if (this.state.showCountdown && this.initialLat !== null
+      && this.initialLon !== null) {
+        if (this.calcDistance(this.state.latitude, this.state.longitude,
+          this.initialLat, this.initialLon) > this.countdownBounds) {
+          this.gameWonActions("Countdown move", null);
+        }
+      }
   }
 
   //Determines countdown amount and starts countdown after both players are in game

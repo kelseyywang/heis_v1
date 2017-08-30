@@ -46,9 +46,8 @@ class LoginForm extends Component {
   }
 
   componentWillUnmount() {
-    console.log("login state" + JSON.stringify(this.state));
-    console.log("LoginForm unmount");
   }
+  
   //Attempts to sign in
   onButtonPress() {
     const {email, password} = this.state;

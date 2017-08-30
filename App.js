@@ -24,6 +24,7 @@ import { Header } from './src/components/common';
 //2-3 seconds off or something
 //GENERAL TODO:
 //make it so that if tracer moves position too much during countdown, the game
+//lock orientation of screen!
 //restarts
 //make option to switch to tracer or traitor!
 //make option to cancel game, while game is happening or in countdown

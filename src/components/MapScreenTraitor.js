@@ -49,7 +49,7 @@ export default class MapScreenTraitor extends React.Component {
       showCountdown: false,
     };
     this.range = 70;
-    this.totalGameTime = 6;
+    this.totalGameTime = 600;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
