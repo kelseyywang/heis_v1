@@ -49,7 +49,7 @@ export default class MapScreenTraitor extends React.Component {
       showCountdown: false,
     };
     this.range = 70;
-    this.totalGameTime = 600;
+    this.totalGameTime = 2;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
@@ -60,6 +60,7 @@ export default class MapScreenTraitor extends React.Component {
   //Sets interval to callCurrentPosition every second and
   //sets timerInterval to null
   componentDidMount() {
+    this.callCurrentPosition();
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
     let updates = {};

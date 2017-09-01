@@ -58,16 +58,16 @@ export default class MapScreenTracer extends React.Component {
     //and anything in between gets a countdown value
     //linearly correlated to its distance, and set to the nearest
     //time increment
-    this.minTime = 60;
-    this.maxTime = 240;
+    this.minTime = 3;
+    this.maxTime = 3;
     this.timeIncrements = 30;
     this.minDist = 200;
-    this.maxDist = 2000;
+    this.maxDist = 1500;
 
     //The amount of meters the the tracer is permitted to travel from his
     //initial location during countdown
     this.countdownBounds = 70;
-    this.totalGameTime = 600;
+    this.totalGameTime = 2;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -78,6 +78,7 @@ export default class MapScreenTracer extends React.Component {
   //Sets interval to callCurrentPosition every second and
   //sets firebase tracerInGame to true
   componentDidMount() {
+    this.callCurrentPosition();
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
     this.countdownInterval = null;

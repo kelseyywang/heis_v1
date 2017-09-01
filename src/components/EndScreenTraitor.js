@@ -28,9 +28,13 @@ export default class EndScreenTraitor extends React.Component {
     return "There's something wrong here because I didn't get my winner prop.";
   }
 
-  goBack() {
+  goToNewGame() {
     this.clearFirebaseActions();
     Actions.mapScreenTraitor({type: ActionConst.RESET});
+  }
+
+  goToLocate() {
+    Actions.locateScreenTraitor();
   }
 
   clearFirebaseActions() {
@@ -83,11 +87,18 @@ export default class EndScreenTraitor extends React.Component {
     return (
       <View style={styles.containerStyle}>
         <Text style={styles.textStyle}>{this.printMessage()}</Text>
-        <Button
-          buttonStyle={styles.buttonAltStyle}
-          onPress={this.goBack.bind(this)}
-          title='New game'
-        />
+        <View style={styles.buttonsContainerStyle}>
+          <Button
+            buttonStyle={styles.buttonAltStyle}
+            onPress={this.goToNewGame.bind(this)}
+            title='New game'
+          />
+          <Button
+            buttonStyle={styles.buttonAltStyle}
+            onPress={this.goToLocate.bind(this)}
+            title='Locate Traitor'
+          />
+        </View>
       </View>
     );
   }
@@ -98,6 +109,11 @@ const styles = StyleSheet.create({
     margin: 20,
     flex: 1,
     justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  buttonsContainerStyle: {
+    flex: 1,
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
   buttonAltStyle: {
