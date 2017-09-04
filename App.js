@@ -20,6 +20,10 @@ import LocateScreenTraitor from './src/components/LocateScreenTraitor';
 // this.minDist = 200;
 // this.maxDist = 1500;
 
+// TODO 9/4 - add GameStartedModal to EndScreenTraitor and the Locate Screens?
+//test to make sure the clearFirebaseActions are truly working.
+//Also after tracer goes into locate traitor, then goes back and traitor starts game,
+//the modal doesn't pop up... figure out why
 
 // PROBLEM TODO:
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
@@ -32,9 +36,11 @@ import LocateScreenTraitor from './src/components/LocateScreenTraitor';
 // 4. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
 // adjusted so that Traitor is usually a tiny tiny bit ahead of Tracer, but sometimes it's up to
 // 2-3 seconds off or something
+//5. 9/3 - In EndScreenTraitor if Traitor clicks new game first, it will go to game screeen briefly
+// Then go to EndScreen saying "u win lil bitch tracer ran outta time. Game time: 10"
 // GENERAL TODO:
-//make colors darker or make it zoom out when circle is really big
-//change user's location icon https://github.com/airbnb/react-native-maps/issues/540
+// make colors darker or make it zoom out when circle is really big
+// change user's location icon https://github.com/airbnb/react-native-maps/issues/540
 // map screen after game ends to relocate each other
 // shorter countdowns? 2:30 max?
 // restarts
@@ -102,16 +108,22 @@ export default class App extends React.Component {
           <Scene
             key="locateScreenTracer"
             component={LocateScreenTracer}
-            title="Trying to reunite?"
+            title="Reunite with Traitor"
+            hideBackImage
+            renderLeftButton={() => (null)}
             onRight={() => {Actions.logoutConfirmTracer();}}
+            onBack={() => {}}
             rightTitle={"Log out"}
             panHandlers={null}
           />
           <Scene
             key="locateScreenTraitor"
             component={LocateScreenTraitor}
-            title="Trying to reunite?"
+            title="Reunite with Tracer"
+            hideBackImage
+            renderLeftButton={() => (null)}
             onRight={() => {Actions.logoutConfirmTraitor();}}
+            onBack={() => {}}
             rightTitle={"Log out"}
             panHandlers={null}
           />

@@ -3,11 +3,41 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
+import GameStartedModal from './GameStartedModal';
 
 export default class EndScreenTracer extends React.Component {
   //TODO: Upload #wins info to firebase so every time user
   //logs in, he has #wins against a specific opponent
   //and total #wins and losses.
+  constructor(props) {
+    super(props);
+    //TODO 9/4: this modal pops up and disappears a lot...
+    this.state = {
+      traitorInGame: false,
+      newGameModalVisible: true,
+    };
+  }
+
+  componentWillMount() {
+    this.interval = setInterval(this.checkTraitorInGame.bind(this), 3000);
+  }
+
+  componentWillUnmount() {
+    this.clearIntervals();
+  }
+
+  checkTraitorInGame() {
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .once('value', snapshot => {
+      this.setState({
+        traitorInGame: snapshot.val().traitorInGame,
+      })
+    })
+  }
+
+  clearIntervals() {
+    clearInterval(this.interval);
+  }
 
   printMessage() {
     const winner = this.props.winner;
@@ -30,15 +60,19 @@ export default class EndScreenTracer extends React.Component {
   }
 
   goToNewGame() {
-    this.clearFirebaseActions();
+    this.clearIntervals();
+    //this.clearFirebaseActions();
     Actions.mapScreenTracer({type: ActionConst.RESET});
   }
 
   goToLocate() {
+    this.clearIntervals();
     Actions.locateScreenTracer();
   }
 
+  //TODO: get rid of this function if everything works.
   clearFirebaseActions() {
+    //TODO: replace fbTraitorInGame with state var
     let fbTraitorInGame;
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
     .once('value', snapshot => {
@@ -74,7 +108,7 @@ export default class EndScreenTracer extends React.Component {
         //Arbitrary values here!
         lastClickLatTraitor: 0,
         lastClickLonTraitor: 0,
-        tracerInGame: false,
+        tracerInGame: true,
         gameWinner: "none",
         countdownTotal: -1,
       })
@@ -83,9 +117,27 @@ export default class EndScreenTracer extends React.Component {
       });
   }
 
+  exitNewGameModal() {
+    this.setState({
+      newGameModalVisible: false,
+    });
+  }
+
+  //TODO 9/3: WHY IS THERE A BIG SPACE UNDER THE TIMER WHEN MODAL RENDERS?!
+  renderModal() {
+    if (this.state.newGameModalVisible && this.state.traitorInGame) {
+      return (
+        <GameStartedModal
+            onCloseModal={this.exitNewGameModal.bind(this)}
+          >Traitor started a new game and is waiting for you bitch.</GameStartedModal>
+      );
+    }
+  }
+
   render() {
     return (
       <View style={styles.containerStyle}>
+        {this.renderModal()}
         <Text style={styles.textStyle}>{this.printMessage()}</Text>
         <View style={styles.buttonsContainerStyle}>
           <Button

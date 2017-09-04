@@ -5,10 +5,7 @@ import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
 import { Spinner } from './common';
-
-//TODO 8/23+: make start game button/screen and countdown screen.
-//Time is determined by how far the traitor and tracer are initially
-//from each other when they press start game...
+import GameStartedModal from './GameStartedModal';
 
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
@@ -72,7 +69,7 @@ export default class MapScreenTracer extends React.Component {
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
     this.updateTime = this.updateTime.bind(this);
-    this.exitTimeModal = this.exitTimeModal.bind(this);
+    this.exitGameJoinModal = this.exitGameJoinModal.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -499,7 +496,7 @@ export default class MapScreenTracer extends React.Component {
   }
 
   //User wants to exit modal
-  exitTimeModal() {
+  exitGameJoinModal() {
     this.setState({
       timerModalVisible: false,
     });
@@ -523,7 +520,7 @@ export default class MapScreenTracer extends React.Component {
               </Text>
               <Button
                 style={styles.buttonStyle}
-                onPress={this.exitTimeModal}
+                onPress={this.exitGameJoinModal}
                 title='OKAY'
               >
               </Button>

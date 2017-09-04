@@ -151,18 +151,57 @@ export default class MapScreenTraitor extends React.Component {
 
   //Check if game has ended
   hasGameEnded(fbGameWinner) {
-    //TODO 8/24: don't need these state checks bc not im unmounting components...
-    if (this.state.gameWinner === "none") {
-      if (this.state.disguiseOn) {
-        clearTimeout(this.disguiseTimeout);
-      }
-      if (this.state.deflectOn) {
-        clearTimeout(this.deflectTimeout);
-      }
+    //TODO 8/24: don't need these state checks bc now im unmounting components...
+    // if (this.state.gameWinner === "none") {
+    //   if (this.state.disguiseOn) {
+    //     clearTimeout(this.disguiseTimeout);
+    //   }
+    //   if (this.state.deflectOn) {
+    //     clearTimeout(this.deflectTimeout);
+    //   }
       //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
+      this.clearFirebaseActions();
       Actions.endScreenTraitor({winner: fbGameWinner, endTime: this.totalGameTime - this.state.currentTime - 2, type: ActionConst.RESET});
-    }
+    //}
   }
+
+  clearFirebaseActions() {
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
+      .set({
+        deflectOn: false,
+        disguiseOn: false,
+        latitude: 0,
+        longitude: 0,
+        traitorInGame: false,
+      })
+      .catch(() => {
+        console.log("firebase reset failed");
+      });
+        firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+          .set({
+            showDirection: false,
+            showDistance: false,
+            distance: 0,
+            directionCoordsForTraitor: [{
+              latitude: 0,
+              longitude: 0
+            },
+            {
+              latitude: 0,
+              longitude: 0
+            }],
+            //Arbitrary values here!
+            lastClickLatTraitor: 0,
+            lastClickLonTraitor: 0,
+            tracerInGame: false,
+            gameWinner: "none",
+            countdownTotal: -1,
+          })
+          .catch(() => {
+            console.log("firebase reset failed");
+          });
+  }
+
 
   //Updates timer
   updateTime() {

@@ -1,12 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Modal } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import { Spinner } from './common';
 
-//TODO: make back button cancel interval
 export default class LocateScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -16,23 +15,30 @@ export default class LocateScreenTraitor extends React.Component {
       tracerLongitude: null,
       traitorLatitude: null,
       traitorLongitude: null,
+      tracerInLocate: false,
+      locateModalVisible: true,
       error: null,
     };
   }
 
   componentWillMount() {
     this.setCurrentPositions();
-    this.interval = setInterval(this.setCurrentPositions.bind(this), 3000);
+    this.interval = setInterval(this.setCurrentPositions.bind(this), 1000);
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/traitorInLocate/'] = true;
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInLocate/'] = true;
     firebase.database().ref().update(updates);
   }
-//remember to clear interval!?
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
   setCurrentPositions() {
     firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
     .once('value', snapshot => {
       let fbTracerLatitude = snapshot.val().latitude;
       let fbTracerLongitude = snapshot.val().longitude;
+      let fbTracerInLocate = snapshot.val().tracerInLocate;
       navigator.geolocation.getCurrentPosition(
         (position) => {
           this.setState({
@@ -40,6 +46,7 @@ export default class LocateScreenTraitor extends React.Component {
             traitorLongitude: position.coords.longitude,
             tracerLatitude: fbTracerLatitude,
             tracerLongitude: fbTracerLongitude,
+            tracerInLocate: fbTracerInLocate,
             error: null
           });
           let updates = {};
@@ -53,9 +60,43 @@ export default class LocateScreenTraitor extends React.Component {
     });
   }
 
+  exitLocateModal() {
+    this.setState({
+      locateModalVisible: false,
+    });
+  }
+
+  backActions() {
+    clearInterval(this.interval);
+    let updates = {};
+    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInLocate/'] = false;
+    firebase.database().ref().update(updates);
+    Actions.pop();
+  }
+
   renderCurrentUser() {
     return (
       <View style={styles.containerStyle}>
+        <Modal
+          visible={!this.state.tracerInLocate && this.state.locateModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {}}
+        >
+          <View style={styles.modalStyle}>
+            <View style={styles.modalSectionStyle}>
+              <Text style={styles.textStyle}>
+                Traitor must also be locating you to get their position.
+              </Text>
+              <Button
+                style={styles.buttonStyle}
+                onPress={this.exitLocateModal.bind(this)}
+                title='OKAY'
+              >
+              </Button>
+            </View>
+          </View>
+        </Modal>
         <Text style={styles.textStyle}>YOU DO NOT AMAZE ME AY</Text>
         <MapView
           provider="google"
@@ -68,17 +109,22 @@ export default class LocateScreenTraitor extends React.Component {
             longitudeDelta: 0.01,
           }}
         >
-          <MapView.Circle
-            center={{
-              latitude: this.state.tracerLatitude,
-              longitude: this.state.tracerLongitude,
-            }}
-            fillColor="rgba(106,92,165,.9)"
-            radius={20}
-            strokeColor="rgba(106,92,165,.9)"
-            strokeWidth={2}
-          />
+          {this.state.tracerInLocate &&
+            <MapView.Marker
+              title="Tracer"
+              coordinate={{
+                latitude: this.state.tracerLatitude,
+                longitude: this.state.tracerLongitude,
+              }}
+            />
+          }
         </MapView>
+        <Button
+          style={styles.buttonStyle}
+          onPress={this.backActions.bind(this)}
+          title='Back'
+        >
+        </Button>
       </View>
     );
   }
@@ -119,9 +165,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(64, 52, 109, 1)',
   },
   textStyle: {
-    fontSize: 30,
+    fontSize: 20,
     textAlign: 'center',
-    lineHeight: 40
+    lineHeight: 30
   },
   map: {
     height: 260,
@@ -129,5 +175,22 @@ const styles = StyleSheet.create({
     marginTop: 5,
     borderWidth: 2,
     borderColor: 'rgba(64, 52, 109, 1)',
+  },
+  modalSectionStyle: {
+    borderBottomWidth: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+    borderColor: '#ddd',
+    height: 150
+  },
+  modalStyle: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    position: 'relative',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1
   },
 });

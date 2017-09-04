@@ -29,7 +29,7 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   goToNewGame() {
-    this.clearFirebaseActions();
+    //this.clearFirebaseActions();
     Actions.mapScreenTraitor({type: ActionConst.RESET});
   }
 
@@ -37,6 +37,7 @@ export default class EndScreenTraitor extends React.Component {
     Actions.locateScreenTraitor();
   }
 
+  //TODO: get rid of this function if everything works.
   clearFirebaseActions() {
     firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
       .set({
@@ -44,7 +45,7 @@ export default class EndScreenTraitor extends React.Component {
         disguiseOn: false,
         latitude: 0,
         longitude: 0,
-        traitorInGame: false,
+        traitorInGame: true,
       })
       .catch(() => {
         console.log("firebase reset failed");
