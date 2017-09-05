@@ -173,6 +173,7 @@ export default class MapScreenTraitor extends React.Component {
         latitude: 0,
         longitude: 0,
         traitorInGame: false,
+        roleTaken: "none",
       })
       .catch(() => {
         console.log("firebase reset failed");
@@ -254,10 +255,12 @@ export default class MapScreenTraitor extends React.Component {
           error: null
         });
         let fbTraitorInGame;
+        let fbRoleTaken;
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
         .once('value', snapshot => {
           //Get current value of traitorInGame and keep it that way
           fbTraitorInGame = snapshot.val().traitorInGame;
+          fbRoleTaken = snapshot.val().roleTaken;
         })
         .then(() => {
         firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
@@ -266,6 +269,7 @@ export default class MapScreenTraitor extends React.Component {
             deflectOn: this.state.deflectOn,
             disguiseOn: this.state.disguiseOn,
             traitorInGame: fbTraitorInGame,
+            roleTaken: fbRoleTaken,
         })
           .catch(() => {
             console.log("location set failed");
@@ -428,6 +432,7 @@ export default class MapScreenTraitor extends React.Component {
         <MapView
           provider="google"
           style={styles.map}
+          showsUserLocation
           initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
@@ -435,13 +440,6 @@ export default class MapScreenTraitor extends React.Component {
             longitudeDelta: 0.01,
           }}
         >
-          <MapView.Marker
-            title="me"
-            coordinate={{
-              latitude: this.state.latitude,
-              longitude: this.state.longitude
-            }}
-          />
         {this.state.showDistance &&
           <MapView.Circle
             center={{

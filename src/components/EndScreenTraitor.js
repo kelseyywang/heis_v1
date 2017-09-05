@@ -3,10 +3,39 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
-
+import GameStartedModal from './GameStartedModal';
 
 export default class EndScreenTraitor extends React.Component {
   //TODO: refer to TODOs on EndScreenTracer
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      tracerInGame: false,
+      newGameModalVisible: true,
+    };
+  }
+
+  componentWillMount() {
+    this.interval = setInterval(this.checkTracerInGame.bind(this), 3000);
+  }
+
+  componentWillUnmount() {
+    this.clearIntervals();
+  }
+
+  checkTracerInGame() {
+    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
+    .once('value', snapshot => {
+      this.setState({
+        tracerInGame: snapshot.val().tracerInGame,
+      })
+    })
+  }
+
+  clearIntervals() {
+    clearInterval(this.interval);
+  }
 
   printMessage() {
     const winner = this.props.winner;
@@ -30,11 +59,29 @@ export default class EndScreenTraitor extends React.Component {
 
   goToNewGame() {
     //this.clearFirebaseActions();
-    Actions.mapScreenTraitor({type: ActionConst.RESET});
+    //Actions.mapScreenTraitor({type: ActionConst.RESET});
+
+    //Check if other player has chosen a role
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .once('value', snapshot => {
+      let fbRoleTaken = snapshot.val().roleTaken;
+      if (fbRoleTaken === "tracer") {
+        //Tracer has been taken, this user is traitor
+        Actions.mapScreenTraitor({type: ActionConst.RESET});
+      }
+      else if (fbRoleTaken === "traitor") {
+        //Traitor has been taken, this user is tracer
+        Actions.mapScreenTracer({type: ActionConst.RESET});
+      }
+      else {
+        //This user has first choice of role
+        Actions.chooseRole({type: ActionConst.RESET});
+      }
+    });
   }
 
   goToLocate() {
-    Actions.locateScreenTraitor();
+    Actions.locateScreenTraitor({winner: this.props.winner, endTime: this.props.endTime, type: ActionConst.RESET});
   }
 
   //TODO: get rid of this function if everything works.
@@ -84,9 +131,26 @@ export default class EndScreenTraitor extends React.Component {
       });
   }
 
+  exitNewGameModal() {
+    this.setState({
+      newGameModalVisible: false,
+    });
+  }
+
+  renderModal() {
+    if (this.state.newGameModalVisible && this.state.tracerInGame) {
+      return (
+        <GameStartedModal
+            onCloseModal={this.exitNewGameModal.bind(this)}
+          >Tracer started a new game and is waiting for you bitch.</GameStartedModal>
+      );
+    }
+  }
+
   render() {
     return (
       <View style={styles.containerStyle}>
+        {this.renderModal()}
         <Text style={styles.textStyle}>{this.printMessage()}</Text>
         <View style={styles.buttonsContainerStyle}>
           <Button

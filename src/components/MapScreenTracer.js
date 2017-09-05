@@ -544,6 +544,7 @@ export default class MapScreenTracer extends React.Component {
         <MapView
           provider="google"
           style={styles.map}
+          showsUserLocation
           initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
@@ -551,13 +552,6 @@ export default class MapScreenTracer extends React.Component {
             longitudeDelta: 0.01,
           }}
         >
-          <MapView.Marker
-            title="me"
-            coordinate={{
-              latitude: this.state.latitude,
-              longitude: this.state.longitude
-            }}
-          />
         {this.state.showDistance &&
           <MapView.Circle
             center={{

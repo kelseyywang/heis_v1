@@ -11,7 +11,6 @@ export default class EndScreenTracer extends React.Component {
   //and total #wins and losses.
   constructor(props) {
     super(props);
-    //TODO 9/4: this modal pops up and disappears a lot...
     this.state = {
       traitorInGame: false,
       newGameModalVisible: true,
@@ -60,14 +59,30 @@ export default class EndScreenTracer extends React.Component {
   }
 
   goToNewGame() {
-    this.clearIntervals();
     //this.clearFirebaseActions();
-    Actions.mapScreenTracer({type: ActionConst.RESET});
+    //Actions.mapScreenTracer({type: ActionConst.RESET});
+
+    //Check if other player has chosen a role
+    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    .once('value', snapshot => {
+      let fbRoleTaken = snapshot.val().roleTaken;
+      if (fbRoleTaken === "tracer") {
+        //Tracer has been taken, this user is traitor
+        Actions.mapScreenTraitor({type: ActionConst.RESET});
+      }
+      else if (fbRoleTaken === "traitor") {
+        //Traitor has been taken, this user is tracer
+        Actions.mapScreenTracer({type: ActionConst.RESET});
+      }
+      else {
+        //This user has first choice of role
+        Actions.chooseRole({type: ActionConst.RESET});
+      }
+    });
   }
 
   goToLocate() {
-    this.clearIntervals();
-    Actions.locateScreenTracer();
+    Actions.locateScreenTracer({winner: this.props.winner, endDistance: this.props.endDistance, endTime: this.props.endTime, type: ActionConst.RESET});
   }
 
   //TODO: get rid of this function if everything works.
@@ -126,6 +141,7 @@ export default class EndScreenTracer extends React.Component {
   //TODO 9/3: WHY IS THERE A BIG SPACE UNDER THE TIMER WHEN MODAL RENDERS?!
   renderModal() {
     if (this.state.newGameModalVisible && this.state.traitorInGame) {
+      console.log("hello");
       return (
         <GameStartedModal
             onCloseModal={this.exitNewGameModal.bind(this)}

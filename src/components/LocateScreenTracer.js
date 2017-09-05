@@ -17,9 +17,9 @@ export default class LocateScreenTracer extends React.Component {
       tracerLongitude: null,
       traitorLatitude: null,
       traitorLongitude: null,
-      error: null,
       traitorInLocate: false,
       locateModalVisible: true,
+      error: null,
     };
   }
 
@@ -33,6 +33,9 @@ export default class LocateScreenTracer extends React.Component {
 
   componentWillUnmount(){
     clearInterval(this.interval);
+    let updates = {};
+    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInLocate/'] = false;
+    firebase.database().ref().update(updates);
   }
 
   setCurrentPositions() {
@@ -69,11 +72,7 @@ export default class LocateScreenTracer extends React.Component {
   }
 
   backActions() {
-    clearInterval(this.interval);
-    let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInLocate/'] = false;
-    firebase.database().ref().update(updates);
-    Actions.pop();
+    Actions.endScreenTracer({winner: this.props.winner, endDistance: this.props.endDistance, endTime: this.props.endTime, type: ActionConst.RESET});
   }
 
   renderCurrentUser() {
@@ -88,7 +87,7 @@ export default class LocateScreenTracer extends React.Component {
           <View style={styles.modalStyle}>
             <View style={styles.modalSectionStyle}>
               <Text style={styles.textStyle}>
-                Traitor must also be locating you to get their position.
+                Traitor must also be locating you for you to get their position.
               </Text>
               <Button
                 style={styles.buttonStyle}
@@ -99,7 +98,7 @@ export default class LocateScreenTracer extends React.Component {
             </View>
           </View>
         </Modal>
-        <Text style={styles.textStyle}>YOU DO NOT AMAZE ME AY</Text>
+        <Text style={styles.textStyle}>FIND YOUR FRIEND</Text>
         <MapView
           provider="google"
           showsUserLocation

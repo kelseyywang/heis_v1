@@ -4,58 +4,57 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 
-export default class LogoutConfirmTraitor extends React.Component {
+export default class ChooseRole extends React.Component {
+  componentWillMount() {
+  }
 
-  //Clears tracer's firebase stuff when logged out
-  logOutActions() {
+  componentWillUnmount() {
+  }
+
+  tracerChosen() {
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "none";
+    updates[`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/roleTaken/`] = "tracer";
     firebase.database().ref().update(updates);
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-      .set({
-        deflectOn: false,
-        disguiseOn: false,
-        latitude: 0,
-        longitude: 0,
-        traitorInGame: false,
-        roleTaken: "none",
-      })
-      .catch(() => {
-        console.log("firebase reset failed");
-      });
-    firebase.auth().signOut();
-    Actions.loginForm({type: ActionConst.RESET});
+    Actions.mapScreenTracer({type: ActionConst.RESET});
+  }
+
+  traitorChosen() {
+    let updates = {};
+    updates[`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/roleTaken/`] = "traitor";
+    firebase.database().ref().update(updates);
+    Actions.mapScreenTraitor({type: ActionConst.RESET});
   }
 
   render() {
     return (
       <View style={styles.containerStyle}>
-        <Text style={styles.textStyle}>WUZZUP WANNA LOG OUT!?</Text>
-        <View style={styles.buttonsRowStyle}>
+        <Text style={styles.textStyle}>Which side are you on?</Text>
+        <View style={styles.buttonsContainerStyle}>
           <Button
             buttonStyle={styles.buttonAltStyle}
-            onPress={this.logOutActions.bind(this)}
-            title='Yes'
+            onPress={this.tracerChosen.bind(this)}
+            title='Tracer'
           />
           <Button
             buttonStyle={styles.buttonAltStyle}
-            onPress={() => {Actions.pop();}}
-            title='No'
+            onPress={this.traitorChosen.bind(this)}
+            title='Traitor'
           />
         </View>
       </View>
     );
   }
 }
+
 const styles = StyleSheet.create({
   containerStyle: {
-    marginTop: 20,
+    margin: 20,
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
-  buttonsRowStyle: {
-    flexDirection: 'row',
+  buttonsContainerStyle: {
+    flex: 1,
     justifyContent: 'space-around',
     alignItems: 'center',
   },

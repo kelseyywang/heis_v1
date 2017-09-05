@@ -11,6 +11,8 @@ import StartGameTraitor from './src/components/StartGameTraitor';
 import StartGameTracer from './src/components/StartGameTracer';
 import LocateScreenTracer from './src/components/LocateScreenTracer';
 import LocateScreenTraitor from './src/components/LocateScreenTraitor';
+import ChooseRole from './src/components/ChooseRole';
+
 //CHECKLIST BEFORE PUSHING TO EXPO
 //MapScreenTracer and Traitor change this.totalGameTime = 600;
 //and these in MapScreenTracer:
@@ -29,21 +31,22 @@ import LocateScreenTraitor from './src/components/LocateScreenTraitor';
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
-// 2. 8/27 - MapScreenTraitor - if you log out, the interval isn't cleared so the location
+// ^FIX? by doing the unmount stuff before any Actions.
+// SOLVED? 2. 8/27 - MapScreenTraitor - if you log out, the interval isn't cleared so the location
 // is still updated on firebase sometimes and it's not 0 as it should be
 // 3. 8/28 - MapScreenTracer on iOS I think? When traitor logs in first, tracer on iOS
 // doesn't show the countdown modal... problem again arises seemingly randomly.
 // 4. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
 // adjusted so that Traitor is usually a tiny tiny bit ahead of Tracer, but sometimes it's up to
 // 2-3 seconds off or something
-//5. 9/3 - In EndScreenTraitor if Traitor clicks new game first, it will go to game screeen briefly
+// SOLVED? 5. 9/3 - In EndScreenTraitor if Traitor clicks new game first, it will go to game screeen briefly
 // Then go to EndScreen saying "u win lil bitch tracer ran outta time. Game time: 10"
+// 6. 9/4 - The GameStartedModal makes layout weird when used anywhere (currently
+// in EndScreenTraitor and Tracer)
 // GENERAL TODO:
 // make colors darker or make it zoom out when circle is really big
 // change user's location icon https://github.com/airbnb/react-native-maps/issues/540
-// map screen after game ends to relocate each other
 // shorter countdowns? 2:30 max?
-// restarts
 // make option to switch to tracer or traitor!
 // make option to cancel game, while game is happening or in countdown
 
@@ -128,6 +131,15 @@ export default class App extends React.Component {
             panHandlers={null}
           />
           <Scene
+            key="chooseRole"
+            component={ChooseRole}
+            title="Choose Next Game Role"
+            hideBackImage
+            renderLeftButton={() => (null)}
+            onBack={() => {}}
+            panHandlers={null}
+          />
+          <Scene
             key="endScreenTraitor"
             component={EndScreenTraitor}
             title="Game Over, Traitor ;^)"
@@ -136,8 +148,6 @@ export default class App extends React.Component {
             onRight={() => {Actions.logoutConfirmTraitor();}}
             onBack={() => {}}
             rightTitle={"Log out"}
-            onBack={() => {}}
-
             panHandlers={null}
           />
           <Scene

@@ -47,7 +47,7 @@ class LoginForm extends Component {
 
   componentWillUnmount() {
   }
-  
+
   //Attempts to sign in
   onButtonPress() {
     const {email, password} = this.state;
@@ -120,6 +120,7 @@ class LoginForm extends Component {
             latitude: 0,
             longitude: 0,
             traitorInGame: false,
+            roleTaken: "none",
           })
           .catch(() => {
             console.log("firebase reset failed");
