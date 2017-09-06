@@ -94,7 +94,6 @@ export default class EndScreenTraitor extends React.Component {
 
   renderModal() {
     if (this.state.newGameModalVisible) {
-      console.log(this.state.traitorInGame)
       if (this.state.traitorInGame) {
         return (
           <GameStartedModal

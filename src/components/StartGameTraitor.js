@@ -29,7 +29,6 @@ export default class StartGameTraitor extends React.Component {
         traitorLatitude: 0,
         traitorLongitude: 0,
         traitorInGame: false,
-        roleTaken: "none",
         showDirection: false,
         showDistance: false,
         distance: 0,

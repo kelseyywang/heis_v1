@@ -12,16 +12,10 @@ export default class ChooseRole extends React.Component {
   }
 
   tracerChosen() {
-    let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/roleTaken/`] = "tracer";
-    firebase.database().ref().update(updates);
     Actions.mapScreenTracer({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 
   traitorChosen() {
-    let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/roleTaken/`] = "traitor";
-    firebase.database().ref().update(updates);
     Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 

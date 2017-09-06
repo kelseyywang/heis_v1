@@ -12,12 +12,28 @@ export default class StartGameTracer extends React.Component {
 
     this.state = {
       sessionKey: "sessionKey",
+      error: 'orig error',
     };
   }
 
   readyActions() {
-    this.checkForRole();
+    if (this.isSessionKeyValid(this.state.sessionKey)) {
+      this.checkForRole();
+    }
     //Actions.mapScreenTracer({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+  }
+
+  isSessionKeyValid(key) {
+    if (key.includes('.') || key.includes('$') ||
+      key.includes('#') || key.includes('[') ||
+      key.includes(']') || key.includes('/') ||
+      typeof key === 'undefined') {
+        this.setState({
+          error: "Don't use any special characters in your session key"
+        });
+        return false;
+      }
+    return true;
   }
 
   //Check if other player has already chosen a role
@@ -25,19 +41,32 @@ export default class StartGameTracer extends React.Component {
   checkForRole() {
     firebase.database().ref(`/currentSessions/${this.state.sessionKey}`)
     .once('value', snapshot => {
-      let fbTracerInGame = snapshot.val().tracerInGame;
-      let fbTraitorInGame = snapshot.val().traitorInGame;
-      this.clearFirebaseActions(fbTracerInGame, fbTraitorInGame);
-      if (fbTracerInGame) {
-        //Tracer has been taken, this user is traitor
-        Actions.mapScreenTraitor({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
-      }
-      else if (fbTraitorInGame) {
-        //Traitor has been taken, this user is tracer
-        Actions.mapScreenTracer({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+      if (snapshot.val() !== null) {
+        let fbTracerInGame = (snapshot.val().tracerInGame || false);
+        let fbTraitorInGame = (snapshot.val().traitorInGame || false);
+        this.clearFirebaseActions(fbTracerInGame, fbTraitorInGame);
+        if (fbTracerInGame && fbTraitorInGame) {
+          //Game already has two players, can't join
+          this.setState({
+            error: 'There are already 2 players in that session',
+          });
+        }
+        else if (fbTracerInGame) {
+          //Tracer has been taken, this user is traitor
+          Actions.mapScreenTraitor({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+        }
+        else if (fbTraitorInGame) {
+          //Traitor has been taken, this user is tracer
+          Actions.mapScreenTracer({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+        }
+        else {
+          //This user has first choice of role
+          Actions.chooseRole({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+        }
       }
       else {
-        //This user has first choice of role
+        //Game has not been created yet
+        this.clearFirebaseActions(false, false);
         Actions.chooseRole({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
       }
     });
@@ -52,7 +81,6 @@ export default class StartGameTracer extends React.Component {
         traitorLatitude: 0,
         traitorLongitude: 0,
         traitorInGame: currTraitorInGame,
-        roleTaken: "none",
         showDirection: false,
         showDistance: false,
         distance: 0,
@@ -92,6 +120,9 @@ export default class StartGameTracer extends React.Component {
           >
           </Input>
         </CardSection>
+        <Text style={styles.errorTextStyle}>
+          {this.state.error}
+        </Text>
         <Text style={styles.textStyle}>Are you ready to start the game?</Text>
         <Button
           buttonStyle={styles.buttonAltStyle}
@@ -123,5 +154,10 @@ const styles = StyleSheet.create({
     fontSize: 30,
     textAlign: 'center',
     lineHeight: 40
-  }
+  },
+  errorTextStyle: {
+    fontSize: 20,
+    alignSelf: 'center',
+    color: 'red',
+  },
 });

@@ -76,7 +76,6 @@ export default class MapScreenTracer extends React.Component {
   //Sets interval to callCurrentPosition every second and
   //sets firebase tracerInGame to true
   componentDidMount() {
-    console.log("sessionKey" + this.props.sessionKey);
     this.callCurrentPosition();
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;

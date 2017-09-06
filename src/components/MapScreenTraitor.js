@@ -168,7 +168,6 @@ export default class MapScreenTraitor extends React.Component {
         traitorLatitude: 0,
         traitorLongitude: 0,
         traitorInGame: false,
-        roleTaken: "none",
         showDirection: false,
         showDistance: false,
         distance: 0,
@@ -252,29 +251,6 @@ export default class MapScreenTraitor extends React.Component {
         updates[`/currentSessions/${this.props.sessionKey}/deflectOn/`] = this.state.deflectOn;
         updates[`/currentSessions/${this.props.sessionKey}/disguiseOn/`] = this.state.disguiseOn;
         firebase.database().ref().update(updates);
-        //CHANGED: didn't include traitorInGame, or roleTaken in the updates.
-        /*let fbTraitorInGame;
-        let fbRoleTaken;
-        firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
-        .once('value', snapshot => {
-          //Get current value of traitorInGame and keep it that way
-          fbTraitorInGame = snapshot.val().traitorInGame;
-          fbRoleTaken = snapshot.val().roleTaken;
-        })
-        .then(() => {
-        firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
-          .set({
-            traitorLatitude: position.coords.latitude,
-            traitorLongitude: position.coords.longitude,
-            deflectOn: this.state.deflectOn,
-            disguiseOn: this.state.disguiseOn,
-            traitorInGame: fbTraitorInGame,
-            roleTaken: fbRoleTaken,
-        })
-          .catch(() => {
-            console.log("location set failed");
-          });
-        });*/
       },
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
