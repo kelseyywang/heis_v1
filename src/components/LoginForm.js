@@ -72,7 +72,7 @@ class LoginForm extends Component {
       this.resetForm();
       Actions.startGameTraitor({type: ActionConst.RESET});
     }*/
-    Actions.startGameTracer({type: ActionConst.RESET});
+    Actions.startGame({type: ActionConst.RESET});
   }
 
   resetForm() {

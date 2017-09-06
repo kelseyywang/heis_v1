@@ -189,6 +189,7 @@ export default class MapScreenTraitor extends React.Component {
         tracerLongitude: 0,
         tracerInLocate: false,
         traitorInLocate: false,
+        numPlayers: 2,
       })
       .catch(() => {
         console.log("firebase reset failed");

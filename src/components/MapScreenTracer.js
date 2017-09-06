@@ -205,22 +205,6 @@ export default class MapScreenTracer extends React.Component {
     updates[`/currentSessions/${this.props.sessionKey}/lastClickLatTraitor/`] = this.state.lastClickLatTraitor;
     updates[`/currentSessions/${this.props.sessionKey}/lastClickLonTraitor/`] = this.state.lastClickLonTraitor;
     firebase.database().ref().update(updates);
-    //CHANGED: didn't include tracerInGame, gameWinner, or countdownTotal in the updates.
-    /*firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
-      .set({
-        showDirection: this.state.showDirection,
-        showDistance: this.state.showDistance,
-        distance: this.state.distance,
-        directionCoordsForTraitor: this.state.directionCoordsForTraitor,
-        lastClickLatTraitor: this.state.lastClickLatTraitor,
-        lastClickLonTraitor: this.state.lastClickLonTraitor,
-        tracerInGame: true,
-        gameWinner: "none",
-        countdownTotal: -1,
-        })
-      .catch(() => {
-        console.log("location set failed");
-      });*/
   }
 
   //Calculates dist in meters between two coordinates

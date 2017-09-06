@@ -6,8 +6,6 @@ import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import { Spinner } from './common';
 
-//TODO: styling, and make something that says if the other person is in the game alr!
-//like some sort of push notification (not necessarily tho) that tells that there's a new game to join.
 export default class LocateScreenTracer extends React.Component {
   constructor(props) {
     super(props);

@@ -5,14 +5,14 @@ import { Button } from 'react-native-elements';
 import { Card, CardSection, Input, Spinner } from './common';
 import firebase from 'firebase';
 
-export default class StartGameTracer extends React.Component {
+export default class StartGame extends React.Component {
 
   constructor(props) {
     super(props);
 
     this.state = {
       sessionKey: "sessionKey",
-      error: 'orig error',
+      error: '',
     };
   }
 
@@ -20,7 +20,6 @@ export default class StartGameTracer extends React.Component {
     if (this.isSessionKeyValid(this.state.sessionKey)) {
       this.checkForRole();
     }
-    //Actions.mapScreenTracer({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
   }
 
   isSessionKeyValid(key) {
@@ -42,38 +41,47 @@ export default class StartGameTracer extends React.Component {
     firebase.database().ref(`/currentSessions/${this.state.sessionKey}`)
     .once('value', snapshot => {
       if (snapshot.val() !== null) {
-        let fbTracerInGame = (snapshot.val().tracerInGame || false);
-        let fbTraitorInGame = (snapshot.val().traitorInGame || false);
-        this.clearFirebaseActions(fbTracerInGame, fbTraitorInGame);
-        if (fbTracerInGame && fbTraitorInGame) {
+        let fbTracerInGame = snapshot.val().tracerInGame;
+        let fbTraitorInGame = snapshot.val().traitorInGame;
+        let fbNumPlayers = snapshot.val().numPlayers;
+        if (fbNumPlayers === 2) {
           //Game already has two players, can't join
           this.setState({
             error: 'There are already 2 players in that session',
           });
         }
-        else if (fbTracerInGame) {
-          //Tracer has been taken, this user is traitor
-          Actions.mapScreenTraitor({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
-        }
-        else if (fbTraitorInGame) {
-          //Traitor has been taken, this user is tracer
-          Actions.mapScreenTracer({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
-        }
         else {
-          //This user has first choice of role
-          Actions.chooseRole({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+          this.clearFirebaseActions(fbTracerInGame, fbTraitorInGame, fbNumPlayers + 1);
+          if (fbNumPlayers === 1 && fbTracerInGame) {
+            //Tracer has been taken, this user is traitor
+            Actions.mapScreenTraitor({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+          }
+          else if (fbNumPlayers === 1 && fbTraitorInGame) {
+            //Traitor has been taken, this user is tracer
+            Actions.mapScreenTracer({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+          }
+          else {
+            //This user has first choice of role
+            Actions.chooseRole({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
+          }
         }
       }
       else {
         //Game has not been created yet
-        this.clearFirebaseActions(false, false);
+        this.clearFirebaseActions(false, false, 1);
         Actions.chooseRole({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
       }
     });
   }
 
+  updateNumPlayers(num) {
+    let updates = {};
+    updates[`/currentSessions/${this.state.sessionKey}/numPlayers/`] = num;
+    firebase.database().ref().update(updates);
+  }
+
   //Resets game properties to default when game is over
-  clearFirebaseActions(currTracerInGame, currTraitorInGame) {
+  clearFirebaseActions(currTracerInGame, currTraitorInGame, currNumPlayers) {
     firebase.database().ref(`/currentSessions/${this.state.sessionKey}`)
       .set({
         deflectOn: false,
@@ -102,6 +110,7 @@ export default class StartGameTracer extends React.Component {
         tracerLongitude: 0,
         tracerInLocate: false,
         traitorInLocate: false,
+        numPlayers: currNumPlayers,
       })
       .catch(() => {
         console.log("firebase reset failed");
