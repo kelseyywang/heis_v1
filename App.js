@@ -103,7 +103,7 @@ export default class App extends React.Component {
             title="Tracer Map"
             hideBackImage
             renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer();}}
+            onRight={() => {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
             onBack={() => {}}
             rightTitle={"Log out"}
             panHandlers={null}

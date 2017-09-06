@@ -23,26 +23,26 @@ export default class LocateScreenTracer extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.setCurrentPositions();
     this.interval = setInterval(this.setCurrentPositions.bind(this), 1000);
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInLocate/'] = true;
+    updates[`/currentSessions/${this.props.sessionKey}/tracerInLocate/`] = true;
     firebase.database().ref().update(updates);
   }
 
   componentWillUnmount(){
     clearInterval(this.interval);
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInLocate/'] = false;
+    updates[`/currentSessions/${this.props.sessionKey}/tracerInLocate/`] = false;
     firebase.database().ref().update(updates);
   }
 
   setCurrentPositions() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let fbTraitorLatitude = snapshot.val().latitude;
-      let fbTraitorLongitude = snapshot.val().longitude;
+      let fbTraitorLatitude = snapshot.val().traitorLatitude;
+      let fbTraitorLongitude = snapshot.val().traitorLongitude;
       let fbTraitorInLocate = snapshot.val().traitorInLocate;
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -55,8 +55,8 @@ export default class LocateScreenTracer extends React.Component {
             error: null
           });
           let updates = {};
-          updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/latitude/'] = position.coords.latitude;
-          updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/longitude/'] = position.coords.longitude;
+          updates[`/currentSessions/${this.props.sessionKey}/tracerLatitude/`] = position.coords.latitude;
+          updates[`/currentSessions/${this.props.sessionKey}/tracerLongitude`] = position.coords.longitude;
           firebase.database().ref().update(updates);
         },
         (error) => this.setState({ error: error.message }),
@@ -72,7 +72,13 @@ export default class LocateScreenTracer extends React.Component {
   }
 
   backActions() {
-    Actions.endScreenTracer({winner: this.props.winner, endDistance: this.props.endDistance, endTime: this.props.endTime, type: ActionConst.RESET});
+    Actions.endScreenTracer({
+      sessionKey: this.props.sessionKey,
+      winner: this.props.winner,
+      endDistance: this.props.endDistance,
+      endTime: this.props.endTime,
+      type: ActionConst.RESET
+    });
   }
 
   renderCurrentUser() {

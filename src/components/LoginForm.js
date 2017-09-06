@@ -63,7 +63,7 @@ class LoginForm extends Component {
 
   //Sends user to appropriate tracer/traitor screen
   onLoginSuccess() {
-    const { currentUser } = firebase.auth();
+    /*const { currentUser } = firebase.auth();
     if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
       this.resetForm();
       Actions.startGameTracer({type: ActionConst.RESET});
@@ -71,7 +71,8 @@ class LoginForm extends Component {
     else if (currentUser.uid === "AQVDfE7Fp4S4nDXvxpX4fchTt2w2") {
       this.resetForm();
       Actions.startGameTraitor({type: ActionConst.RESET});
-    }
+    }*/
+    Actions.startGameTracer({type: ActionConst.RESET});
   }
 
   resetForm() {
@@ -81,52 +82,6 @@ class LoginForm extends Component {
       loading: false,
       error: ''
     });
-  }
-
-  //Clears tracer's firebase stuff when logged out
-  logOutActions() {
-    if (firebase.auth().currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
-      firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-        .set({
-          showDirection: false,
-          showDistance: false,
-          distance: 0,
-          directionCoordsForTraitor: [{
-            latitude: 0,
-            longitude: 0
-          },
-          {
-            latitude: 0,
-            longitude: 0
-          }],
-          //Arbitrary values here!
-          lastClickLatTraitor: 0,
-          lastClickLonTraitor: 0,
-          tracerInGame: false,
-          gameWinner: "none",
-        })
-        .catch(() => {
-          console.log("location set failed");
-        });
-      }
-      else {
-        let updates = {};
-        updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "none";
-        firebase.database().ref().update(updates);
-        firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-          .set({
-            deflectOn: false,
-            disguiseOn: false,
-            latitude: 0,
-            longitude: 0,
-            traitorInGame: false,
-            roleTaken: "none",
-          })
-          .catch(() => {
-            console.log("firebase reset failed");
-          });
-      }
-      firebase.auth().signOut();
   }
 
   renderButton() {

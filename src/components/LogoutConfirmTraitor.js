@@ -8,21 +8,9 @@ export default class LogoutConfirmTraitor extends React.Component {
 
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = "none";
-    firebase.database().ref().update(updates);
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-      .set({
-        deflectOn: false,
-        disguiseOn: false,
-        latitude: 0,
-        longitude: 0,
-        traitorInGame: false,
-        roleTaken: "none",
-      })
-      .catch(() => {
-        console.log("firebase reset failed");
-      });
+    /*let updates = {};
+    updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = false;
+    firebase.database().ref().update(updates);*/
     firebase.auth().signOut();
     Actions.loginForm({type: ActionConst.RESET});
   }

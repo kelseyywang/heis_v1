@@ -6,31 +6,15 @@ import firebase from 'firebase';
 
 export default class LogoutConfirmTracer extends React.Component {
 
+  //TODO: This logout doesn't really work because it's connected via the Router
+  //and won't get the sessionKey prop, so can't set the InGame to false on fb...
+  //Same for LogoutConfirmTraitor
+
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-      .set({
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoordsForTraitor: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
-        tracerInGame: false,
-        gameWinner: "none",
-        countdownTotal: -1,
-      })
-      .catch(() => {
-        console.log("firebase reset failed");
-      });
+    /*let updates = {};
+    updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = false;
+    firebase.database().ref().update(updates);*/
     firebase.auth().signOut();
     Actions.loginForm({type: ActionConst.RESET});
   }

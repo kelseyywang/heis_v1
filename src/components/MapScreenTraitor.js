@@ -7,16 +7,7 @@ import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
 import { Spinner } from './common';
 
 //TODO (eventually): change rules in firebase
-//TODO: think about whether you want to make this a time-based
-//game, or a win/lose, time-sensitive point-based game.
-//Because you can make it time-based if you let the tracer know
-//every time the traitor deflects, and it's basically just a shield,
-//not necessarily reflective. Or there can be both...??
-//Prob should be time based bc traitor will be bored after using all their weapons
 
-
-//TODO 8/27: make new modal
-//TODO 8/27 send game time prop when someone wins
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
@@ -64,7 +55,7 @@ export default class MapScreenTraitor extends React.Component {
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
     let updates = {};
-    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInGame/'] = true;
+    updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = true;
     firebase.database().ref().update(updates);
   }
 
@@ -77,7 +68,7 @@ export default class MapScreenTraitor extends React.Component {
   //Sets state to all this current info, with callback to
   //getAndSetLocation
   callCurrentPosition() {
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       let fbGameWinner = snapshot.val().gameWinner;
       if (fbGameWinner !== "none") {
@@ -98,12 +89,11 @@ export default class MapScreenTraitor extends React.Component {
               !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor, fbDirectionCoordsForTraitor)) {
           Vibration.vibrate();
         }
-        //Check if tracer is logged in, and if so, start countdown.
-
+        //Check if fbCountdownTotal has a value and tracer is logged in.
+        //If so, set countdownTotal and start countdown
         let fbCountdownTotal = snapshot.val().countdownTotal;
         if (!this.state.tracerInGame && fbTracerInGame &&
           this.state.currentTime === -10 && fbCountdownTotal > 0) {
-            //fbCountdownTotal has a value, so set countdownTotal
             this.countdownTotal = fbCountdownTotal;
             this.setState({
               currentTime: this.countdownTotal,
@@ -111,9 +101,9 @@ export default class MapScreenTraitor extends React.Component {
             });
             this.startCountdown();
         }
+        //If countdownTotal hasn't been set because of asynchronous
+        //firebase uploading by tracer, then pull from firebase again
         if (!(this.countdownTotal > 0) && fbTracerInGame && fbCountdownTotal > 0) {
-          //If countdownTotal hasn't been set because of asynchronous
-          //firebase uploading by tracer, then pull from firebase again
           this.countdownTotal = fbCountdownTotal;
           this.setState({
             currentTime: this.countdownTotal,
@@ -161,48 +151,50 @@ export default class MapScreenTraitor extends React.Component {
     //   }
       //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
       this.clearFirebaseActions();
-      Actions.endScreenTraitor({winner: fbGameWinner, endTime: this.totalGameTime - this.state.currentTime - 2, type: ActionConst.RESET});
+      Actions.endScreenTraitor({
+        sessionKey: this.props.sessionKey,
+        winner: fbGameWinner,
+        endTime: this.totalGameTime - this.state.currentTime - 2,
+        type: ActionConst.RESET});
     //}
   }
 
+  //Resets game properties to default when game is over
   clearFirebaseActions() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
       .set({
         deflectOn: false,
         disguiseOn: false,
-        latitude: 0,
-        longitude: 0,
+        traitorLatitude: 0,
+        traitorLongitude: 0,
         traitorInGame: false,
         roleTaken: "none",
+        showDirection: false,
+        showDistance: false,
+        distance: 0,
+        directionCoordsForTraitor: [{
+          latitude: 0,
+          longitude: 0
+        },
+        {
+          latitude: 0,
+          longitude: 0
+        }],
+        //Arbitrary values here!
+        lastClickLatTraitor: 0,
+        lastClickLonTraitor: 0,
+        tracerInGame: false,
+        gameWinner: "none",
+        countdownTotal: -1,
+        tracerLatitude: 0,
+        tracerLongitude: 0,
+        tracerInLocate: false,
+        traitorInLocate: false,
       })
       .catch(() => {
         console.log("firebase reset failed");
       });
-        firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-          .set({
-            showDirection: false,
-            showDistance: false,
-            distance: 0,
-            directionCoordsForTraitor: [{
-              latitude: 0,
-              longitude: 0
-            },
-            {
-              latitude: 0,
-              longitude: 0
-            }],
-            //Arbitrary values here!
-            lastClickLatTraitor: 0,
-            lastClickLonTraitor: 0,
-            tracerInGame: false,
-            gameWinner: "none",
-            countdownTotal: -1,
-          })
-          .catch(() => {
-            console.log("firebase reset failed");
-          });
   }
-
 
   //Updates timer
   updateTime() {
@@ -254,18 +246,26 @@ export default class MapScreenTraitor extends React.Component {
           longitude: position.coords.longitude,
           error: null
         });
-        let fbTraitorInGame;
+        let updates = {};
+        updates[`/currentSessions/${this.props.sessionKey}/traitorLatitude/`] = position.coords.latitude;
+        updates[`/currentSessions/${this.props.sessionKey}/traitorLongitude/`] = position.coords.longitude;
+        updates[`/currentSessions/${this.props.sessionKey}/deflectOn/`] = this.state.deflectOn;
+        updates[`/currentSessions/${this.props.sessionKey}/disguiseOn/`] = this.state.disguiseOn;
+        firebase.database().ref().update(updates);
+        //CHANGED: didn't include traitorInGame, or roleTaken in the updates.
+        /*let fbTraitorInGame;
         let fbRoleTaken;
-        firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+        firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
         .once('value', snapshot => {
           //Get current value of traitorInGame and keep it that way
           fbTraitorInGame = snapshot.val().traitorInGame;
           fbRoleTaken = snapshot.val().roleTaken;
         })
         .then(() => {
-        firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-          .set({latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+        firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
+          .set({
+            traitorLatitude: position.coords.latitude,
+            traitorLongitude: position.coords.longitude,
             deflectOn: this.state.deflectOn,
             disguiseOn: this.state.disguiseOn,
             traitorInGame: fbTraitorInGame,
@@ -274,7 +274,7 @@ export default class MapScreenTraitor extends React.Component {
           .catch(() => {
             console.log("location set failed");
           });
-        });
+        });*/
       },
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
@@ -288,7 +288,7 @@ export default class MapScreenTraitor extends React.Component {
       && !this.state.showCountdown) {
       this.state.disguisesRemaining = this.state.disguisesRemaining - 1;
       let updates = {};
-      updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = true;
+      updates[`/currentSessions/${this.props.sessionKey}/disguiseOn/`] = true;
       firebase.database().ref().update(updates);
       Vibration.vibrate();
       this.setState({
@@ -302,7 +302,7 @@ export default class MapScreenTraitor extends React.Component {
   endDisguise() {
     clearTimeout(this.disguiseTimeout);
     let updates = {};
-    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/disguiseOn/'] = false;
+    updates[`/currentSessions/${this.props.sessionKey}/disguiseOn/`] = false;
     firebase.database().ref().update(updates);
     Vibration.vibrate();
     this.setState({
@@ -325,7 +325,7 @@ export default class MapScreenTraitor extends React.Component {
       && !this.state.showCountdown) {
       this.state.deflectsRemaining = this.state.deflectsRemaining - 1;
       let updates = {};
-      updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = true;
+      updates[`/currentSessions/${this.props.sessionKey}/deflectOn/`] = true;
       firebase.database().ref().update(updates);
       Vibration.vibrate();
       this.setState({
@@ -340,7 +340,7 @@ export default class MapScreenTraitor extends React.Component {
   endDeflect() {
     clearTimeout(this.deflectTimeout);
     let updates = {};
-    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/deflectOn/'] = false;
+    updates[`/currentSessions/${this.props.sessionKey}/deflectOn/`] = false;
     firebase.database().ref().update(updates);
     Vibration.vibrate();
     this.setState({
@@ -356,7 +356,7 @@ export default class MapScreenTraitor extends React.Component {
     clearInterval(this.deflectTimeout);
     clearInterval(this.disguiseTimeout);
     let updates = {};
-    updates['/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/traitorInGame/'] = false;
+    updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = false;
     firebase.database().ref().update(updates);
   }
 

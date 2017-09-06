@@ -13,11 +13,12 @@ export default class EndScreenTracer extends React.Component {
     super(props);
     this.state = {
       traitorInGame: false,
+      tracerInGame: false,
       newGameModalVisible: true,
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.interval = setInterval(this.checkTraitorInGame.bind(this), 3000);
   }
 
@@ -26,12 +27,13 @@ export default class EndScreenTracer extends React.Component {
   }
 
   checkTraitorInGame() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       this.setState({
+        tracerInGame: snapshot.val().tracerInGame,
         traitorInGame: snapshot.val().traitorInGame,
-      })
-    })
+      });
+    });
   }
 
   clearIntervals() {
@@ -59,77 +61,36 @@ export default class EndScreenTracer extends React.Component {
   }
 
   goToNewGame() {
-    //this.clearFirebaseActions();
-    //Actions.mapScreenTracer({type: ActionConst.RESET});
-
     //Check if other player has chosen a role
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let fbRoleTaken = snapshot.val().roleTaken;
-      if (fbRoleTaken === "tracer") {
+      //Even though tracerInGame/traitorInGame are set to state,
+      //it's only set every 3 seconds, so this is more accurate
+      let fbTracerInGame = snapshot.val().tracerInGame;
+      let fbTraitorInGame = snapshot.val().traitorInGame;
+      if (fbTracerInGame) {
         //Tracer has been taken, this user is traitor
-        Actions.mapScreenTraitor({type: ActionConst.RESET});
+        Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
       }
-      else if (fbRoleTaken === "traitor") {
+      else if (fbTraitorInGame) {
         //Traitor has been taken, this user is tracer
-        Actions.mapScreenTracer({type: ActionConst.RESET});
+        Actions.mapScreenTracer({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
       }
       else {
         //This user has first choice of role
-        Actions.chooseRole({type: ActionConst.RESET});
+        Actions.chooseRole({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
       }
     });
   }
 
   goToLocate() {
-    Actions.locateScreenTracer({winner: this.props.winner, endDistance: this.props.endDistance, endTime: this.props.endTime, type: ActionConst.RESET});
-  }
-
-  //TODO: get rid of this function if everything works.
-  clearFirebaseActions() {
-    //TODO: replace fbTraitorInGame with state var
-    let fbTraitorInGame;
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
-    .once('value', snapshot => {
-      //Get current value of traitorInGame and keep it that way
-      fbTraitorInGame = snapshot.val().traitorInGame;
-    })
-    .then(() => {
-      firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/`)
-        .set({
-          deflectOn: false,
-          disguiseOn: false,
-          latitude: 0,
-          longitude: 0,
-          traitorInGame: fbTraitorInGame,
-        })
-        .catch(() => {
-          console.log("firebase reset failed");
-        });
+    Actions.locateScreenTracer({
+      sessionKey: this.props.sessionKey,
+      winner: this.props.winner,
+      endDistance: this.props.endDistance,
+      endTime: this.props.endTime,
+      type: ActionConst.RESET
     });
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
-      .set({
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoordsForTraitor: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
-        tracerInGame: true,
-        gameWinner: "none",
-        countdownTotal: -1,
-      })
-      .catch(() => {
-        console.log("firebase reset failed");
-      });
   }
 
   exitNewGameModal() {
@@ -140,13 +101,25 @@ export default class EndScreenTracer extends React.Component {
 
   //TODO 9/3: WHY IS THERE A BIG SPACE UNDER THE TIMER WHEN MODAL RENDERS?!
   renderModal() {
-    if (this.state.newGameModalVisible && this.state.traitorInGame) {
-      console.log("hello");
-      return (
-        <GameStartedModal
+    if (this.state.newGameModalVisible) {
+      if (this.state.traitorInGame) {
+        return (
+          <GameStartedModal
             onCloseModal={this.exitNewGameModal.bind(this)}
-          >Traitor started a new game and is waiting for you bitch.</GameStartedModal>
-      );
+          >
+            Yo friend started a new game. You are tracer.
+          </GameStartedModal>
+        );
+      }
+      else if (this.state.tracerInGame) {
+        return (
+          <GameStartedModal
+            onCloseModal={this.exitNewGameModal.bind(this)}
+          >
+            Yo friend started a new game. You are traitor.
+          </GameStartedModal>
+        );
+      }
     }
   }
 

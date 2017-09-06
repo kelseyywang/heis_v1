@@ -7,6 +7,7 @@ import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
 import { Spinner } from './common';
 import GameStartedModal from './GameStartedModal';
 
+//TODO 9/5: Reset all the fb with sessionKey to default vals in beginning
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -75,12 +76,13 @@ export default class MapScreenTracer extends React.Component {
   //Sets interval to callCurrentPosition every second and
   //sets firebase tracerInGame to true
   componentDidMount() {
+    console.log("sessionKey" + this.props.sessionKey);
     this.callCurrentPosition();
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
     this.countdownInterval = null;
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = true;
+    updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = true;
     firebase.database().ref().update(updates);
   }
 
@@ -92,7 +94,7 @@ export default class MapScreenTracer extends React.Component {
   //Also pulls disguise info from firebase
   callCurrentPosition() {
     //Check if traitor is in game, if so, start countdown
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       let fbTraitorInGame = snapshot.val().traitorInGame;
       if (fbTraitorInGame && this.countdownInterval === null) {
@@ -139,8 +141,6 @@ export default class MapScreenTracer extends React.Component {
   //Determines countdown amount and starts countdown after both players are in game
   startCountdown() {
     this.setCountdownTotal();
-    //Wait one second for the display to be more synchronized with traitor
-    //who will have a slight lag
     this.timerStart = new Date().getTime();
     this.countdownInterval = setInterval(this.updateTime, 1000);
   }
@@ -150,23 +150,23 @@ export default class MapScreenTracer extends React.Component {
   setCountdownTotal() {
     let traitorStartLat;
     let traitorStartLon;
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      traitorStartLat = snapshot.val().latitude;
-      traitorStartLon = snapshot.val().longitude;
+      traitorStartLat = snapshot.val().traitorLatitude;
+      traitorStartLon = snapshot.val().traitorLongitude;
     })
     .then(() => {
       if (traitorStartLat === 0 || traitorStartLon === 0) {
-        //traitor's position hasn't been uploaded to firebase yet, need to wait
+        //Traitor's position hasn't been uploaded to firebase yet, need to wait
         this.getTraitorPosTimeout = setTimeout(this.setCountdownTotal.bind(this), 500);
       }
       else {
         clearTimeout(this.getTraitorPosTimeout);
-        //traitor's position has been uploaded to firebase
+        //Traitor's position has been uploaded to firebase
         let startDistance = this.calcDistance(this.state.latitude, this.state.longitude, traitorStartLat, traitorStartLon);
         this.countdownTotal = this.calcCountdownAmount(startDistance);
         let updates = {};
-        updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/countdownTotal/'] = this.countdownTotal;
+        updates[`/currentSessions/${this.props.sessionKey}/countdownTotal/`] = this.countdownTotal;
         firebase.database().ref().update(updates);
       }
     });
@@ -198,7 +198,16 @@ export default class MapScreenTracer extends React.Component {
 
   //Sets current state variables to firebase
   setFirebase() {
-    firebase.database().ref(`/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/`)
+    let updates = {};
+    updates[`/currentSessions/${this.props.sessionKey}/showDirection/`] = this.state.showDirection;
+    updates[`/currentSessions/${this.props.sessionKey}/showDistance/`] = this.state.showDistance;
+    updates[`/currentSessions/${this.props.sessionKey}/distance/`] = this.state.distance;
+    updates[`/currentSessions/${this.props.sessionKey}/directionCoordsForTraitor/`] = this.state.directionCoordsForTraitor;
+    updates[`/currentSessions/${this.props.sessionKey}/lastClickLatTraitor/`] = this.state.lastClickLatTraitor;
+    updates[`/currentSessions/${this.props.sessionKey}/lastClickLonTraitor/`] = this.state.lastClickLonTraitor;
+    firebase.database().ref().update(updates);
+    //CHANGED: didn't include tracerInGame, gameWinner, or countdownTotal in the updates.
+    /*firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
       .set({
         showDirection: this.state.showDirection,
         showDistance: this.state.showDistance,
@@ -212,7 +221,7 @@ export default class MapScreenTracer extends React.Component {
         })
       .catch(() => {
         console.log("location set failed");
-      });
+      });*/
   }
 
   //Calculates dist in meters between two coordinates
@@ -265,10 +274,10 @@ export default class MapScreenTracer extends React.Component {
   setCurrentDistance() {
     if (!this.state.pauseBetweenClicks && this.state.traitorInGame
       && !this.state.showCountdown) {
-      firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+      firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
       .once('value', snapshot => {
-        let traitorLat = snapshot.val().latitude;
-        let traitorLon = snapshot.val().longitude;
+        let traitorLat = snapshot.val().traitorLatitude;
+        let traitorLon = snapshot.val().traitorLongitude;
         let traitorDisguiseOn = snapshot.val().disguiseOn;
         if (traitorDisguiseOn) {
           this.setState({
@@ -283,8 +292,8 @@ export default class MapScreenTracer extends React.Component {
             showDirection: false,
             lastClickLatTracer: this.state.latitude,
             lastClickLonTracer: this.state.longitude,
-            lastClickLatTraitor: snapshot.val().latitude,
-            lastClickLonTraitor: snapshot.val().longitude,
+            lastClickLatTraitor: snapshot.val().traitorLatitude,
+            lastClickLonTraitor: snapshot.val().traitorLongitude,
             showTriggerCircle: false,
             disguiseOn: false,
           }, this.setFirebase);
@@ -303,10 +312,10 @@ export default class MapScreenTracer extends React.Component {
   setCurrentDirectionCoords() {
     if (!this.state.pauseBetweenClicks && this.state.traitorInGame
     && !this.state.showCountdown) {
-      firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+      firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
       .once('value', snapshot => {
-        let traitorLat = snapshot.val().latitude;
-        let traitorLon = snapshot.val().longitude;
+        let traitorLat = snapshot.val().traitorLatitude;
+        let traitorLon = snapshot.val().traitorLongitude;
         let traitorDisguiseOn = snapshot.val().disguiseOn;
         if (traitorDisguiseOn) {
           this.setState({
@@ -325,8 +334,8 @@ export default class MapScreenTracer extends React.Component {
             showDirection: true,
             lastClickLatTracer: this.state.latitude,
             lastClickLonTracer: this.state.longitude,
-            lastClickLatTraitor: snapshot.val().latitude,
-            lastClickLonTraitor: snapshot.val().longitude,
+            lastClickLatTraitor: snapshot.val().traitorLatitude,
+            lastClickLonTraitor: snapshot.val().traitorLongitude,
             showTriggerCircle: false,
             disguiseOn: false,
           }, this.setFirebase);
@@ -385,10 +394,10 @@ export default class MapScreenTracer extends React.Component {
   //Determines whether traitor is in range and
   //whether deflect was pulled. If no winner, resets state
   determineWinner() {
-    firebase.database().ref(`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2`)
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let traitorLat = snapshot.val().latitude;
-      let traitorLon = snapshot.val().longitude;
+      let traitorLat = snapshot.val().traitorLatitude;
+      let traitorLon = snapshot.val().traitorLongitude;
       let traitorDeflect = snapshot.val().deflectOn;
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
@@ -419,9 +428,14 @@ export default class MapScreenTracer extends React.Component {
   //and send to end screen
   gameWonActions(winnerString, endDist) {
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/gameWinner/'] = winnerString;
+    updates[`/currentSessions/${this.props.sessionKey}/gameWinner/`] = winnerString;
     firebase.database().ref().update(updates);
-    Actions.endScreenTracer({winner: winnerString, endDistance: endDist, endTime: this.totalGameTime - this.state.currentTime, type: ActionConst.RESET});
+    Actions.endScreenTracer({
+      sessionKey: this.props.sessionKey,
+      winner: winnerString,
+      endDistance: endDist,
+      endTime: this.totalGameTime - this.state.currentTime,
+      type: ActionConst.RESET});
   }
 
   //Updates timer
@@ -468,7 +482,7 @@ export default class MapScreenTracer extends React.Component {
     clearInterval(this.countdownInterval);
     clearTimeout(this.getTraitorPosTimeout);
     let updates = {};
-    updates['/users/oAoeKzMPhwZ5W5xUMEQImvQ1r333/tracerInGame/'] = false;
+    updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = false;
     firebase.database().ref().update(updates);
   }
 

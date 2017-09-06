@@ -5,7 +5,7 @@ import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 
 export default class ChooseRole extends React.Component {
-  componentWillMount() {
+  componentDidMount() {
   }
 
   componentWillUnmount() {
@@ -13,16 +13,16 @@ export default class ChooseRole extends React.Component {
 
   tracerChosen() {
     let updates = {};
-    updates[`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/roleTaken/`] = "tracer";
+    updates[`/currentSessions/${this.props.sessionKey}/roleTaken/`] = "tracer";
     firebase.database().ref().update(updates);
-    Actions.mapScreenTracer({type: ActionConst.RESET});
+    Actions.mapScreenTracer({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 
   traitorChosen() {
     let updates = {};
-    updates[`/users/AQVDfE7Fp4S4nDXvxpX4fchTt2w2/roleTaken/`] = "traitor";
+    updates[`/currentSessions/${this.props.sessionKey}/roleTaken/`] = "traitor";
     firebase.database().ref().update(updates);
-    Actions.mapScreenTraitor({type: ActionConst.RESET});
+    Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 
   render() {
