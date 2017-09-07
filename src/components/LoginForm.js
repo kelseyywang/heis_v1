@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button, Card, CardSection, Input, Spinner } from './common';
+import { Button, Card, CardSection, Input, Spinner, Header } from './common';
 
+//TODO 9/7: make styling less bad... why is password deleting
+//completely after you touch outside on ios? 
 class LoginForm extends Component {
   constructor(props) {
     super(props);
@@ -97,8 +99,14 @@ class LoginForm extends Component {
 
   renderForm() {
     return (
-      <Card>
-        <CardSection>
+      <View style={styles.containerStyle}>
+        <View style={styles.smallSectionStyle}>
+          <Image
+            style={styles.logoStyle}
+            source={require('../images/heistemplogo.png')}
+          />
+        </View>
+        <View style={styles.mainSectionStyle}>
           <Input
             placeholder="user@gmail.com"
             label="Email"
@@ -106,9 +114,7 @@ class LoginForm extends Component {
             onChangeText={email => this.setState({ email })}
           >
           </Input>
-        </CardSection>
 
-        <CardSection>
           <Input
             secureTextEntry
             placeholder="password"
@@ -116,30 +122,54 @@ class LoginForm extends Component {
             onChangeText={password => this.setState({ password })}
             label="Password"
           />
-        </CardSection>
-
-        <Text style={styles.errorTextStyle}>
-          {this.state.error}
-        </Text>
-        <CardSection>
+        </View>
+        <View style={styles.smallSectionStyle}>
+          <Text style={styles.errorTextStyle}>
+            {this.state.error}
+          </Text>
           {this.renderButton()}
-        </CardSection>
-      </Card>
+        </View>
+        <View style={styles.smallSectionStyle}/>
+      </View>
     );
   }
 
   render() {
     return (
-      <View style={styles.container}>
-        {this.renderForm()}
-      </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.containerStyle}>
+          <Header
+            headerText='Log In/Create Account'
+            includeRightButton={false}
+          />
+          {this.renderForm()}
+        </View>
+      </TouchableWithoutFeedback>
     );
   }
 }
 
 const styles = {
-  container: {
+  logoStyle: {
+    height: 80,
+    width: 80,
+  },
+  containerStyle: {
     flex: 1,
+    flexDirection: 'column',
+    alignSelf: 'stretch',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  mainSectionStyle: {
+    flex: 1.5,
+    alignSelf: 'stretch',
+  },
+  smallSectionStyle: {
+    flex: 1,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorTextStyle: {
     fontSize: 20,

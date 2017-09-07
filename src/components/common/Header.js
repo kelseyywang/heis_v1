@@ -1,29 +1,100 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import colors from '../../styles/colors';
 
 const Header = (props) => {
-  const { textStyle, viewStyle } = styles;
+  const { titleText, rightText, viewStyle, altViewStyle, placeholderStyle } = styles;
+  if (props.includeRightButton) {
+    return (
+      <View style={viewStyle}>
+          <View style={placeholderStyle} />
+          <View style={placeholderStyle}>
+            <Text style={titleText}>{props.headerText}</Text>
+          </View>
+          <View style={placeholderStyle}>
+            <TouchableOpacity
+              onPress={props.rightButtonAction}
+            >
+              <Text style={rightText}>{props.rightButtonText}</Text>
+            </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
   return (
-  <View style={viewStyle}>
-    <Text style={textStyle}>{props.headerText}</Text>
-  </View>
-)
+    <View style={altViewStyle}>
+      <Text style={titleText}>{props.headerText}</Text>
+    </View>
+  );
 };
 
-const styles = {
+
+const styles = StyleSheet.create({
   viewStyle: {
-    backgroundColor: '#F8F8F8',
+    ...Platform.select({
+      ios: {
+        paddingTop: 20,
+        height: 70,
+      },
+      android: {
+        paddingTop: 25,
+        height: 75,
+      },
+      windows: {
+        paddingTop: 25,
+        height: 75,
+      },
+    }),
+    alignSelf: 'stretch',
+    backgroundColor: colors.headerColor,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderColor,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  altViewStyle: {
+    ...Platform.select({
+      ios: {
+        paddingTop: 20,
+        height: 70,
+      },
+      android: {
+        paddingTop: 25,
+        height: 75,
+      },
+      windows: {
+        paddingTop: 25,
+        height: 75,
+      },
+    }),
+    paddingLeft: 20,
+    paddingRight: 20,
+    alignSelf: 'stretch',
+    backgroundColor: colors.headerColor,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderColor,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 60,
-    paddingTop: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.9
   },
-  textStyle: {
-    fontSize: 20
-  }
-};
+  placeholderStyle: {
+    flex: 1,
+    alignSelf: 'stretch',
+    height: 50,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rightText: {
+    alignSelf: 'flex-end',
+    color: colors.clickTextColor,
+  },
+  titleText: {
+    alignSelf: 'center',
+    textAlign: 'center',
+    color: colors.lightTextColor,
+  },
+});
 
 export { Header };

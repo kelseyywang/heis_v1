@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button } from 'react-native-elements';
-import { Card, CardSection, Input, Spinner } from './common';
+import { Card, CardSection, Input, Spinner, Header } from './common';
 import firebase from 'firebase';
 
 export default class StartGame extends React.Component {
@@ -120,6 +120,13 @@ export default class StartGame extends React.Component {
   render() {
     return (
       <View style={styles.containerStyle}>
+        <Header
+          headerText='Start Game'
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirmTracer({sessionKey: this.state.sessionKey});}}
+        />
         <CardSection>
           <Input
             placeholder="sessionKey"
@@ -144,7 +151,6 @@ export default class StartGame extends React.Component {
 }
 const styles = StyleSheet.create({
   containerStyle: {
-    marginTop: 20,
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',

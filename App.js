@@ -34,11 +34,14 @@ import ChooseRole from './src/components/ChooseRole';
 // 4. 9/4 - The GameStartedModal makes layout weird when used anywhere (currently
 // in EndScreenTraitor and Tracer)
 // GENERAL TODO:
+// for styling android vs ios: https://github.com/aksonov/react-native-router-flux/blob/master/src/NavBar.js
+// handle create account
 // connect log out to sessionKey... and make numPlayers decrease when there's a logout.
 // handle if both players are on chooseRole at same time...
 // make colors darker or make it zoom out when circle is really big
 // shorter countdowns? 2:30 max?
 // make option to cancel game, while game is happening or in countdown
+// about page
 
 
 export default class App extends React.Component {
@@ -50,113 +53,58 @@ export default class App extends React.Component {
           <Scene
             key="loginForm"
             component={LoginForm}
-            title="Login"
-            onBack={() => {}}
+            hideNavBar
             initial
           />
           <Scene
             key="startGame"
             component={StartGame}
-            title="Tracer Start Game?"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer();}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="mapScreenTraitor"
             component={MapScreenTraitor}
-            title="Traitor Map"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTraitor();}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="mapScreenTracer"
             component={MapScreenTracer}
-            title="Tracer Map"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="locateScreenTracer"
             component={LocateScreenTracer}
-            title="Reunite with Traitor"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer();}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="locateScreenTraitor"
             component={LocateScreenTraitor}
-            title="Reunite with Tracer"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTraitor();}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="chooseRole"
             component={ChooseRole}
-            title="Choose Next Game Role"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onBack={() => {}}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="endScreenTraitor"
             component={EndScreenTraitor}
-            title="Game Over, Traitor ;^)"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTraitor();}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="endScreenTracer"
             component={EndScreenTracer}
-            title="Game Over, Tracer ;^)"
-            hideBackImage
-            renderLeftButton={() => (null)}
-            onRight={() => {Actions.logoutConfirmTracer();}}
-            onBack={() => {}}
-            rightTitle={"Log out"}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="logoutConfirmTracer"
             component={LogoutConfirmTracer}
-            title="Logout BITCH?"
-            hideBackImage
-            onBack={() => {}}
-            renderLeftButton={() => (null)}
-            panHandlers={null}
+            hideNavBar
           />
           <Scene
             key="logoutConfirmTraitor"
             component={LogoutConfirmTraitor}
-            title="Logout BITCH?"
-            hideBackImage
-            onBack={() => {}}
-            renderLeftButton={() => (null)}
-            panHandlers={null}
+            hideNavBar
           />
         </Scene>
       </Router>
