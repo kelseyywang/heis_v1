@@ -29,7 +29,7 @@ export default class ChooseRole extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'unknown'});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>

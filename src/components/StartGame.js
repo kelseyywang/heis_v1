@@ -79,12 +79,6 @@ export default class StartGame extends React.Component {
     });
   }
 
-  updateNumPlayers(num) {
-    let updates = {};
-    updates[`/currentSessions/${this.state.sessionKey}/numPlayers/`] = num;
-    firebase.database().ref().update(updates);
-  }
-
   //Resets game properties to default when game is over
   clearFirebaseActions(currTracerInGame, currTraitorInGame, currNumPlayers) {
     firebase.database().ref(`/currentSessions/${this.state.sessionKey}`)
@@ -131,7 +125,7 @@ export default class StartGame extends React.Component {
             includeRightButton
             rightButtonText='Log Out'
             rightButtonAction={() =>
-              {Actions.logoutConfirmTracer({sessionKey: this.state.sessionKey});}}
+            {Actions.logoutConfirm({sessionKey: this.state.sessionKey, role: 'none'});}}
           />
           <Placeholder
             flex={0.3}

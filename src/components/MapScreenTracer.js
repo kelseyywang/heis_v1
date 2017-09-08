@@ -508,7 +508,7 @@ export default class MapScreenTracer extends React.Component {
           gameMode
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'tracer'});}}
         />
         <Placeholder flex={0.3} >
         {!this.state.showCountdown &&
@@ -523,8 +523,8 @@ export default class MapScreenTracer extends React.Component {
           animationType="slide"
           onRequestClose={() => {}}
         >
-          <View style={styles.modalStyle}>
-            <View style={styles.modalSectionStyle}>
+          <View style={commonStyles.modalStyle}>
+            <View style={commonStyles.modalSectionStyle}>
               <Text style={commonStyles.mainTextStyle}>
                 Traitor is not in the game
               </Text>
@@ -543,8 +543,8 @@ export default class MapScreenTracer extends React.Component {
         animationType="slide"
         onRequestClose={() => {}}
         >
-          <View style={styles.modalStyle}>
-            <View style={styles.modalShortSectionStyle}>
+          <View style={commonStyles.modalStyle}>
+            <View style={commonStyles.modalShortSectionStyle}>
               <Text style={commonStyles.mainTextStyle}>
                 {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
               </Text>
@@ -554,7 +554,7 @@ export default class MapScreenTracer extends React.Component {
         <Placeholder flex={2} >
           <MapView
             provider="google"
-            style={styles.map}
+            style={commonStyles.map}
             showsUserLocation
             initialRegion={{
               latitude: this.state.latitude,
@@ -631,14 +631,13 @@ export default class MapScreenTracer extends React.Component {
               title='Direction'
               main={false}
             />
-            <View style={styles.rowContainerStyle}>
+            <View style={commonStyles.rowContainerStyle}>
               <TouchableOpacity
                 onPress={this.setAim.bind(this)}
-                style={styles.aimButtonStyle}
+                style={commonStyles.aimButtonStyle}
               >
-                <Text style={styles.aimTextStyle} >Aim</Text>
+                <Text style={commonStyles.aimTextStyle} >Aim</Text>
               </TouchableOpacity>
-
               <Button
                 onPress={this.triggerPulled.bind(this)}
                 title={`Trigger (${this.state.triggersRemaining})`}
@@ -676,60 +675,3 @@ export default class MapScreenTracer extends React.Component {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  map: {
-    flex: 1,
-    alignSelf: 'stretch',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  rowContainerStyle: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  aimButtonStyle: {
-    marginRight: 30,
-    width: 50,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 25,
-    borderColor: colors.mainButtonTextColor,
-    backgroundColor: colors.mainButtonColor,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  aimTextStyle: {
-    color: colors.mainButtonTextColor,
-    fontSize: 16,
-  },
-  modalSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 150
-  },
-  modalShortSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 70
-  },
-  modalStyle: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    position: 'relative',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1
-  },
-});

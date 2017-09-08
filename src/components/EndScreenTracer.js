@@ -134,7 +134,7 @@ export default class EndScreenTracer extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'tracer'});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>{this.printMessage()}</Text>
@@ -146,7 +146,7 @@ export default class EndScreenTracer extends React.Component {
             />
             <Button
               onPress={this.goToLocate.bind(this)}
-              title='Find Your Friend'
+              title='Find My Friend'
               margin='30'
               main
             />

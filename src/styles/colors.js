@@ -20,6 +20,8 @@ colors = {
   aimCircleColor: 'rgba(229, 172, 0, .3)',
   clueFillColor: 'rgba(64, 52, 109, .2)',
   clueStrokeColor: 'rgba(64, 52, 109, .9)',
+  modalColor: '#ffffff',
+  modalBorderColor: '#8892e2',
 }
 
 export default colors;

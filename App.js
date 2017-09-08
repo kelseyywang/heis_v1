@@ -5,8 +5,7 @@ import MapScreenTraitor from './src/components/MapScreenTraitor';
 import MapScreenTracer from './src/components/MapScreenTracer';
 import EndScreenTracer from './src/components/EndScreenTracer';
 import EndScreenTraitor from './src/components/EndScreenTraitor';
-import LogoutConfirmTraitor from './src/components/LogoutConfirmTraitor';
-import LogoutConfirmTracer from './src/components/LogoutConfirmTracer';
+import LogoutConfirm from './src/components/LogoutConfirm';
 import StartGame from './src/components/StartGame';
 import LocateScreenTracer from './src/components/LocateScreenTracer';
 import LocateScreenTraitor from './src/components/LocateScreenTraitor';
@@ -22,6 +21,8 @@ import ChooseRole from './src/components/ChooseRole';
 // this.maxDist = 1500;
 
 // PROBLEM TODO:
+// 0. 9/7 - Button has to take in a margin String prop because it didn't work with the {} int object
+// thing. But it works on Placeholder so maybe use (props) ??
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
@@ -34,15 +35,17 @@ import ChooseRole from './src/components/ChooseRole';
 // 4. 9/4 - The GameStartedModal makes layout weird when used anywhere (currently
 // in EndScreenTraitor and Tracer)
 // GENERAL TODO:
-// for styling android vs ios: https://github.com/aksonov/react-native-router-flux/blob/master/src/NavBar.js
 // handle create account
 // connect log out to sessionKey... and make numPlayers decrease when there's a logout.
 // handle if both players are on chooseRole at same time...
 // make colors darker or make it zoom out when circle is really big
-// shorter countdowns? 2:30 max?
-// make option to cancel game, while game is happening or in countdown
+// revise endscreen messages
 // about page - maybe an information icon on header on each page
 // chenge rules in firebase
+// In LocateScreens and maybe MapScreens, make lon/lat delta dependent on how far
+// away the players are initially
+// not important: make option to cancel game, while game is happening or in countdown
+
 
 export default class App extends React.Component {
 
@@ -97,13 +100,8 @@ export default class App extends React.Component {
             hideNavBar
           />
           <Scene
-            key="logoutConfirmTracer"
-            component={LogoutConfirmTracer}
-            hideNavBar
-          />
-          <Scene
-            key="logoutConfirmTraitor"
-            component={LogoutConfirmTraitor}
+            key="logoutConfirm"
+            component={LogoutConfirm}
             hideNavBar
           />
         </Scene>

@@ -6,13 +6,32 @@ import { Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
-export default class LogoutConfirmTraitor extends React.Component {
+export default class LogoutConfirmTracer extends React.Component {
+
+  //TODO: This logout doesn't really work because it's connected via the Router
+  //and won't get the sessionKey prop, so can't set the InGame to false on fb...
+  //Same for LogoutConfirmTraitor
 
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    /*let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = false;
-    firebase.database().ref().update(updates);*/
+    if (this.props.role === 'tracer' || this.props.role === 'traitor') {
+      let updates = {};
+      updates[`/currentSessions/${this.props.sessionKey}/${this.props.role}InGame/`] = false;
+      firebase.database().ref().update(updates);
+    }
+    //If player logged out from StartGame, don't need to subtract from numPlayers
+    //since she was never added to numPlayers
+    if (this.props.role !== 'none') {
+      firebase.database().ref(`/currentSessions/${this.props.sessionKey}/numPlayers`)
+      .once('value', snapshot => {
+        let fbNumPlayers = snapshot.val();
+        if (fbNumPlayers > 0) {
+          let updates = {};
+          updates[`/currentSessions/${this.props.sessionKey}/numPlayers/`] = fbNumPlayers - 1;
+          firebase.database().ref().update(updates);
+        }
+      });
+    }
     firebase.auth().signOut();
     Actions.loginForm({type: ActionConst.RESET});
   }
@@ -57,6 +76,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSetupColor,
   },
   buttonsRowStyle: {
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',

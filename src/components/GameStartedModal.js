@@ -13,8 +13,8 @@ export default class GameStartedModal extends React.Component {
         animationType="slide"
         onRequestClose={() => {}}
       >
-        <View style={styles.modalStyle}>
-          <View style={styles.modalSectionStyle}>
+        <View style={commonStyles.modalStyle}>
+          <View style={commonStyles.modalSectionStyle}>
             <Text style={commonStyles.mainTextStyle}>
               {this.props.children}
             </Text>
@@ -31,60 +31,6 @@ export default class GameStartedModal extends React.Component {
   }
 
   render() {
-    return (
-      <View style={styles.containerStyle}>
-        {this.renderCurrentUser()}
-      </View>
-    );
+    return this.renderCurrentUser();
   }
 }
-
-const styles = StyleSheet.create({
-  containerStyle: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  buttonsContainerStyle: {
-    flex: 1,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  buttonAltStyle: {
-    marginTop: 20,
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  modalSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 150
-  },
-  modalShortSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 70
-  },
-  textStyle: {
-    flex: 1,
-    fontSize: 18,
-    textAlign: 'center',
-    lineHeight: 40
-  },
-  modalStyle: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    position: 'relative',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1
-  },
-});

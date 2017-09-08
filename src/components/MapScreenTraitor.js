@@ -1,7 +1,7 @@
+import React from 'react';
 import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
-import React from 'react';
 import { StyleSheet, Text, View, Vibration, Modal, TouchableOpacity } from 'react-native';
 import { Spinner, Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
@@ -368,24 +368,36 @@ export default class MapScreenTraitor extends React.Component {
 
   renderCurrentUser() {
     return (
-      <View style={styles.containerStyle}>
-        {!this.state.showCountdown &&
-          <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
+      <View style={commonStyles.gameStyle}>
+        <Header
+          headerText='Traitor'
+          gameMode
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
+        />
+        <Placeholder flex={0.3} >
+          {!this.state.showCountdown &&
+            <Text style={commonStyles.lightTextStyle}>
+              {"Time: " + this.returnTimerString(this.state.currentTime)}
+            </Text>
+          }
+        </Placeholder>
         <Modal
           visible={!this.state.showCountdown && !this.state.tracerInGame && this.state.timerModalVisible}
           transparent
           animationType="slide"
           onRequestClose={() => {}}
         >
-          <View style={styles.modalStyle}>
-            <View style={styles.modalSectionStyle}>
-              <Text style={styles.textStyle}>
+          <View style={commonStyles.modalStyle}>
+            <View style={commonStyles.modalSectionStyle}>
+              <Text style={commonStyles.mainTextStyle}>
                 Tracer is not in the game
               </Text>
               <Button
-                style={styles.buttonStyle}
                 onPress={this.exitTimeModal}
-                title='OKAY'
+                title='Okay'
+                main
               >
               </Button>
             </View>
@@ -397,17 +409,18 @@ export default class MapScreenTraitor extends React.Component {
         animationType="slide"
         onRequestClose={() => {}}
         >
-        <View style={styles.modalStyle}>
-          <View style={styles.modalShortSectionStyle}>
-            <Text style={styles.textStyle}>
+        <View style={commonStyles.modalStyle}>
+          <View style={commonStyles.modalShortSectionStyle}>
+            <Text style={commonStyles.mainTextStyle}>
               {"Run! Countdown: " + this.returnTimerString(this.state.currentTime)}
             </Text>
           </View>
         </View>
       </Modal>
+      <Placeholder flex={2} >
         <MapView
           provider="google"
-          style={styles.map}
+          style={commonStyles.map}
           showsUserLocation
           initialRegion={{
             latitude: this.state.latitude,
@@ -427,7 +440,7 @@ export default class MapScreenTraitor extends React.Component {
             strokeColor={colors.clueStrokeColor}
             strokeWidth={2}
           />
-          }
+        }
           {this.state.disguiseOn &&
             <MapView.Circle
               center={{
@@ -469,29 +482,31 @@ export default class MapScreenTraitor extends React.Component {
             strokeColor={colors.clueStrokeColor}
             strokeWidth={2}
           />
-        }
-        </MapView>
-        <View style={styles.buttonsContainerStyle}>
-          <Button
-            buttonStyle={styles.buttonStyle}
-            color='rgba(64, 52, 109, 1)'
-            onPress={this.disguisePressed.bind(this)}
-            title={`Disguise (${this.state.disguisesRemaining})`}
-          />
-          <View style={styles.deflectAimStyle}>
+          }
+          </MapView>
+        </Placeholder>
+        <Placeholder flex={2} >
+          <View style={commonStyles.gameStyle}>
             <Button
-              buttonStyle={styles.buttonAltStyle}
-              fontSize={10}
-              onPress={this.setAim.bind(this)}
-              title='Aim'
+              onPress={this.disguisePressed.bind(this)}
+              title={`Disguise (${this.state.disguisesRemaining})`}
+              main={false}
             />
+          <View style={commonStyles.rowContainerStyle}>
+            <TouchableOpacity
+              onPress={this.setAim.bind(this)}
+              style={commonStyles.aimButtonStyle}
+            >
+              <Text style={commonStyles.aimTextStyle} >Aim</Text>
+            </TouchableOpacity>
             <Button
-              buttonStyle={styles.buttonAltStyle}
               onPress={this.deflectPressed.bind(this)}
               title={`Deflect (${this.state.deflectsRemaining})`}
+              main
             />
+          </View>
         </View>
-      </View>
+      </Placeholder>
     </View>
     );
   }
@@ -505,74 +520,9 @@ export default class MapScreenTraitor extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
+      <View style={commonStyles.gameStyle}>
         {this.renderContent()}
       </View>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  containerStyle: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  map: {
-    height: 260,
-    width: 300,
-    marginTop: 5,
-    borderWidth: 2,
-    borderColor: 'rgba(64, 52, 109, 1)',
-  },
-  buttonStyle: {
-    backgroundColor: 'white',
-    borderRadius: 2,
-  },
-  buttonAltStyle: {
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  buttonsContainerStyle: {
-    flex: 1,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  deflectAimStyle: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  modalSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 150,
-  },
-  modalShortSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 70,
-  },
-  textStyle: {
-    flex: 1,
-    fontSize: 18,
-    textAlign: 'center',
-    lineHeight: 40,
-  },
-  modalStyle: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    position: 'relative',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-});

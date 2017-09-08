@@ -1,10 +1,10 @@
 import React from 'react';
+import firebase from 'firebase';
 import { StyleSheet, Text, View, Modal } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button } from 'react-native-elements';
-import firebase from 'firebase';
 import MapView from 'react-native-maps';
-import { Spinner } from './common';
+import { Spinner, Button, Header, Placeholder } from './common';
+import commonStyles from '../styles/commonStyles';
 
 export default class LocateScreenTraitor extends React.Component {
   constructor(props) {
@@ -80,55 +80,70 @@ export default class LocateScreenTraitor extends React.Component {
 
   renderCurrentUser() {
     return (
-      <View style={styles.containerStyle}>
+      <View style={commonStyles.setupStyle}>
+        <Header
+          headerText='Traitor'
+          gameMode
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
+        />
         <Modal
           visible={!this.state.tracerInLocate && this.state.locateModalVisible}
           transparent
           animationType="slide"
           onRequestClose={() => {}}
         >
-          <View style={styles.modalStyle}>
-            <View style={styles.modalSectionStyle}>
-              <Text style={styles.textStyle}>
+          <View style={commonStyles.modalStyle}>
+            <View style={commonStyles.longModalSectionStyle}>
+              <Text style={commonStyles.mainTextStyle}>
                 Tracer must also be locating you for you to get their position.
               </Text>
               <Button
-                style={styles.buttonStyle}
                 onPress={this.exitLocateModal.bind(this)}
-                title='OKAY'
+                title='Okay'
+                main
               >
               </Button>
             </View>
           </View>
         </Modal>
-        <Text style={styles.textStyle}>FIND YOUR FRIEND</Text>
-        <MapView
-          provider="google"
-          showsUserLocation
-          style={styles.map}
-          initialRegion={{
-            latitude: this.state.traitorLatitude,
-            longitude: this.state.traitorLongitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-        >
-          {this.state.tracerInLocate &&
-            <MapView.Marker
-              title="Tracer"
-              coordinate={{
-                latitude: this.state.tracerLatitude,
-                longitude: this.state.tracerLongitude,
-              }}
-            />
-          }
-        </MapView>
-        <Button
-          style={styles.buttonStyle}
-          onPress={this.backActions.bind(this)}
-          title='Back'
-        >
-        </Button>
+        <Placeholder flex={0.3} >
+          <Text style={commonStyles.mainTextStyle} >
+            Reunite with the Tracer
+          </Text>
+        </Placeholder>
+        <Placeholder flex={1} >
+          <MapView
+            provider="google"
+            showsUserLocation
+            style={commonStyles.map}
+            initialRegion={{
+              latitude: this.state.traitorLatitude,
+              longitude: this.state.traitorLongitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            {this.state.tracerInLocate &&
+              <MapView.Marker
+                title="Tracer"
+                coordinate={{
+                  latitude: this.state.tracerLatitude,
+                  longitude: this.state.tracerLongitude,
+                }}
+              />
+            }
+          </MapView>
+        </Placeholder>
+        <Placeholder flex={1} >
+          <Button
+            onPress={this.backActions.bind(this)}
+            title='Back'
+            main
+          >
+          </Button>
+        </Placeholder>
       </View>
     );
   }
@@ -144,57 +159,9 @@ export default class LocateScreenTraitor extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
+      <View style={commonStyles.setupStyle}>
         {this.renderContent()}
       </View>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  containerStyle: {
-    margin: 20,
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  buttonsContainerStyle: {
-    flex: 1,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  buttonAltStyle: {
-    marginTop: 20,
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  textStyle: {
-    fontSize: 20,
-    textAlign: 'center',
-    lineHeight: 30
-  },
-  map: {
-    height: 260,
-    width: 300,
-    marginTop: 5,
-    borderWidth: 2,
-    borderColor: 'rgba(64, 52, 109, 1)',
-  },
-  modalSectionStyle: {
-    borderBottomWidth: 1,
-    padding: 15,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: '#ddd',
-    height: 150
-  },
-  modalStyle: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    position: 'relative',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1
-  },
-});

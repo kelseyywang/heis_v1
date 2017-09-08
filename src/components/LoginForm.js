@@ -146,7 +146,7 @@ class LoginForm extends Component {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={commonStyles.setupStyle}>
           <Header
-            headerText='Log In/Create Account'
+            headerText='Log In Or Create Account'
             includeRightButton={false}
           />
           {this.renderForm()}

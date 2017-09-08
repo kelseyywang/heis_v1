@@ -126,7 +126,7 @@ export default class EndScreenTraitor extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirmTraitor({sessionKey: this.props.sessionKey});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>{this.printMessage()}</Text>
