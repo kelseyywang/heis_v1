@@ -1,12 +1,11 @@
-import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
-import { Spinner } from './common';
-
-//TODO (eventually): change rules in firebase
+import { StyleSheet, Text, View, Vibration, Modal, TouchableOpacity } from 'react-native';
+import { Spinner, Button, Header, Placeholder } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
@@ -40,7 +39,7 @@ export default class MapScreenTraitor extends React.Component {
       showCountdown: false,
     };
     this.range = 70;
-    this.totalGameTime = 2;
+    this.totalGameTime = 20;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
@@ -424,8 +423,8 @@ export default class MapScreenTraitor extends React.Component {
               longitude: this.state.lastClickLonTraitor
             }}
             radius={this.state.distance}
-            fillColor="rgba(106,92,165,.1)"
-            strokeColor="rgba(106,92,165,.9)"
+            fillColor={colors.clueFillColor}
+            strokeColor={colors.clueStrokeColor}
             strokeWidth={2}
           />
           }
@@ -447,8 +446,8 @@ export default class MapScreenTraitor extends React.Component {
                 longitude: this.state.longitude
               }}
               radius={this.range}
-              fillColor="rgba(255,235,20,.3)"
-              strokeColor="rgba(255,235,20,.3)"
+              fillColor={colors.aimCircleColor}
+              strokeColor={colors.aimCircleColor}
             />
           }
           {this.state.deflectOn &&
@@ -467,7 +466,7 @@ export default class MapScreenTraitor extends React.Component {
             coordinates={
               this.state.directionCoordsForTraitor
             }
-            strokeColor="rgba(106,92,165,.9)"
+            strokeColor={colors.clueStrokeColor}
             strokeWidth={2}
           />
         }

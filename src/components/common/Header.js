@@ -3,7 +3,27 @@ import { Text, View, StyleSheet, TouchableOpacity, Platform } from 'react-native
 import colors from '../../styles/colors';
 
 const Header = (props) => {
-  const { titleText, rightText, viewStyle, altViewStyle, placeholderStyle } = styles;
+  const { titleText, rightText,
+    viewStyle, altViewStyle,
+    placeholderStyle, gameViewStyle,
+    gameTitleText, gameRightText } = styles;
+  if (props.gameMode) {
+    return (
+      <View style={gameViewStyle}>
+          <View style={placeholderStyle} />
+          <View style={placeholderStyle}>
+            <Text style={gameTitleText}>{props.headerText}</Text>
+          </View>
+          <View style={placeholderStyle}>
+            <TouchableOpacity
+              onPress={props.rightButtonAction}
+            >
+              <Text style={gameRightText}>{props.rightButtonText}</Text>
+            </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
   if (props.includeRightButton) {
     return (
       <View style={viewStyle}>
@@ -53,6 +73,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  gameViewStyle: {
+    ...Platform.select({
+      ios: {
+        paddingTop: 20,
+        height: 70,
+      },
+      android: {
+        paddingTop: 25,
+        height: 75,
+      },
+      windows: {
+        paddingTop: 25,
+        height: 75,
+      },
+    }),
+    alignSelf: 'stretch',
+    backgroundColor: colors.gameHeaderColor,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderColor,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   altViewStyle: {
     ...Platform.select({
       ios: {
@@ -87,13 +130,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rightText: {
-    alignSelf: 'flex-end',
+    paddingLeft: 30,
+    alignSelf: 'center',
     color: colors.clickTextColor,
   },
   titleText: {
     alignSelf: 'center',
     textAlign: 'center',
     color: colors.lightTextColor,
+  },
+  gameRightText: {
+    paddingLeft: 30,
+    alignSelf: 'center',
+    color: colors.gameClickTextColor,
+  },
+  gameTitleText: {
+    alignSelf: 'center',
+    textAlign: 'center',
+    color: colors.darkTextColor,
   },
 });
 

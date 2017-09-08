@@ -1,10 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View, Modal } from 'react-native';
-import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button } from 'react-native-elements';
-import firebase from 'firebase';
-import MapView from 'react-native-maps';
-import { Spinner } from './common';
+import { Button } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 export default class GameStartedModal extends React.Component {
   renderCurrentUser() {
@@ -17,13 +15,13 @@ export default class GameStartedModal extends React.Component {
       >
         <View style={styles.modalStyle}>
           <View style={styles.modalSectionStyle}>
-            <Text style={styles.textStyle}>
+            <Text style={commonStyles.mainTextStyle}>
               {this.props.children}
             </Text>
             <Button
-              style={styles.buttonStyle}
               onPress={this.props.onCloseModal}
-              title='OKAY'
+              title='Okay'
+              main
             >
             </Button>
           </View>

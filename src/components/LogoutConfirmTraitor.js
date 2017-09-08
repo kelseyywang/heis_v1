@@ -1,8 +1,10 @@
 import React from 'react';
+import firebase from 'firebase';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button } from 'react-native-elements';
-import firebase from 'firebase';
+import { Button, Header, Placeholder } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 export default class LogoutConfirmTraitor extends React.Component {
 
@@ -17,44 +19,47 @@ export default class LogoutConfirmTraitor extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
-        <Text style={styles.textStyle}>WUZZUP WANNA LOG OUT!?</Text>
-        <View style={styles.buttonsRowStyle}>
-          <Button
-            buttonStyle={styles.buttonAltStyle}
-            onPress={this.logOutActions.bind(this)}
-            title='Yes'
-          />
-          <Button
-            buttonStyle={styles.buttonAltStyle}
-            onPress={() => {Actions.pop();}}
-            title='No'
-          />
-        </View>
+      <View style={commonStyles.setupStyle}>
+        <Header
+          headerText='Log Out?'
+          includeRightButton={false}
+        />
+      <Placeholder>
+        <Text style={commonStyles.mainTextStyle}>Do you really want to log out?</Text>
+          <View style={styles.buttonsRowStyle}>
+            <Button
+              onPress={this.logOutActions.bind(this)}
+              title='Yes'
+              main
+            />
+            <Button
+              onPress={() => {Actions.pop();}}
+              title='No'
+              main
+            />
+          </View>
+        </Placeholder>
+        <Placeholder
+          flex={0.2}
+        />
       </View>
     );
   }
 }
+
 const styles = StyleSheet.create({
   containerStyle: {
-    marginTop: 20,
     flex: 1,
-    justifyContent: 'flex-start',
+    flexDirection: 'column',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.backgroundSetupColor,
   },
   buttonsRowStyle: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
+    alignSelf: 'stretch',
   },
-  buttonAltStyle: {
-    marginTop: 20,
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  textStyle: {
-    fontSize: 30,
-    textAlign: 'center',
-    lineHeight: 40
-  }
 });

@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import { View, Text, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button, Card, CardSection, Input, Spinner, Header } from './common';
+import { Button, Input, Spinner, Header, Placeholder } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 //TODO 9/7: make styling less bad... why is password deleting
-//completely after you touch outside on ios? 
+//completely after you touch outside on ios?
 class LoginForm extends Component {
   constructor(props) {
     super(props);
@@ -91,22 +93,27 @@ class LoginForm extends Component {
       return <Spinner size="small" />;
     }
     return (
-      <Button onPress={this.onButtonPress.bind(this)}>
-        Log in
-      </Button>
+      <Button
+        onPress={this.onButtonPress.bind(this)}
+        title='Log In'
+        main
+      />
     );
   }
 
   renderForm() {
     return (
-      <View style={styles.containerStyle}>
-        <View style={styles.smallSectionStyle}>
+      <View style={commonStyles.setupStyle}>
+        <Placeholder>
           <Image
             style={styles.logoStyle}
             source={require('../images/heistemplogo.png')}
           />
-        </View>
-        <View style={styles.mainSectionStyle}>
+        </Placeholder>
+        <Placeholder
+          noJustify
+          flex={1.5}
+        >
           <Input
             placeholder="user@gmail.com"
             label="Email"
@@ -122,14 +129,14 @@ class LoginForm extends Component {
             onChangeText={password => this.setState({ password })}
             label="Password"
           />
-        </View>
-        <View style={styles.smallSectionStyle}>
-          <Text style={styles.errorTextStyle}>
+      </Placeholder>
+        <Placeholder>
+          <Text style={commonStyles.errorTextStyle}>
             {this.state.error}
           </Text>
           {this.renderButton()}
-        </View>
-        <View style={styles.smallSectionStyle}/>
+        </Placeholder>
+        <Placeholder />
       </View>
     );
   }
@@ -137,7 +144,7 @@ class LoginForm extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.containerStyle}>
+        <View style={commonStyles.setupStyle}>
           <Header
             headerText='Log In/Create Account'
             includeRightButton={false}
@@ -153,28 +160,6 @@ const styles = {
   logoStyle: {
     height: 80,
     width: 80,
-  },
-  containerStyle: {
-    flex: 1,
-    flexDirection: 'column',
-    alignSelf: 'stretch',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  mainSectionStyle: {
-    flex: 1.5,
-    alignSelf: 'stretch',
-  },
-  smallSectionStyle: {
-    flex: 1,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorTextStyle: {
-    fontSize: 20,
-    alignSelf: 'center',
-    color: 'red',
   },
 };
 

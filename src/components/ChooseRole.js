@@ -1,8 +1,10 @@
 import React from 'react';
+import firebase from 'firebase';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button } from 'react-native-elements';
-import firebase from 'firebase';
+import { Button, Header, Placeholder } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 export default class ChooseRole extends React.Component {
   componentDidMount() {
@@ -21,20 +23,32 @@ export default class ChooseRole extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
-        <Text style={styles.textStyle}>Which side are you on?</Text>
-        <View style={styles.buttonsContainerStyle}>
-          <Button
-            buttonStyle={styles.buttonAltStyle}
-            onPress={this.tracerChosen.bind(this)}
-            title='Tracer'
-          />
-          <Button
-            buttonStyle={styles.buttonAltStyle}
-            onPress={this.traitorChosen.bind(this)}
-            title='Traitor'
-          />
-        </View>
+      <View style={commonStyles.setupStyle}>
+        <Header
+          headerText='Choose Side'
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
+        />
+      <Placeholder>
+        <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>
+          <View style={styles.buttonsRowStyle}>
+            <Button
+              onPress={this.tracerChosen.bind(this)}
+              title='Tracer'
+              main
+            />
+            <Button
+              onPress={this.traitorChosen.bind(this)}
+              title='Traitor'
+              main
+            />
+          </View>
+        </Placeholder>
+        <Placeholder
+          flex={0.2}
+        />
       </View>
     );
   }
@@ -42,24 +56,18 @@ export default class ChooseRole extends React.Component {
 
 const styles = StyleSheet.create({
   containerStyle: {
-    margin: 20,
     flex: 1,
-    justifyContent: 'flex-start',
+    flexDirection: 'column',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.backgroundSetupColor,
   },
-  buttonsContainerStyle: {
-    flex: 1,
+  buttonsRowStyle: {
+    marginTop: 20,
+    flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
+    alignSelf: 'stretch',
   },
-  buttonAltStyle: {
-    marginTop: 20,
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  textStyle: {
-    fontSize: 30,
-    textAlign: 'center',
-    lineHeight: 40
-  }
 });

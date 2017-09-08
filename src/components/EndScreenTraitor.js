@@ -1,9 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button } from 'react-native-elements';
 import firebase from 'firebase';
 import GameStartedModal from './GameStartedModal';
+import { Button, Header, Placeholder } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 export default class EndScreenTraitor extends React.Component {
   //TODO: refer to TODOs on EndScreenTracer
@@ -117,21 +119,34 @@ export default class EndScreenTraitor extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
+      <View style={commonStyles.setupStyle}>
         {this.renderModal()}
-        <Text style={styles.textStyle}>{this.printMessage()}</Text>
-        <View style={styles.buttonsContainerStyle}>
-          <Button
-            buttonStyle={styles.buttonAltStyle}
-            onPress={this.goToNewGame.bind(this)}
-            title='New game'
-          />
-          <Button
-            buttonStyle={styles.buttonAltStyle}
-            onPress={this.goToLocate.bind(this)}
-            title='Locate Traitor'
-          />
-        </View>
+        <Header
+          headerText='Choose Side'
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirmTraitor({sessionKey: this.props.sessionKey});}}
+        />
+      <Placeholder>
+        <Text style={commonStyles.mainTextStyle}>{this.printMessage()}</Text>
+          <View style={styles.buttonsRowStyle}>
+            <Button
+              onPress={this.goToNewGame.bind(this)}
+              title='New Game'
+              main
+            />
+            <Button
+              onPress={this.goToLocate.bind(this)}
+              title='Find Your Friend'
+              margin='30'
+              main
+            />
+          </View>
+        </Placeholder>
+        <Placeholder
+          flex={0.2}
+        />
       </View>
     );
   }
@@ -139,24 +154,18 @@ export default class EndScreenTraitor extends React.Component {
 
 const styles = StyleSheet.create({
   containerStyle: {
-    margin: 20,
     flex: 1,
-    justifyContent: 'flex-start',
+    flexDirection: 'column',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.backgroundSetupColor,
   },
-  buttonsContainerStyle: {
-    flex: 1,
+  buttonsRowStyle: {
+    marginTop: 20,
+    flexDirection: 'column',
     justifyContent: 'space-around',
     alignItems: 'center',
+    alignSelf: 'stretch',
   },
-  buttonAltStyle: {
-    marginTop: 20,
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  textStyle: {
-    fontSize: 30,
-    textAlign: 'center',
-    lineHeight: 40
-  }
 });

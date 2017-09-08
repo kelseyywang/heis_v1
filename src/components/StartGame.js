@@ -1,17 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button } from 'react-native-elements';
-import { Card, CardSection, Input, Spinner, Header } from './common';
 import firebase from 'firebase';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { Actions, ActionConst } from 'react-native-router-flux';
+import { Button, Placeholder, Input, Header } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 export default class StartGame extends React.Component {
-
   constructor(props) {
     super(props);
 
     this.state = {
-      sessionKey: "sessionKey",
+      sessionKey: '',
       error: '',
     };
   }
@@ -25,13 +25,18 @@ export default class StartGame extends React.Component {
   isSessionKeyValid(key) {
     if (key.includes('.') || key.includes('$') ||
       key.includes('#') || key.includes('[') ||
-      key.includes(']') || key.includes('/') ||
-      typeof key === 'undefined') {
+      key.includes(']') || key.includes('/')) {
         this.setState({
-          error: "Don't use any special characters in your session key"
+          error: "Don't use any special characters in your session key."
         });
         return false;
       }
+    else if (typeof key === 'undefined' || key.length === 0) {
+      this.setState({
+        error: "Invalid session key."
+      });
+      return false;
+    }
     return true;
   }
 
@@ -119,60 +124,57 @@ export default class StartGame extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
-        <Header
-          headerText='Start Game'
-          includeRightButton
-          rightButtonText='Log Out'
-          rightButtonAction={() =>
-            {Actions.logoutConfirmTracer({sessionKey: this.state.sessionKey});}}
-        />
-        <CardSection>
-          <Input
-            placeholder="sessionKey"
-            label="Session Key (one word):"
-            value={this.state.email}
-            onChangeText={sessionKey => this.setState({ sessionKey })}
-          >
-          </Input>
-        </CardSection>
-        <Text style={styles.errorTextStyle}>
-          {this.state.error}
-        </Text>
-        <Text style={styles.textStyle}>Are you ready to start the game?</Text>
-        <Button
-          buttonStyle={styles.buttonAltStyle}
-          onPress={this.readyActions.bind(this)}
-          title='Ready'
-        />
-      </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={commonStyles.setupStyle}>
+          <Header
+            headerText='Set Up Game'
+            includeRightButton
+            rightButtonText='Log Out'
+            rightButtonAction={() =>
+              {Actions.logoutConfirmTracer({sessionKey: this.state.sessionKey});}}
+          />
+          <Placeholder
+            flex={0.3}
+          />
+          <Placeholder noJustify>
+              <Input
+                placeholder='sessionKey'
+                label='Session Key'
+                onChangeText={sessionKey => this.setState({ sessionKey })}
+              >
+            </Input>
+            <Text style={styles.altErrorTextStyle}>
+              {this.state.error}
+            </Text>
+          </Placeholder>
+          <Placeholder
+            flex={0.2}
+          />
+          <Placeholder>
+            <Text style={commonStyles.mainTextStyle}>Are you ready to start the game?</Text>
+            <Button
+              onPress={this.readyActions.bind(this)}
+              title='Ready'
+              main
+            />
+          </Placeholder>
+          <Placeholder
+            flex={0.8}
+          />
+        </View>
+      </TouchableWithoutFeedback>
     );
   }
 }
 const styles = StyleSheet.create({
-  containerStyle: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  buttonsRowStyle: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  buttonAltStyle: {
-    marginTop: 20,
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  textStyle: {
-    fontSize: 30,
-    textAlign: 'center',
-    lineHeight: 40
-  },
-  errorTextStyle: {
+  altErrorTextStyle: {
+    marginLeft: 20,
+    marginRight: 20,
+    marginTop: 10,
+    marginBottom: 10,
     fontSize: 20,
     alignSelf: 'center',
-    color: 'red',
+    textAlign: 'center',
+    color: colors.errorTextColor,
   },
 });

@@ -41,8 +41,8 @@ import ChooseRole from './src/components/ChooseRole';
 // make colors darker or make it zoom out when circle is really big
 // shorter countdowns? 2:30 max?
 // make option to cancel game, while game is happening or in countdown
-// about page
-
+// about page - maybe an information icon on header on each page
+// chenge rules in firebase
 
 export default class App extends React.Component {
 

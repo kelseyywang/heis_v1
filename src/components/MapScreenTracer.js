@@ -1,11 +1,12 @@
-import { Button } from 'react-native-elements';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
-import { StyleSheet, Text, View, Vibration, Modal } from 'react-native';
-import { Spinner } from './common';
+import { StyleSheet, Text, View, Vibration, Modal, TouchableOpacity } from 'react-native';
 import GameStartedModal from './GameStartedModal';
+import { Spinner, Button, Header, Placeholder } from './common';
+import colors from '../styles/colors';
+import commonStyles from '../styles/commonStyles';
 
 //TODO 9/5: Reset all the fb with sessionKey to default vals in beginning
 export default class MapScreenTracer extends React.Component {
@@ -65,7 +66,7 @@ export default class MapScreenTracer extends React.Component {
     //The amount of meters the the tracer is permitted to travel from his
     //initial location during countdown
     this.countdownBounds = 70;
-    this.totalGameTime = 2;
+    this.totalGameTime = 20;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -501,9 +502,21 @@ export default class MapScreenTracer extends React.Component {
 
   renderCurrentUser() {
     return (
-      <View style={styles.containerStyle}>
+      <View style={commonStyles.gameStyle}>
+        <Header
+          headerText='Tracer'
+          gameMode
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirmTracer({sessionKey: this.props.sessionKey});}}
+        />
+        <Placeholder flex={0.3} >
         {!this.state.showCountdown &&
-          <Text>{"Time: " + this.returnTimerString(this.state.currentTime)}</Text>}
+          <Text style={commonStyles.lightTextStyle}>
+            {"Time: " + this.returnTimerString(this.state.currentTime)}
+          </Text>
+        }
+        </Placeholder>
         <Modal
           visible={!this.state.showCountdown && !this.state.traitorInGame && this.state.timerModalVisible}
           transparent
@@ -512,13 +525,13 @@ export default class MapScreenTracer extends React.Component {
         >
           <View style={styles.modalStyle}>
             <View style={styles.modalSectionStyle}>
-              <Text style={styles.textStyle}>
+              <Text style={commonStyles.mainTextStyle}>
                 Traitor is not in the game
               </Text>
               <Button
-                style={styles.buttonStyle}
                 onPress={this.exitGameJoinModal}
-                title='OKAY'
+                title='Okay'
+                main
               >
               </Button>
             </View>
@@ -530,111 +543,118 @@ export default class MapScreenTracer extends React.Component {
         animationType="slide"
         onRequestClose={() => {}}
         >
-        <View style={styles.modalStyle}>
-          <View style={styles.modalShortSectionStyle}>
-            <Text style={styles.textStyle}>
-              {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
-            </Text>
+          <View style={styles.modalStyle}>
+            <View style={styles.modalShortSectionStyle}>
+              <Text style={commonStyles.mainTextStyle}>
+                {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
+              </Text>
+            </View>
           </View>
-        </View>
-      </Modal>
-        <MapView
-          provider="google"
-          style={styles.map}
-          showsUserLocation
-          initialRegion={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-        >
-        {this.state.showDistance &&
-          <MapView.Circle
-            center={{
-              latitude: this.state.lastClickLatTracer,
-              longitude: this.state.lastClickLonTracer
+        </Modal>
+        <Placeholder flex={2} >
+          <MapView
+            provider="google"
+            style={styles.map}
+            showsUserLocation
+            initialRegion={{
+              latitude: this.state.latitude,
+              longitude: this.state.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
             }}
-            radius={this.state.distance}
-            fillColor="rgba(64, 52, 109, .1)"
-            strokeColor="rgba(64, 52, 109, .9)"
-            strokeWidth={2}
-          />
-          }
-          {this.state.showAimCircle &&
-            <MapView.Circle
-              center={{
-                latitude: this.state.latitude,
-                longitude: this.state.longitude
-              }}
-              radius={this.range}
-              fillColor="rgba(255,235,20,.3)"
-              strokeColor="rgba(255,235,20,.3)"
-            />
-          }
-          {this.state.showTriggerCircle &&
+          >
+          {this.state.showDistance &&
             <MapView.Circle
               center={{
                 latitude: this.state.lastClickLatTracer,
                 longitude: this.state.lastClickLonTracer
               }}
               radius={this.state.distance}
-              fillColor="rgba(193,0,0,.3)"
-              strokeColor="rgba(193,0,0,.3)"
+              fillColor={colors.clueFillColor}
+              strokeColor={colors.clueStrokeColor}
+              strokeWidth={2}
             />
-          }
-          {this.state.disguiseOn &&
-            <MapView.Circle
-              center={{
-                latitude: this.state.latitude,
-                longitude: this.state.longitude
-              }}
-              radius={100000}
-              fillColor="rgba(0,0,0,.3)"
-              strokeColor="rgba(0,0,0,.3)"
-            />
-          }
-          {this.state.showDirection &&
-          <MapView.Polyline
-            coordinates={
-              this.state.directionCoords
             }
-            strokeColor="rgba(64, 52, 109, .9)"
-            strokeWidth={2}
-          />
-          }
-        </MapView>
-        <View style={styles.buttonsContainerStyle}>
+            {this.state.showAimCircle &&
+              <MapView.Circle
+                center={{
+                  latitude: this.state.latitude,
+                  longitude: this.state.longitude
+                }}
+                radius={this.range}
+                fillColor={colors.aimCircleColor}
+                strokeColor={colors.aimCircleColor}
+              />
+            }
+            {this.state.showTriggerCircle &&
+              <MapView.Circle
+                center={{
+                  latitude: this.state.lastClickLatTracer,
+                  longitude: this.state.lastClickLonTracer
+                }}
+                radius={this.state.distance}
+                fillColor="rgba(193,0,0,.3)"
+                strokeColor="rgba(193,0,0,.3)"
+              />
+            }
+            {this.state.disguiseOn &&
+              <MapView.Circle
+                center={{
+                  latitude: this.state.latitude,
+                  longitude: this.state.longitude
+                }}
+                radius={100000}
+                fillColor="rgba(0,0,0,.3)"
+                strokeColor="rgba(0,0,0,.3)"
+              />
+            }
+            {this.state.showDirection &&
+            <MapView.Polyline
+              coordinates={
+                this.state.directionCoords
+              }
+              strokeColor={colors.clueStrokeColor}
+              strokeWidth={2}
+            />
+            }
+          </MapView>
+        </Placeholder>
+        <Placeholder flex={2} >
+          <View style={commonStyles.gameStyle}>
+            <Button
+              onPress={this.setCurrentDistance.bind(this)}
+              title='Distance'
+              main={false}
+            />
+            <Button
+              onPress={this.setCurrentDirectionCoords.bind(this)}
+              title='Direction'
+              main={false}
+            />
+            <View style={styles.rowContainerStyle}>
+              <TouchableOpacity
+                onPress={this.setAim.bind(this)}
+                style={styles.aimButtonStyle}
+              >
+                <Text style={styles.aimTextStyle} >Aim</Text>
+              </TouchableOpacity>
+
+              <Button
+                onPress={this.triggerPulled.bind(this)}
+                title={`Trigger (${this.state.triggersRemaining})`}
+                main
+              />
+            </View>
+          </View>
+        </Placeholder>
+        <Placeholder flex={0.3} >
           {this.state.showPauseText && this.state.traitorInGame &&
             !this.state.showCountdown &&
-            <Text>Must wait 5 sec. between clues</Text>
+            <Text style={commonStyles.errorTextStyle}>
+              Must wait 5 sec. between clues
+            </Text>
           }
-          <Button
-            buttonStyle={styles.buttonStyle}
-            color='rgba(64, 52, 109, 1)'
-            onPress={this.setCurrentDistance.bind(this)}
-            title='Distance'
-          />
-          <Button
-            buttonStyle={styles.buttonStyle}
-            color='rgba(64, 52, 109, 1)'
-            onPress={this.setCurrentDirectionCoords.bind(this)}
-            title='Direction'
-          />
-          <View style={styles.triggerAimStyle}>
-            <Button
-              buttonStyle={styles.buttonAltStyle}
-              fontSize={10}
-              onPress={this.setAim.bind(this)}
-              title='Aim'
-            />
-            <Button
-              buttonStyle={styles.buttonAltStyle}
-              onPress={this.triggerPulled.bind(this)}
-              title={`Trigger (${this.state.triggersRemaining})`}
-            />
-          </View>
-        </View>
+        </Placeholder>
       </View>
     );
   }
@@ -650,7 +670,7 @@ export default class MapScreenTracer extends React.Component {
 
   render() {
     return (
-      <View style={styles.containerStyle}>
+      <View style={commonStyles.gameStyle}>
         {this.renderContent()}
       </View>
     );
@@ -658,35 +678,33 @@ export default class MapScreenTracer extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  containerStyle: {
+  map: {
     flex: 1,
-    justifyContent: 'flex-start',
+    alignSelf: 'stretch',
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  buttonStyle: {
-    backgroundColor: 'white',
-    borderRadius: 2,
-  },
-  buttonAltStyle: {
-    borderRadius: 2,
-    backgroundColor: 'rgba(64, 52, 109, 1)',
-  },
-  buttonsContainerStyle: {
-    flex: 1,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  triggerAimStyle: {
+  rowContainerStyle: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  map: {
-    height: 260,
-    width: 300,
-    marginTop: 5,
-    borderWidth: 2,
-    borderColor: 'rgba(64, 52, 109, 1)',
+  aimButtonStyle: {
+    marginRight: 30,
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 25,
+    borderColor: colors.mainButtonTextColor,
+    backgroundColor: colors.mainButtonColor,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  aimTextStyle: {
+    color: colors.mainButtonTextColor,
+    fontSize: 16,
   },
   modalSectionStyle: {
     borderBottomWidth: 1,
@@ -705,12 +723,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderColor: '#ddd',
     height: 70
-  },
-  textStyle: {
-    flex: 1,
-    fontSize: 18,
-    textAlign: 'center',
-    lineHeight: 40
   },
   modalStyle: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
