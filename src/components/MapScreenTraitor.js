@@ -44,7 +44,7 @@ export default class MapScreenTraitor extends React.Component {
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
     this.updateTime = this.updateTime.bind(this);
-    this.exitTimeModal = this.exitTimeModal.bind(this);
+    this.notInGameModal = this.notInGameModal.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -360,7 +360,7 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   //User wants to exit modal
-  exitTimeModal() {
+  notInGameModal() {
     this.setState({
       timerModalVisible: false,
     });
@@ -371,7 +371,7 @@ export default class MapScreenTraitor extends React.Component {
       <View style={commonStyles.gameStyle}>
         <Header
           headerText='Traitor'
-          gameMode
+          includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
             {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
@@ -395,7 +395,7 @@ export default class MapScreenTraitor extends React.Component {
                 Tracer is not in the game
               </Text>
               <Button
-                onPress={this.exitTimeModal}
+                onPress={this.notInGameModal}
                 title='Okay'
                 main
               >

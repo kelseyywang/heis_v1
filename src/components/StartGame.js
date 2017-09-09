@@ -1,6 +1,6 @@
 import React from 'react';
 import firebase from 'firebase';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Modal } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button, Placeholder, Input, Header } from './common';
 import colors from '../styles/colors';
@@ -13,6 +13,7 @@ export default class StartGame extends React.Component {
     this.state = {
       sessionKey: '',
       error: '',
+      newUserModalVisible: true,
     };
   }
 
@@ -38,6 +39,12 @@ export default class StartGame extends React.Component {
       return false;
     }
     return true;
+  }
+
+  exitNewUserModal() {
+    this.setState({
+      newUserModalVisible: false,
+    });
   }
 
   //Check if other player has already chosen a role
@@ -77,6 +84,33 @@ export default class StartGame extends React.Component {
         Actions.chooseRole({sessionKey: this.state.sessionKey, type: ActionConst.RESET});
       }
     });
+  }
+
+  renderModal() {
+    if (this.props.newUser) {
+      return (
+        <Modal
+          visible={this.state.newUserModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {}}
+        >
+          <View style={commonStyles.modalStyle}>
+            <View style={commonStyles.longModalSectionStyle}>
+              <Text style={commonStyles.mainTextStyle}>
+                I see you just made a new account here. Welcome to heis!
+              </Text>
+              <Button
+                onPress={this.exitNewUserModal.bind(this)}
+                title='Okay'
+                main
+              >
+              </Button>
+            </View>
+          </View>
+        </Modal>
+      );
+    }
   }
 
   //Resets game properties to default when game is over
@@ -120,6 +154,7 @@ export default class StartGame extends React.Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={commonStyles.setupStyle}>
+          {this.renderModal()}
           <Header
             headerText='Set Up Game'
             includeRightButton

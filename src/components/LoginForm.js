@@ -57,8 +57,12 @@ class LoginForm extends Component {
     const {email, password} = this.state;
     this.setState({ error: '', loading: true });
     firebase.auth().signInWithEmailAndPassword(email, password)
-      .then(this.onLoginSuccess)
-      .catch(this.onLoginFail);
+      .then(this.onLoginSuccess.bind(this))
+      .catch(() => {
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+          .then(this.onCreateUserSuccess.bind(this))
+          .catch(this.onLoginFail.bind(this));
+      });
   }
 
   onLoginFail() {
@@ -76,7 +80,11 @@ class LoginForm extends Component {
       this.resetForm();
       Actions.startGameTraitor({type: ActionConst.RESET});
     }*/
-    Actions.startGame({type: ActionConst.RESET});
+    Actions.startGame({type: ActionConst.RESET, newUser: false});
+  }
+
+  onCreateUserSuccess() {
+    Actions.startGame({type: ActionConst.RESET, newUser: true});
   }
 
   resetForm() {
