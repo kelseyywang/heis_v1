@@ -12,6 +12,7 @@ export default class EndScreenTraitor extends React.Component {
 
   constructor(props) {
     super(props);
+
     this.state = {
       tracerInGame: false,
       traitorInGame: false,
@@ -20,14 +21,14 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   componentDidMount() {
-    this.interval = setInterval(this.checkTracerInGame.bind(this), 3000);
+    this.interval = setInterval(this.checkInGame.bind(this), 1000);
   }
 
   componentWillUnmount() {
-    this.clearIntervals();
+    clearInterval(this.interval);
   }
 
-  checkTracerInGame() {
+  checkInGame() {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       this.setState({
@@ -37,9 +38,6 @@ export default class EndScreenTraitor extends React.Component {
     });
   }
 
-  clearIntervals() {
-    clearInterval(this.interval);
-  }
 
   printMessage() {
     const winner = this.props.winner;
@@ -99,18 +97,20 @@ export default class EndScreenTraitor extends React.Component {
       if (this.state.traitorInGame) {
         return (
           <GameStartedModal
-            onCloseModal={this.exitNewGameModal.bind(this)}
+            onButtonPress={this.exitNewGameModal.bind(this)}
+            buttonTitle='Okay'
           >
-            Yo friend started a new game. You are tracer.
+            Your opponent started a new game. You are tracer.
           </GameStartedModal>
         );
       }
       else if (this.state.tracerInGame) {
         return (
           <GameStartedModal
-            onCloseModal={this.exitNewGameModal.bind(this)}
+            onButtonPress={this.exitNewGameModal.bind(this)}
+            buttonTitle='Okay'
           >
-            Yo friend started a new game. You are traitor.
+            Your friend started a new game. You are traitor.
           </GameStartedModal>
         );
       }
@@ -138,8 +138,8 @@ export default class EndScreenTraitor extends React.Component {
             />
             <Button
               onPress={this.goToLocate.bind(this)}
-              title='Find Your Friend'
-              margin='30'
+              title='Find Your Opponent'
+              margin={30}
               main
             />
           </View>

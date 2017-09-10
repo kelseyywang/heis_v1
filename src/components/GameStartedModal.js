@@ -14,13 +14,13 @@ export default class GameStartedModal extends React.Component {
         onRequestClose={() => {}}
       >
         <View style={commonStyles.modalStyle}>
-          <View style={commonStyles.modalSectionStyle}>
+          <View style={commonStyles.longModalSectionStyle}>
             <Text style={commonStyles.mainTextStyle}>
               {this.props.children}
             </Text>
             <Button
-              onPress={this.props.onCloseModal}
-              title='Okay'
+              onPress={this.props.onButtonPress}
+              title={this.props.buttonTitle}
               main
             >
             </Button>

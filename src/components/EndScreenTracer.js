@@ -21,14 +21,14 @@ export default class EndScreenTracer extends React.Component {
   }
 
   componentDidMount() {
-    this.interval = setInterval(this.checkTraitorInGame.bind(this), 3000);
+    this.interval = setInterval(this.checkInGame.bind(this), 1000);
   }
 
   componentWillUnmount() {
-    this.clearIntervals();
+    clearInterval(this.interval);
   }
 
-  checkTraitorInGame() {
+  checkInGame() {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       this.setState({
@@ -36,10 +36,6 @@ export default class EndScreenTracer extends React.Component {
         traitorInGame: snapshot.val().traitorInGame,
       });
     });
-  }
-
-  clearIntervals() {
-    clearInterval(this.interval);
   }
 
   printMessage() {
@@ -101,24 +97,25 @@ export default class EndScreenTracer extends React.Component {
     });
   }
 
-  //TODO 9/3: WHY IS THERE A BIG SPACE UNDER THE TIMER WHEN MODAL RENDERS?!
   renderModal() {
     if (this.state.newGameModalVisible) {
       if (this.state.traitorInGame) {
         return (
           <GameStartedModal
-            onCloseModal={this.exitNewGameModal.bind(this)}
+            onButtonPress={this.exitNewGameModal.bind(this)}
+            buttonTitle='Okay'
           >
-            Yo friend started a new game. You are tracer.
+            Your opponent started a new game. You are the Tracer.
           </GameStartedModal>
         );
       }
       else if (this.state.tracerInGame) {
         return (
           <GameStartedModal
-            onCloseModal={this.exitNewGameModal.bind(this)}
+            onButtonPress={this.exitNewGameModal.bind(this)}
+            buttonTitle='Okay'
           >
-            Yo friend started a new game. You are traitor.
+            Your opponent started a new game. You are the Traitor.
           </GameStartedModal>
         );
       }
@@ -146,8 +143,8 @@ export default class EndScreenTracer extends React.Component {
             />
             <Button
               onPress={this.goToLocate.bind(this)}
-              title='Find My Friend'
-              margin='30'
+              title='Find My Opponent'
+              margin={30}
               main
             />
           </View>

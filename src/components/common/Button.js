@@ -2,33 +2,33 @@ import React from 'react';
 import {Text, TouchableOpacity} from 'react-native';
 import colors from '../../styles/colors';
 
-const Button = ({onPress, title, main, margin }) => {
+const Button = (props) => {
   const {textStyle, buttonStyle } = styles;
-  const marginInt = parseInt(margin);
-  if (main) {
+  //const marginInt = parseInt(margin);
+  if (props.main) {
     return (
       <TouchableOpacity
-        onPress={onPress}
+        onPress={props.onPress}
         style={[buttonStyle,
           {borderColor: colors.mainButtonTextColor,
             backgroundColor: colors.mainButtonColor,
-            margin: (marginInt || 5),
+            margin: (props.margin || 5),
           }]}
       >
-        <Text style={[textStyle, {color: colors.mainButtonTextColor}]}>{title}</Text>
+        <Text style={[textStyle, {color: colors.mainButtonTextColor}]}>{props.title}</Text>
       </TouchableOpacity>
     );
   }
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={props.onPress}
       style={[buttonStyle,
         {borderColor: colors.secondaryButtonTextColor,
           backgroundColor: colors.secondaryButtonColor,
-          margin: (marginInt || 5),
+          margin: (props.margin || 5),
         }]}
     >
-      <Text style={[textStyle, {color: colors.secondaryButtonTextColor}]}>{title}</Text>
+      <Text style={[textStyle, {color: colors.secondaryButtonTextColor}]}>{props.title}</Text>
     </TouchableOpacity>
   );
 };

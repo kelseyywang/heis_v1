@@ -21,8 +21,6 @@ import ChooseRole from './src/components/ChooseRole';
 // this.maxDist = 1500;
 
 // PROBLEM TODO:
-// 0. 9/7 - Button has to take in a margin String prop because it didn't work with the {} int object
-// thing. But it works on Placeholder so maybe use (props) ??
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
@@ -32,12 +30,8 @@ import ChooseRole from './src/components/ChooseRole';
 // 3. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
 // adjusted so that Traitor is usually a tiny tiny bit ahead of Tracer, but sometimes it's up to
 // 2-3 seconds off or something
-// 4. 9/4 - The GameStartedModal makes layout weird when used anywhere (currently
-// in EndScreenTraitor and Tracer)
 // GENERAL TODO:
-// handle create account
-// connect log out to sessionKey... and make numPlayers decrease when there's a logout.
-// handle if both players are on chooseRole at same time...
+// handle when user quits app without logging out??
 // make colors darker or make it zoom out when circle is really big
 // revise endscreen messages
 // about page - maybe an information icon on header on each page
