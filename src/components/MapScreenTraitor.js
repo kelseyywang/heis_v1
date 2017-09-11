@@ -11,8 +11,8 @@ export default class MapScreenTraitor extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: null,
-      longitude: null,
+      latitude: 0,
+      longitude: 0,
       distance: 0,
       directionCoordsForTraitor: [{
         latitude: 0,
@@ -25,8 +25,8 @@ export default class MapScreenTraitor extends React.Component {
       error: null,
       showDirection: false,
       showDistance: false,
-      lastClickLatTraitor: null,
-      lastClickLonTraitor: null,
+      lastClickLatTraitor: 0,
+      lastClickLonTraitor: 0,
       disguiseOn: false,
       disguisesRemaining: 3,
       showAimCircle: false,
@@ -34,7 +34,6 @@ export default class MapScreenTraitor extends React.Component {
       deflectsRemaining: 3,
       tracerInGame: false,
       timerModalVisible: true,
-      gameWinner: "none",
       currentTime: -10,
       showCountdown: false,
       initialLatDelta: 0,
@@ -55,6 +54,7 @@ export default class MapScreenTraitor extends React.Component {
     this.callCurrentPosition();
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
+    this.countdownTotal = null;
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = true;
     firebase.database().ref().update(updates);
@@ -72,7 +72,7 @@ export default class MapScreenTraitor extends React.Component {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       let fbGameWinner = snapshot.val().gameWinner;
-      if (fbGameWinner !== "none") {
+      if (typeof fbGameWinner !== 'undefined') {
         this.hasGameEnded(fbGameWinner);
       }
       else {
@@ -84,10 +84,12 @@ export default class MapScreenTraitor extends React.Component {
         let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
         let fbTracerInGame = snapshot.val().tracerInGame;
         //Check if display on map has changed
-        if (this.state.showDirection !== fbShowDirection ||
-              this.state.showDistance !== fbShowDistance ||
-              this.state.distance !== fbDistance ||
-              !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor, fbDirectionCoordsForTraitor)) {
+        if ((typeof fbShowDistance !== 'undefined' && this.state.showDistance !== fbShowDistance) ||
+              (typeof fbShowDirection !== 'undefined' && this.state.showDirection !== fbShowDirection) ||
+              (typeof fbDistance !== 'undefined' && this.state.distance !== fbDistance) ||
+              (typeof fbDirectionCoordsForTraitor !== 'undefined' &&
+              !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor,
+                fbDirectionCoordsForTraitor))) {
           Vibration.vibrate();
         }
         //Check if fbCountdownTotal has a value and tracer is logged in.
@@ -97,8 +99,10 @@ export default class MapScreenTraitor extends React.Component {
         let fbInitialLonDelta = snapshot.val().initialLonDelta;
 
         //countdownTotal hasn't been set because of asynchronous
-        //firebase uploading by tracer, so pull from firebase again
-        if (!(this.countdownTotal > 0) && fbTracerInGame && fbCountdownTotal > 0) {
+        //firebase uploading by tracer, so pull from firebase
+        if (this.countdownTotal === null && fbTracerInGame &&
+          typeof fbCountdownTotal !== 'undefined' && typeof fbInitialLatDelta !== 'undefined' &&
+          typeof fbInitialLonDelta !== 'undefined') {
           this.countdownTotal = fbCountdownTotal;
           this.setState({
             currentTime: this.countdownTotal,
@@ -108,14 +112,23 @@ export default class MapScreenTraitor extends React.Component {
           });
           this.startCountdown();
         }
+        //Ensure state variables showDistance and showDirection
+        //are not set to undefined
+        let defaultDirectionCoords = [{
+          latitude: 0,
+          longitude: 0,
+        },
+        {
+          latitude: 0,
+          longitude: 0,
+        }];
           this.setState({
-            showDistance: fbShowDistance,
-            showDirection: fbShowDirection,
-            distance: fbDistance,
-            directionCoordsForTraitor: fbDirectionCoordsForTraitor,
-            lastClickLatTraitor: fbLastClickLatTraitor,
-            lastClickLonTraitor: fbLastClickLonTraitor,
-            gameWinner: fbGameWinner,
+            showDistance: (fbShowDistance || false),
+            showDirection: (fbShowDirection || false),
+            distance: (fbDistance || 0),
+            directionCoordsForTraitor: (fbDirectionCoordsForTraitor || defaultDirectionCoords),
+            lastClickLatTraitor: (fbLastClickLatTraitor || 0),
+            lastClickLonTraitor: (fbLastClickLonTraitor || 0),
             tracerInGame: fbTracerInGame,
             },
             this.getAndSetLocation.bind(this)
@@ -138,52 +151,23 @@ export default class MapScreenTraitor extends React.Component {
 
   //Check if game has ended
   hasGameEnded(fbGameWinner) {
-    //TODO 8/24: don't need these state checks bc now im unmounting components...
-    // if (this.state.gameWinner === "none") {
-    //   if (this.state.disguiseOn) {
-    //     clearTimeout(this.disguiseTimeout);
-    //   }
-    //   if (this.state.deflectOn) {
-    //     clearTimeout(this.deflectTimeout);
-    //   }
-      //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
-      this.clearFirebaseActions();
-      Actions.endScreenTraitor({
-        sessionKey: this.props.sessionKey,
-        winner: fbGameWinner,
-        endTime: this.totalGameTime - this.state.currentTime - 2,
-        type: ActionConst.RESET});
-    //}
+    //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
+    this.clearFirebaseActions();
+    Actions.endScreenTraitor({
+      sessionKey: this.props.sessionKey,
+      winner: fbGameWinner,
+      endTime: this.totalGameTime - this.state.currentTime - 2,
+      type: ActionConst.RESET});
   }
 
   //Resets game properties to default when game is over
   clearFirebaseActions() {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
       .set({
-        deflectOn: false,
-        disguiseOn: false,
         traitorLatitude: 0,
         traitorLongitude: 0,
         traitorInGame: false,
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoordsForTraitor: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
         tracerInGame: false,
-        gameWinner: "none",
-        countdownTotal: -1,
-        initialLatDelta: 0,
-        initialLonDelta: 0,
         tracerLatitude: 0,
         tracerLongitude: 0,
         tracerInLocate: false,
@@ -367,7 +351,6 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   renderMap() {
-
     if (this.state.initialLatDelta > 0 && this.state.initialLonDelta > 0) {
       return (
         <MapView
@@ -521,7 +504,7 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   renderContent() {
-    if (this.state.latitude !== null && this.state.longitude !== null) {
+    if (this.state.latitude !== 0 && this.state.longitude !== 0) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;

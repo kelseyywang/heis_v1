@@ -117,30 +117,10 @@ export default class StartGame extends React.Component {
   clearFirebaseActions(currTracerInGame, currTraitorInGame, currNumPlayers) {
     firebase.database().ref(`/currentSessions/${this.state.sessionKey}`)
       .set({
-        deflectOn: false,
-        disguiseOn: false,
         traitorLatitude: 0,
         traitorLongitude: 0,
         traitorInGame: currTraitorInGame,
-        showDirection: false,
-        showDistance: false,
-        distance: 0,
-        directionCoordsForTraitor: [{
-          latitude: 0,
-          longitude: 0
-        },
-        {
-          latitude: 0,
-          longitude: 0
-        }],
-        //Arbitrary values here!
-        lastClickLatTraitor: 0,
-        lastClickLonTraitor: 0,
         tracerInGame: currTracerInGame,
-        gameWinner: "none",
-        countdownTotal: -1,
-        initialLatDelta: 0,
-        initialLonDelta: 0,
         tracerLatitude: 0,
         tracerLongitude: 0,
         tracerInLocate: false,

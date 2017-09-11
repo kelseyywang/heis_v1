@@ -13,32 +13,18 @@ export default class MapScreenTracer extends React.Component {
     super(props);
 
     this.state = {
-      latitude: null,
-      longitude: null,
+      latitude: 0,
+      longitude: 0,
       distance: 0,
-      directionCoords: [{
-        latitude: 0,
-        longitude: 0,
-      },
-      {
-        latitude: 0,
-        longitude: 0,
-      }],
-      directionCoordsForTraitor: [{
-        latitude: 0,
-        longitude: 0,
-      },
-      {
-        latitude: 0,
-        longitude: 0,
-      }],
+      directionCoords: null,
+      directionCoordsForTraitor: null,
       error: null,
       showDirection: false,
       showDistance: false,
-      lastClickLatTracer: null,
-      lastClickLonTracer: null,
-      lastClickLatTraitor: null,
-      lastClickLonTraitor: null,
+      lastClickLatTracer: 0,
+      lastClickLonTracer: 0,
+      lastClickLatTraitor: 0,
+      lastClickLonTraitor: 0,
       showAimCircle: false,
       showTriggerCircle: false,
       triggersRemaining: 3,
@@ -82,6 +68,8 @@ export default class MapScreenTracer extends React.Component {
     this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
     this.countdownInterval = null;
+    this.initialLat = null;
+    this.initialLon = null;
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = true;
     firebase.database().ref().update(updates);
@@ -169,11 +157,21 @@ export default class MapScreenTracer extends React.Component {
           traitorStartLat, traitorStartLon);
         this.countdownTotal = this.calcCountdownAmount(startDistance);
         //Compute initial latitude and longitude delta on map
+        let stateInitialLatDelta = this.calcInitialDeltas(startDistance, this.countdownTotal,
+        'latitude', this.state.latitude);
+        if (stateInitialLatDelta > 10) {
+          //Check if it's reasonable, as it sometimes glitches
+          stateInitialLatDelta = 0.01;
+        }
+        let stateInitialLonDelta = this.calcInitialDeltas(startDistance, this.countdownTotal,
+        'longitude', this.state.latitude);
+        if (stateInitialLonDelta > 10) {
+          //Check if it's reasonable, as it sometimes glitches
+          stateInitialLonDelta = 0.01;
+        }
         this.setState({
-          initialLatDelta: this.calcInitialDeltas(startDistance, this.countdownTotal,
-          'latitude', this.state.latitude),
-          initialLonDelta: this.calcInitialDeltas(startDistance, this.countdownTotal,
-          'longitude', this.state.latitude),
+          initialLatDelta: stateInitialLatDelta,
+          initialLonDelta: stateInitialLonDelta,
         });
         let updates = {};
         updates[`/currentSessions/${this.props.sessionKey}/countdownTotal/`] = this.countdownTotal;
@@ -414,7 +412,7 @@ export default class MapScreenTracer extends React.Component {
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
       if (dist < this.range) {
-        if (!traitorDeflect) {
+        if (typeof traitorDeflect === 'undefined' || !traitorDeflect) {
           //Tracer won
           this.gameWonActions("Tracer", Math.round(dist));
         }
@@ -695,9 +693,10 @@ export default class MapScreenTracer extends React.Component {
   }
 
   renderContent() {
-    if (this.state.latitude !== null && this.state.longitude !== null &&
-    this.state.distance !== null && this.state.directionCoords !== null &&
-    this.state.showDirection !== null && this.state.showDistance !== null) {
+    console.log("start");
+    console.log(this.state.latitude);
+    console.log(this.state.longitude);
+    if (this.state.latitude !== 0 && this.state.longitude !== 0) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;
