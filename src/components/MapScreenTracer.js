@@ -8,7 +8,6 @@ import { Spinner, Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
-//TODO 9/5: Reset all the fb with sessionKey to default vals in beginning
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
     super(props);
@@ -50,6 +49,8 @@ export default class MapScreenTracer extends React.Component {
       showPauseText: false,
       currentTime: -10,
       showCountdown: false,
+      initialLatDelta: 0,
+      initialLonDelta: 0,
     };
     this.range = 70;
     //The following instance vars are to determine countdown time
@@ -163,10 +164,21 @@ export default class MapScreenTracer extends React.Component {
       else {
         clearTimeout(this.getTraitorPosTimeout);
         //Traitor's position has been uploaded to firebase
-        let startDistance = this.calcDistance(this.state.latitude, this.state.longitude, traitorStartLat, traitorStartLon);
+        //Compute countdown total
+        let startDistance = this.calcDistance(this.state.latitude, this.state.longitude,
+          traitorStartLat, traitorStartLon);
         this.countdownTotal = this.calcCountdownAmount(startDistance);
+        //Compute initial latitude and longitude delta on map
+        this.setState({
+          initialLatDelta: this.calcInitialDeltas(startDistance, this.countdownTotal,
+          'latitude', this.state.latitude),
+          initialLonDelta: this.calcInitialDeltas(startDistance, this.countdownTotal,
+          'longitude', this.state.latitude),
+        });
         let updates = {};
         updates[`/currentSessions/${this.props.sessionKey}/countdownTotal/`] = this.countdownTotal;
+        updates[`/currentSessions/${this.props.sessionKey}/initialLatDelta/`] = this.state.initialLatDelta;
+        updates[`/currentSessions/${this.props.sessionKey}/initialLonDelta/`] = this.state.initialLonDelta;
         firebase.database().ref().update(updates);
       }
     });
@@ -181,13 +193,29 @@ export default class MapScreenTracer extends React.Component {
     else if (myDist > this.maxDist) {
       return this.minTime;
     }
-    else {
-      let numCountdownTimes = 1 + Math.floor((this.maxTime - this.minTime) / this.timeIncrements);
-      //Calculate range of distance for each time increment
-      let incrementDistAmts = Math.floor((this.maxDist - this.minDist) / (numCountdownTimes - 2));
-      let numTimeIncrements = numCountdownTimes - 2 - Math.floor((myDist - this.minDist) / incrementDistAmts);
-      return (Math.floor(this.minTime + this.timeIncrements * numTimeIncrements));
+    let numCountdownTimes = 1 + Math.floor((this.maxTime - this.minTime) / this.timeIncrements);
+    //Calculate range of distance for each time increment
+    let incrementDistAmts = Math.floor((this.maxDist - this.minDist) / (numCountdownTimes - 2));
+    let numTimeIncrements = numCountdownTimes - 2 - Math.floor((myDist - this.minDist) / incrementDistAmts);
+    return (Math.floor(this.minTime + this.timeIncrements * numTimeIncrements));
+  }
+
+  calcInitialDeltas(myDist, myCountdownTotal, direction, latitude) {
+    //Add some distance in both directions to account for meters
+    //gained during countdown, assuming 8 minute mile pace
+    let countdownMetersGained = 1609.34 * myCountdownTotal / (8 * 60);
+    let meterDelta = 2 * (countdownMetersGained + myDist);
+
+    if (direction === 'latitude') {
+      //Convert meters to latitude
+      return meterDelta / 111044.46;
     }
+    else if (direction === 'longitude') {
+      //Number of meters in longitude depends on current latitude
+      let metersInLon = Math.cos(latitude * Math.PI / 180) * 111318.05;
+      return meterDelta / metersInLon;
+    }
+    return 0.01;
   }
 
   //Starts timer after countdown ends
@@ -500,6 +528,79 @@ export default class MapScreenTracer extends React.Component {
     });
   }
 
+  renderMap() {
+    if (this.state.initialLatDelta > 0 && this.state.initialLonDelta > 0) {
+      return (
+        <MapView
+          provider="google"
+          style={commonStyles.map}
+          showsUserLocation
+          initialRegion={{
+            latitude: this.state.latitude,
+            longitude: this.state.longitude,
+            latitudeDelta: this.state.initialLatDelta,
+            longitudeDelta: this.state.initialLonDelta,
+          }}
+        >
+        {this.state.showDistance &&
+          <MapView.Circle
+            center={{
+              latitude: this.state.lastClickLatTracer,
+              longitude: this.state.lastClickLonTracer
+            }}
+            radius={this.state.distance}
+            fillColor={colors.clueFillColor}
+            strokeColor={colors.clueStrokeColor}
+            strokeWidth={2}
+          />
+          }
+          {this.state.showAimCircle &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }}
+              radius={this.range}
+              fillColor={colors.aimCircleColor}
+              strokeColor={colors.aimCircleColor}
+            />
+          }
+          {this.state.showTriggerCircle &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.lastClickLatTracer,
+                longitude: this.state.lastClickLonTracer
+              }}
+              radius={this.state.distance}
+              fillColor="rgba(193,0,0,.3)"
+              strokeColor="rgba(193,0,0,.3)"
+            />
+          }
+          {this.state.disguiseOn &&
+            <MapView.Circle
+              center={{
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }}
+              radius={100000}
+              fillColor="rgba(0,0,0,.3)"
+              strokeColor="rgba(0,0,0,.3)"
+            />
+          }
+          {this.state.showDirection &&
+          <MapView.Polyline
+            coordinates={
+              this.state.directionCoords
+            }
+            strokeColor={colors.clueStrokeColor}
+            strokeWidth={2}
+          />
+          }
+        </MapView>
+      );
+    }
+  }
+
   renderCurrentUser() {
     return (
       <View style={commonStyles.gameStyle}>
@@ -552,72 +653,7 @@ export default class MapScreenTracer extends React.Component {
           </View>
         </Modal>
         <Placeholder flex={2} >
-          <MapView
-            provider="google"
-            style={commonStyles.map}
-            showsUserLocation
-            initialRegion={{
-              latitude: this.state.latitude,
-              longitude: this.state.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-          {this.state.showDistance &&
-            <MapView.Circle
-              center={{
-                latitude: this.state.lastClickLatTracer,
-                longitude: this.state.lastClickLonTracer
-              }}
-              radius={this.state.distance}
-              fillColor={colors.clueFillColor}
-              strokeColor={colors.clueStrokeColor}
-              strokeWidth={2}
-            />
-            }
-            {this.state.showAimCircle &&
-              <MapView.Circle
-                center={{
-                  latitude: this.state.latitude,
-                  longitude: this.state.longitude
-                }}
-                radius={this.range}
-                fillColor={colors.aimCircleColor}
-                strokeColor={colors.aimCircleColor}
-              />
-            }
-            {this.state.showTriggerCircle &&
-              <MapView.Circle
-                center={{
-                  latitude: this.state.lastClickLatTracer,
-                  longitude: this.state.lastClickLonTracer
-                }}
-                radius={this.state.distance}
-                fillColor="rgba(193,0,0,.3)"
-                strokeColor="rgba(193,0,0,.3)"
-              />
-            }
-            {this.state.disguiseOn &&
-              <MapView.Circle
-                center={{
-                  latitude: this.state.latitude,
-                  longitude: this.state.longitude
-                }}
-                radius={100000}
-                fillColor="rgba(0,0,0,.3)"
-                strokeColor="rgba(0,0,0,.3)"
-              />
-            }
-            {this.state.showDirection &&
-            <MapView.Polyline
-              coordinates={
-                this.state.directionCoords
-              }
-              strokeColor={colors.clueStrokeColor}
-              strokeWidth={2}
-            />
-            }
-          </MapView>
+          {this.renderMap()}
         </Placeholder>
         <Placeholder flex={2} >
           <View style={commonStyles.gameStyle}>

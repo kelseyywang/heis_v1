@@ -37,6 +37,8 @@ export default class MapScreenTraitor extends React.Component {
       gameWinner: "none",
       currentTime: -10,
       showCountdown: false,
+      initialLatDelta: 0,
+      initialLonDelta: 0,
     };
     this.range = 70;
     this.totalGameTime = 20;
@@ -91,21 +93,17 @@ export default class MapScreenTraitor extends React.Component {
         //Check if fbCountdownTotal has a value and tracer is logged in.
         //If so, set countdownTotal and start countdown
         let fbCountdownTotal = snapshot.val().countdownTotal;
-        if (!this.state.tracerInGame && fbTracerInGame &&
-          this.state.currentTime === -10 && fbCountdownTotal > 0) {
-            this.countdownTotal = fbCountdownTotal;
-            this.setState({
-              currentTime: this.countdownTotal,
-              showCountdown: true,
-            });
-            this.startCountdown();
-        }
-        //If countdownTotal hasn't been set because of asynchronous
-        //firebase uploading by tracer, then pull from firebase again
+        let fbInitialLatDelta = snapshot.val().initialLatDelta;
+        let fbInitialLonDelta = snapshot.val().initialLonDelta;
+
+        //countdownTotal hasn't been set because of asynchronous
+        //firebase uploading by tracer, so pull from firebase again
         if (!(this.countdownTotal > 0) && fbTracerInGame && fbCountdownTotal > 0) {
           this.countdownTotal = fbCountdownTotal;
           this.setState({
             currentTime: this.countdownTotal,
+            initialLatDelta: fbInitialLatDelta,
+            initialLonDelta: fbInitialLonDelta,
             showCountdown: true,
           });
           this.startCountdown();
@@ -184,6 +182,8 @@ export default class MapScreenTraitor extends React.Component {
         tracerInGame: false,
         gameWinner: "none",
         countdownTotal: -1,
+        initialLatDelta: 0,
+        initialLonDelta: 0,
         tracerLatitude: 0,
         tracerLongitude: 0,
         tracerInLocate: false,
@@ -366,58 +366,10 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
-  renderCurrentUser() {
-    return (
-      <View style={commonStyles.gameStyle}>
-        <Header
-          headerText='Traitor'
-          includeRightButton
-          rightButtonText='Log Out'
-          rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
-        />
-        <Placeholder flex={0.3} >
-          {!this.state.showCountdown &&
-            <Text style={commonStyles.lightTextStyle}>
-              {"Time: " + this.returnTimerString(this.state.currentTime)}
-            </Text>
-          }
-        </Placeholder>
-        <Modal
-          visible={!this.state.showCountdown && !this.state.tracerInGame && this.state.timerModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => {}}
-        >
-          <View style={commonStyles.modalStyle}>
-            <View style={commonStyles.modalSectionStyle}>
-              <Text style={commonStyles.mainTextStyle}>
-                Tracer is not in the game
-              </Text>
-              <Button
-                onPress={this.notInGameModal}
-                title='Okay'
-                main
-              >
-              </Button>
-            </View>
-          </View>
-        </Modal>
-        <Modal
-        visible={this.state.showCountdown}
-        transparent
-        animationType="slide"
-        onRequestClose={() => {}}
-        >
-        <View style={commonStyles.modalStyle}>
-          <View style={commonStyles.modalShortSectionStyle}>
-            <Text style={commonStyles.mainTextStyle}>
-              {"Run! Countdown: " + this.returnTimerString(this.state.currentTime)}
-            </Text>
-          </View>
-        </View>
-      </Modal>
-      <Placeholder flex={2} >
+  renderMap() {
+
+    if (this.state.initialLatDelta > 0 && this.state.initialLonDelta > 0) {
+      return (
         <MapView
           provider="google"
           style={commonStyles.map}
@@ -425,8 +377,8 @@ export default class MapScreenTraitor extends React.Component {
           initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
+            latitudeDelta: this.state.initialLatDelta,
+            longitudeDelta: this.state.initialLonDelta,
           }}
         >
         {this.state.showDistance &&
@@ -484,7 +436,64 @@ export default class MapScreenTraitor extends React.Component {
           />
           }
           </MapView>
+      );
+    }
+  }
+
+  renderCurrentUser() {
+    return (
+      <View style={commonStyles.gameStyle}>
+        <Header
+          headerText='Traitor'
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
+        />
+        <Placeholder flex={0.3} >
+          {!this.state.showCountdown &&
+            <Text style={commonStyles.lightTextStyle}>
+              {"Time: " + this.returnTimerString(this.state.currentTime)}
+            </Text>
+          }
         </Placeholder>
+        <Modal
+          visible={!this.state.showCountdown && !this.state.tracerInGame && this.state.timerModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {}}
+        >
+          <View style={commonStyles.modalStyle}>
+            <View style={commonStyles.modalSectionStyle}>
+              <Text style={commonStyles.mainTextStyle}>
+                Tracer is not in the game
+              </Text>
+              <Button
+                onPress={this.notInGameModal}
+                title='Okay'
+                main
+              >
+              </Button>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+        visible={this.state.showCountdown}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {}}
+        >
+        <View style={commonStyles.modalStyle}>
+          <View style={commonStyles.modalShortSectionStyle}>
+            <Text style={commonStyles.mainTextStyle}>
+              {"Run! Countdown: " + this.returnTimerString(this.state.currentTime)}
+            </Text>
+          </View>
+        </View>
+      </Modal>
+      <Placeholder flex={2} >
+        {this.renderMap()}
+      </Placeholder>
         <Placeholder flex={2} >
           <View style={commonStyles.gameStyle}>
             <Button

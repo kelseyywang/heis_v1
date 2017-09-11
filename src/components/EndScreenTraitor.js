@@ -100,7 +100,7 @@ export default class EndScreenTraitor extends React.Component {
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new game. You are tracer.
+            Your opponent started a new game. You are the Tracer.
           </GameStartedModal>
         );
       }
@@ -110,7 +110,7 @@ export default class EndScreenTraitor extends React.Component {
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your friend started a new game. You are traitor.
+            Your friend started a new game. You are the Traitor.
           </GameStartedModal>
         );
       }
@@ -122,7 +122,7 @@ export default class EndScreenTraitor extends React.Component {
       <View style={commonStyles.setupStyle}>
         {this.renderModal()}
         <Header
-          headerText='Choose Side'
+          headerText='Game Over'
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>

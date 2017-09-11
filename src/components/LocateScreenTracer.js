@@ -17,6 +17,10 @@ export default class LocateScreenTracer extends React.Component {
       traitorLongitude: null,
       traitorInLocate: false,
       locateModalVisible: true,
+      initialLatDelta: 0,
+      initialLonDelta: 0,
+      initialLat: 0,
+      initialLon: 0,
       error: null,
     };
   }
@@ -52,6 +56,18 @@ export default class LocateScreenTracer extends React.Component {
             traitorInLocate: fbTraitorInLocate,
             error: null
           });
+          if (fbTraitorInLocate && fbTraitorLatitude !== 0 && fbTraitorLongitude !== 0) {
+            this.setState({
+              initialLatDelta: this.calcLocateDelta(this.state.tracerLatitude,
+                this.state.traitorLatitude),
+              initialLonDelta: this.calcLocateDelta(this.state.tracerLongitude,
+                this.state.traitorLongitude),
+              initialLat: this.calcAve(this.state.tracerLatitude,
+                this.state.traitorLatitude),
+              initialLon: this.calcAve(this.state.tracerLongitude,
+                this.state.traitorLongitude),
+            });
+          }
           let updates = {};
           updates[`/currentSessions/${this.props.sessionKey}/tracerLatitude/`] = position.coords.latitude;
           updates[`/currentSessions/${this.props.sessionKey}/tracerLongitude`] = position.coords.longitude;
@@ -61,6 +77,16 @@ export default class LocateScreenTracer extends React.Component {
         { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
       );
     });
+  }
+
+  calcLocateDelta(coord1, coord2) {
+    let difference = Math.abs(coord1 - coord2);
+    //add difference / 6 to add some padding
+    return (difference + difference / 6);
+  }
+
+  calcAve(coord1, coord2) {
+    return ((coord1 + coord2) / 2);
   }
 
   exitLocateModal() {
@@ -79,11 +105,46 @@ export default class LocateScreenTracer extends React.Component {
     });
   }
 
+  renderMap() {
+    if (this.state.initialLatDelta !== 0 && this.state.initialLonDelta !== 0
+    && this.state.initialLat !== 0 && this.state.initialLon !== 0) {
+      console.log("start");
+      console.log(this.state.initialLatDelta);
+      console.log(this.state.initialLonDelta);
+      console.log(this.state.initialLat);
+      console.log(this.state.initialLon);
+
+      return (
+        <MapView
+          provider="google"
+          showsUserLocation
+          style={commonStyles.map}
+          initialRegion={{
+            latitude: this.state.initialLat,
+            longitude: this.state.initialLon,
+            latitudeDelta: this.state.initialLatDelta,
+            longitudeDelta: this.state.initialLonDelta,
+          }}
+        >
+          {this.state.traitorInLocate &&
+            <MapView.Marker
+              title="Traitor"
+              coordinate={{
+                latitude: this.state.traitorLatitude,
+                longitude: this.state.traitorLongitude,
+              }}
+            />
+          }
+        </MapView>
+      );
+    }
+  }
+
   renderCurrentUser() {
     return (
       <View style={commonStyles.setupStyle}>
         <Header
-          headerText='Traitor'
+          headerText='Tracer'
           gameMode
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -115,27 +176,7 @@ export default class LocateScreenTracer extends React.Component {
           </Text>
         </Placeholder>
         <Placeholder flex={1} >
-          <MapView
-            provider="google"
-            showsUserLocation
-            style={commonStyles.map}
-            initialRegion={{
-              latitude: this.state.tracerLatitude,
-              longitude: this.state.tracerLongitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            {this.state.traitorInLocate &&
-              <MapView.Marker
-                title="Traitor"
-                coordinate={{
-                  latitude: this.state.traitorLatitude,
-                  longitude: this.state.traitorLongitude,
-                }}
-              />
-            }
-          </MapView>
+          {this.renderMap()}
         </Placeholder>
         <Placeholder flex={1} >
           <Button

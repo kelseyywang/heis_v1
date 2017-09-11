@@ -127,7 +127,7 @@ export default class EndScreenTracer extends React.Component {
       <View style={commonStyles.setupStyle}>
         {this.renderModal()}
         <Header
-          headerText='Choose Side'
+          headerText='Game Over'
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>

@@ -139,6 +139,8 @@ export default class StartGame extends React.Component {
         tracerInGame: currTracerInGame,
         gameWinner: "none",
         countdownTotal: -1,
+        initialLatDelta: 0,
+        initialLonDelta: 0,
         tracerLatitude: 0,
         tracerLongitude: 0,
         tracerInLocate: false,
