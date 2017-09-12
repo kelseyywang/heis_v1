@@ -38,6 +38,7 @@ import ChooseRole from './src/components/ChooseRole';
 // chenge rules in firebase
 // In LocateScreens and maybe MapScreens, make lon/lat delta dependent on how far
 // away the players are initially
+// Override default game time in ChooseRole, also set countdown time?
 // not important: make option to cancel game, while game is happening or in countdown
 
 

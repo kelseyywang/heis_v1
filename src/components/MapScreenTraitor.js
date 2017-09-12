@@ -14,14 +14,7 @@ export default class MapScreenTraitor extends React.Component {
       latitude: 0,
       longitude: 0,
       distance: 0,
-      directionCoordsForTraitor: [{
-        latitude: 0,
-        longitude: 0,
-      },
-      {
-        latitude: 0,
-        longitude: 0,
-      }],
+      directionCoordsForTraitor: null,
       error: null,
       showDirection: false,
       showDistance: false,
@@ -61,7 +54,24 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
-    this.endGameActions();
+    this.unmountActions();
+  }
+
+  //Resets intervals and stuff at the end of game
+  unmountActions() {
+    clearInterval(this.interval);
+    clearInterval(this.timerInterval);
+    clearInterval(this.countdownInterval);
+    clearInterval(this.deflectTimeout);
+    clearInterval(this.disguiseTimeout);
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
+    .once('value', snapshot => {
+      if (snapshot.val() !== null) {
+        let updates = {};
+        updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = false;
+        firebase.database().ref().update(updates);
+      }
+    });
   }
 
   //Pulls all info from firebase, and checks stuff about
@@ -69,70 +79,70 @@ export default class MapScreenTraitor extends React.Component {
   //Sets state to all this current info, with callback to
   //getAndSetLocation
   callCurrentPosition() {
+    let ret = false;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let fbGameWinner = snapshot.val().gameWinner;
-      if (typeof fbGameWinner !== 'undefined') {
-        this.hasGameEnded(fbGameWinner);
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        return;
       }
-      else {
-        let fbShowDirection = snapshot.val().showDirection;
-        let fbShowDistance = snapshot.val().showDistance;
-        let fbDistance = snapshot.val().distance;
-        let fbDirectionCoordsForTraitor = snapshot.val().directionCoordsForTraitor;
-        let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
-        let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
-        let fbTracerInGame = snapshot.val().tracerInGame;
-        //Check if display on map has changed
-        if ((typeof fbShowDistance !== 'undefined' && this.state.showDistance !== fbShowDistance) ||
-              (typeof fbShowDirection !== 'undefined' && this.state.showDirection !== fbShowDirection) ||
-              (typeof fbDistance !== 'undefined' && this.state.distance !== fbDistance) ||
-              (typeof fbDirectionCoordsForTraitor !== 'undefined' &&
-              !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor,
-                fbDirectionCoordsForTraitor))) {
-          Vibration.vibrate();
+      if (!ret) {
+        let fbGameWinner = snapshot.val().gameWinner;
+        if (typeof fbGameWinner !== 'undefined') {
+          this.hasGameEnded(fbGameWinner);
         }
-        //Check if fbCountdownTotal has a value and tracer is logged in.
-        //If so, set countdownTotal and start countdown
-        let fbCountdownTotal = snapshot.val().countdownTotal;
-        let fbInitialLatDelta = snapshot.val().initialLatDelta;
-        let fbInitialLonDelta = snapshot.val().initialLonDelta;
+        else {
+          let fbShowDirection = snapshot.val().showDirection;
+          let fbShowDistance = snapshot.val().showDistance;
+          let fbDistance = snapshot.val().distance;
+          let fbDirectionCoordsForTraitor = snapshot.val().directionCoordsForTraitor;
+          let fbLastClickLatTraitor = snapshot.val().lastClickLatTraitor;
+          let fbLastClickLonTraitor = snapshot.val().lastClickLonTraitor;
+          let fbTracerInGame = snapshot.val().tracerInGame;
+          //Check if display on map has changed
+          if ((typeof fbShowDistance !== 'undefined' && this.state.showDistance !== fbShowDistance) ||
+                (typeof fbShowDirection !== 'undefined' && this.state.showDirection !== fbShowDirection) ||
+                (typeof fbDistance !== 'undefined' && this.state.distance !== fbDistance) ||
+                (typeof fbDirectionCoordsForTraitor !== 'undefined' &&
+                !this.compareDirectionCoordsForTraitor(this.state.directionCoordsForTraitor,
+                  fbDirectionCoordsForTraitor))) {
+            Vibration.vibrate();
+          }
+          //Check if fbCountdownTotal has a value and tracer is logged in.
+          //If so, set countdownTotal and start countdown
+          let fbCountdownTotal = snapshot.val().countdownTotal;
+          let fbInitialLatDelta = snapshot.val().initialLatDelta;
+          let fbInitialLonDelta = snapshot.val().initialLonDelta;
 
-        //countdownTotal hasn't been set because of asynchronous
-        //firebase uploading by tracer, so pull from firebase
-        if (this.countdownTotal === null && fbTracerInGame &&
-          typeof fbCountdownTotal !== 'undefined' && typeof fbInitialLatDelta !== 'undefined' &&
-          typeof fbInitialLonDelta !== 'undefined') {
-          this.countdownTotal = fbCountdownTotal;
-          this.setState({
-            currentTime: this.countdownTotal,
-            initialLatDelta: fbInitialLatDelta,
-            initialLonDelta: fbInitialLonDelta,
-            showCountdown: true,
-          });
-          this.startCountdown();
-        }
-        //Ensure state variables showDistance and showDirection
-        //are not set to undefined
-        let defaultDirectionCoords = [{
-          latitude: 0,
-          longitude: 0,
-        },
-        {
-          latitude: 0,
-          longitude: 0,
-        }];
+          //countdownTotal hasn't been set because of asynchronous
+          //firebase uploading by tracer, so pull from firebase
+          if (this.countdownTotal === null && fbTracerInGame &&
+            typeof fbCountdownTotal !== 'undefined' && typeof fbInitialLatDelta !== 'undefined' &&
+            typeof fbInitialLonDelta !== 'undefined') {
+            this.countdownTotal = fbCountdownTotal;
+            this.setState({
+              currentTime: this.countdownTotal,
+              initialLatDelta: fbInitialLatDelta,
+              initialLonDelta: fbInitialLonDelta,
+              showCountdown: true,
+            });
+            this.startCountdown();
+          }
+          //Ensure state variables showDistance and showDirection
+          //are not set to undefined
           this.setState({
             showDistance: (fbShowDistance || false),
             showDirection: (fbShowDirection || false),
             distance: (fbDistance || 0),
-            directionCoordsForTraitor: (fbDirectionCoordsForTraitor || defaultDirectionCoords),
+            directionCoordsForTraitor: (fbDirectionCoordsForTraitor || null),
             lastClickLatTraitor: (fbLastClickLatTraitor || 0),
             lastClickLonTraitor: (fbLastClickLonTraitor || 0),
             tracerInGame: fbTracerInGame,
             },
             this.getAndSetLocation.bind(this)
           );
+        }
       }
     });
   }
@@ -153,6 +163,7 @@ export default class MapScreenTraitor extends React.Component {
   hasGameEnded(fbGameWinner) {
     //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
     this.clearFirebaseActions();
+    this.unmountActions();
     Actions.endScreenTraitor({
       sessionKey: this.props.sessionKey,
       winner: fbGameWinner,
@@ -306,18 +317,6 @@ export default class MapScreenTraitor extends React.Component {
     this.setState({
       deflectOn: false,
     });
-  }
-
-  //Resets intervals and stuff at the end of game
-  endGameActions() {
-    clearInterval(this.interval);
-    clearInterval(this.timerInterval);
-    clearInterval(this.countdownInterval);
-    clearInterval(this.deflectTimeout);
-    clearInterval(this.disguiseTimeout);
-    let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = false;
-    firebase.database().ref().update(updates);
   }
 
   //Returns what timer should appear as

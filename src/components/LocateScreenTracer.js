@@ -11,10 +11,10 @@ export default class LocateScreenTracer extends React.Component {
     super(props);
 
     this.state = {
-      tracerLatitude: null,
-      tracerLongitude: null,
-      traitorLatitude: null,
-      traitorLongitude: null,
+      tracerLatitude: 0,
+      tracerLongitude: 0,
+      traitorLatitude: 0,
+      traitorLongitude: 0,
       traitorInLocate: false,
       locateModalVisible: true,
       initialLatDelta: 0,
@@ -34,55 +34,72 @@ export default class LocateScreenTracer extends React.Component {
   }
 
   componentWillUnmount(){
+    this.unmountActions();
+  }
+
+  unmountActions() {
     clearInterval(this.interval);
-    let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/tracerInLocate/`] = false;
-    firebase.database().ref().update(updates);
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
+    .once('value', snapshot => {
+      if (snapshot.val() !== null) {
+        let updates = {};
+        updates[`/currentSessions/${this.props.sessionKey}/tracerInLocate/`] = false;
+        firebase.database().ref().update(updates);
+      }
+    });
   }
 
   setCurrentPositions() {
+    let ret = false;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let fbTraitorLatitude = snapshot.val().traitorLatitude;
-      let fbTraitorLongitude = snapshot.val().traitorLongitude;
-      let fbTraitorInLocate = snapshot.val().traitorInLocate;
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.setState({
-            tracerLatitude: position.coords.latitude,
-            tracerLongitude: position.coords.longitude,
-            traitorLatitude: fbTraitorLatitude,
-            traitorLongitude: fbTraitorLongitude,
-            traitorInLocate: fbTraitorInLocate,
-            error: null
-          });
-          if (fbTraitorInLocate && fbTraitorLatitude !== 0 && fbTraitorLongitude !== 0) {
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        return;
+      }
+      if (!ret) {
+        let fbTraitorLatitude = snapshot.val().traitorLatitude;
+        let fbTraitorLongitude = snapshot.val().traitorLongitude;
+        let fbTraitorInLocate = snapshot.val().traitorInLocate;
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
             this.setState({
-              initialLatDelta: this.calcLocateDelta(this.state.tracerLatitude,
-                this.state.traitorLatitude),
-              initialLonDelta: this.calcLocateDelta(this.state.tracerLongitude,
-                this.state.traitorLongitude),
-              initialLat: this.calcAve(this.state.tracerLatitude,
-                this.state.traitorLatitude),
-              initialLon: this.calcAve(this.state.tracerLongitude,
-                this.state.traitorLongitude),
+              tracerLatitude: position.coords.latitude,
+              tracerLongitude: position.coords.longitude,
+              traitorLatitude: fbTraitorLatitude,
+              traitorLongitude: fbTraitorLongitude,
+              traitorInLocate: fbTraitorInLocate,
+              error: null
             });
-          }
-          let updates = {};
-          updates[`/currentSessions/${this.props.sessionKey}/tracerLatitude/`] = position.coords.latitude;
-          updates[`/currentSessions/${this.props.sessionKey}/tracerLongitude`] = position.coords.longitude;
-          firebase.database().ref().update(updates);
-        },
-        (error) => this.setState({ error: error.message }),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-      );
+            if (fbTraitorInLocate && fbTraitorLatitude !== 0 && fbTraitorLongitude !== 0) {
+              this.setState({
+                initialLatDelta: this.calcLocateDelta(this.state.tracerLatitude,
+                  this.state.traitorLatitude),
+                initialLonDelta: this.calcLocateDelta(this.state.tracerLongitude,
+                  this.state.traitorLongitude),
+                initialLat: this.calcAve(this.state.tracerLatitude,
+                  this.state.traitorLatitude),
+                initialLon: this.calcAve(this.state.tracerLongitude,
+                  this.state.traitorLongitude),
+              });
+            }
+            let updates = {};
+            updates[`/currentSessions/${this.props.sessionKey}/tracerLatitude/`] = position.coords.latitude;
+            updates[`/currentSessions/${this.props.sessionKey}/tracerLongitude`] = position.coords.longitude;
+            firebase.database().ref().update(updates);
+          },
+          (error) => this.setState({ error: error.message }),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
+      }
     });
   }
 
   calcLocateDelta(coord1, coord2) {
     let difference = Math.abs(coord1 - coord2);
     //add difference / 6 to add some padding
-    return (difference + difference / 6);
+    return (difference + difference / 4);
   }
 
   calcAve(coord1, coord2) {
@@ -96,6 +113,7 @@ export default class LocateScreenTracer extends React.Component {
   }
 
   backActions() {
+    this.unmountActions();
     Actions.endScreenTracer({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
@@ -108,12 +126,6 @@ export default class LocateScreenTracer extends React.Component {
   renderMap() {
     if (this.state.initialLatDelta !== 0 && this.state.initialLonDelta !== 0
     && this.state.initialLat !== 0 && this.state.initialLon !== 0) {
-      console.log("start");
-      console.log(this.state.initialLatDelta);
-      console.log(this.state.initialLonDelta);
-      console.log(this.state.initialLat);
-      console.log(this.state.initialLon);
-
       return (
         <MapView
           provider="google"
@@ -144,7 +156,7 @@ export default class LocateScreenTracer extends React.Component {
     return (
       <View style={commonStyles.setupStyle}>
         <Header
-          headerText='Tracer'
+          headerText='Locate Other Player'
           gameMode
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -191,8 +203,7 @@ export default class LocateScreenTracer extends React.Component {
   }
 
   renderContent() {
-    if (this.state.tracerLatitude !== null && this.state.tracerLongitude !== null &&
-    this.state.traitorLatitude !== null && this.state.traitorLongitude !== null) {
+    if (this.state.tracerLatitude !== 0 && this.state.tracerLongitude !== 0) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;

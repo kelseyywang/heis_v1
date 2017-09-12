@@ -11,12 +11,16 @@ export default class LocateScreenTraitor extends React.Component {
     super(props);
 
     this.state = {
-      tracerLatitude: null,
-      tracerLongitude: null,
-      traitorLatitude: null,
-      traitorLongitude: null,
+      tracerLatitude: 0,
+      tracerLongitude: 0,
+      traitorLatitude: 0,
+      traitorLongitude: 0,
       tracerInLocate: false,
       locateModalVisible: true,
+      initialLatDelta: 0,
+      initialLonDelta: 0,
+      initialLat: 0,
+      initialLon: 0,
       error: null,
     };
   }
@@ -30,37 +34,76 @@ export default class LocateScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
+    this.unmountActions();
+  }
+
+  unmountActions() {
     clearInterval(this.interval);
-    let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/traitorInLocate/`] = false;
-    firebase.database().ref().update(updates);
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
+    .once('value', snapshot => {
+      if (snapshot.val() !== null) {
+        let updates = {};
+        updates[`/currentSessions/${this.props.sessionKey}/traitorInLocate/`] = false;
+        firebase.database().ref().update(updates);
+      }
+    });
   }
 
   setCurrentPositions() {
+    let ret = false;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let fbTracerLatitude = snapshot.val().tracerLatitude;
-      let fbTracerLongitude = snapshot.val().tracerLongitude;
-      let fbTracerInLocate = snapshot.val().tracerInLocate;
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.setState({
-            traitorLatitude: position.coords.latitude,
-            traitorLongitude: position.coords.longitude,
-            tracerLatitude: fbTracerLatitude,
-            tracerLongitude: fbTracerLongitude,
-            tracerInLocate: fbTracerInLocate,
-            error: null
-          });
-          let updates = {};
-          updates[`/currentSessions/${this.props.sessionKey}/traitorLatitude/`] = position.coords.latitude;
-          updates[`/currentSessions/${this.props.sessionKey}/traitorLongitude/`] = position.coords.longitude;
-          firebase.database().ref().update(updates);
-        },
-        (error) => this.setState({ error: error.message }),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-      );
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        return;
+      }
+      if (!ret) {
+        let fbTracerLatitude = snapshot.val().tracerLatitude;
+        let fbTracerLongitude = snapshot.val().tracerLongitude;
+        let fbTracerInLocate = snapshot.val().tracerInLocate;
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            this.setState({
+              traitorLatitude: position.coords.latitude,
+              traitorLongitude: position.coords.longitude,
+              tracerLatitude: fbTracerLatitude,
+              tracerLongitude: fbTracerLongitude,
+              tracerInLocate: fbTracerInLocate,
+              error: null
+            });
+            if (fbTracerInLocate && fbTracerLatitude !== 0 && fbTracerLongitude !== 0) {
+              this.setState({
+                initialLatDelta: this.calcLocateDelta(this.state.tracerLatitude,
+                  this.state.traitorLatitude),
+                initialLonDelta: this.calcLocateDelta(this.state.tracerLongitude,
+                  this.state.traitorLongitude),
+                initialLat: this.calcAve(this.state.tracerLatitude,
+                  this.state.traitorLatitude),
+                initialLon: this.calcAve(this.state.tracerLongitude,
+                  this.state.traitorLongitude),
+              });
+            }
+            let updates = {};
+            updates[`/currentSessions/${this.props.sessionKey}/traitorLatitude/`] = position.coords.latitude;
+            updates[`/currentSessions/${this.props.sessionKey}/traitorLongitude/`] = position.coords.longitude;
+            firebase.database().ref().update(updates);
+          },
+          (error) => this.setState({ error: error.message }),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
+      }
     });
+  }
+
+  calcLocateDelta(coord1, coord2) {
+    let difference = Math.abs(coord1 - coord2);
+    //add difference / 6 to add some padding
+    return (difference + difference / 4);
+  }
+
+  calcAve(coord1, coord2) {
+    return ((coord1 + coord2) / 2);
   }
 
   exitLocateModal() {
@@ -70,6 +113,7 @@ export default class LocateScreenTraitor extends React.Component {
   }
 
   backActions() {
+    this.unmountActions();
     Actions.endScreenTraitor({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
@@ -78,11 +122,40 @@ export default class LocateScreenTraitor extends React.Component {
     });
   }
 
+  renderMap() {
+    if (this.state.initialLatDelta !== 0 && this.state.initialLonDelta !== 0
+    && this.state.initialLat !== 0 && this.state.initialLon !== 0) {
+      return (
+        <MapView
+          provider="google"
+          showsUserLocation
+          style={commonStyles.map}
+          initialRegion={{
+            latitude: this.state.initialLat,
+            longitude: this.state.initialLon,
+            latitudeDelta: this.state.initialLatDelta,
+            longitudeDelta: this.state.initialLonDelta,
+          }}
+        >
+          {this.state.tracerInLocate &&
+            <MapView.Marker
+              title="Tracer"
+              coordinate={{
+                latitude: this.state.tracerLatitude,
+                longitude: this.state.tracerLongitude,
+              }}
+            />
+          }
+        </MapView>
+      );
+    }
+  }
+
   renderCurrentUser() {
     return (
       <View style={commonStyles.setupStyle}>
         <Header
-          headerText='Traitor'
+          headerText='Locate Other Player'
           gameMode
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -114,27 +187,7 @@ export default class LocateScreenTraitor extends React.Component {
           </Text>
         </Placeholder>
         <Placeholder flex={1} >
-          <MapView
-            provider="google"
-            showsUserLocation
-            style={commonStyles.map}
-            initialRegion={{
-              latitude: this.state.traitorLatitude,
-              longitude: this.state.traitorLongitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            {this.state.tracerInLocate &&
-              <MapView.Marker
-                title="Tracer"
-                coordinate={{
-                  latitude: this.state.tracerLatitude,
-                  longitude: this.state.tracerLongitude,
-                }}
-              />
-            }
-          </MapView>
+          {this.renderMap()}
         </Placeholder>
         <Placeholder flex={1} >
           <Button
@@ -149,8 +202,7 @@ export default class LocateScreenTraitor extends React.Component {
   }
 
   renderContent() {
-    if (this.state.tracerLatitude !== null && this.state.tracerLongitude !== null &&
-    this.state.traitorLatitude !== null && this.state.traitorLongitude !== null) {
+    if (this.state.traitorLatitude !== 0 && this.state.traitorLongitude !== 0) {
       return this.renderCurrentUser();
     }
     return <Spinner size="large" />;

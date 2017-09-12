@@ -16,7 +16,9 @@ export default class EndScreenTraitor extends React.Component {
     this.state = {
       tracerInGame: false,
       traitorInGame: false,
+      tracerInLocate: false,
       newGameModalVisible: true,
+      locateModalVisible: true,
     };
   }
 
@@ -25,16 +27,29 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   componentWillUnmount() {
+    this.unmountActions();
+  }
+
+  unmountActions() {
     clearInterval(this.interval);
   }
 
   checkInGame() {
+    let ret = false;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      this.setState({
-        tracerInGame: snapshot.val().tracerInGame,
-        traitorInGame: snapshot.val().traitorInGame,
-      });
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        return;
+      }
+      if (!ret) {
+        this.setState({
+          tracerInGame: snapshot.val().tracerInGame,
+          traitorInGame: snapshot.val().traitorInGame,
+          tracerInLocate: snapshot.val().tracerInLocate,
+        });
+      }
     });
   }
 
@@ -67,6 +82,7 @@ export default class EndScreenTraitor extends React.Component {
       //it's only set every 3 seconds, so this is more accurate
       let fbTracerInGame = snapshot.val().tracerInGame;
       let fbTraitorInGame = snapshot.val().traitorInGame;
+      this.unmountActions();
       if (fbTracerInGame) {
         //Tracer has been taken, this user is traitor
         Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
@@ -83,7 +99,13 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   goToLocate() {
-    Actions.locateScreenTraitor({sessionKey: this.props.sessionKey, winner: this.props.winner, endTime: this.props.endTime, type: ActionConst.RESET});
+    this.unmountActions();
+    Actions.locateScreenTraitor({
+      sessionKey: this.props.sessionKey,
+      winner: this.props.winner,
+      endTime: this.props.endTime,
+      type: ActionConst.RESET
+    });
   }
 
   exitNewGameModal() {
@@ -92,7 +114,23 @@ export default class EndScreenTraitor extends React.Component {
     });
   }
 
+  exitLocateModal() {
+    this.setState({
+      locateModalVisible: false,
+    });
+  }
+
   renderModal() {
+    if (this.state.locateModalVisible && this.state.tracerInLocate) {
+      return (
+        <GameStartedModal
+          onButtonPress={this.exitLocateModal.bind(this)}
+          buttonTitle='Okay'
+        >
+          Your friend is looking for you. Go to 'Find My Opponent'
+        </GameStartedModal>
+      );
+    }
     if (this.state.newGameModalVisible) {
       if (this.state.traitorInGame) {
         return (

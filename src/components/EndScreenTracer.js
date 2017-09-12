@@ -16,7 +16,9 @@ export default class EndScreenTracer extends React.Component {
     this.state = {
       traitorInGame: false,
       tracerInGame: false,
+      traitorInLocate: false,
       newGameModalVisible: true,
+      locateModalVisible: true,
     };
   }
 
@@ -25,16 +27,29 @@ export default class EndScreenTracer extends React.Component {
   }
 
   componentWillUnmount() {
+    this.unmountActions();
+  }
+
+  unmountActions() {
     clearInterval(this.interval);
   }
 
   checkInGame() {
+    let ret = false;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      this.setState({
-        tracerInGame: snapshot.val().tracerInGame,
-        traitorInGame: snapshot.val().traitorInGame,
-      });
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        return;
+      }
+      if (!ret) {
+        this.setState({
+          tracerInGame: snapshot.val().tracerInGame,
+          traitorInGame: snapshot.val().traitorInGame,
+          traitorInLocate: snapshot.val().traitorInLocate,
+        });
+      }
     });
   }
 
@@ -66,6 +81,7 @@ export default class EndScreenTracer extends React.Component {
       //it's only set every 3 seconds, so this is more accurate
       let fbTracerInGame = snapshot.val().tracerInGame;
       let fbTraitorInGame = snapshot.val().traitorInGame;
+      this.unmountActions();
       if (fbTracerInGame) {
         //Tracer has been taken, this user is traitor
         Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
@@ -82,6 +98,7 @@ export default class EndScreenTracer extends React.Component {
   }
 
   goToLocate() {
+    this.unmountActions();
     Actions.locateScreenTracer({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
@@ -97,7 +114,23 @@ export default class EndScreenTracer extends React.Component {
     });
   }
 
+  exitLocateModal() {
+    this.setState({
+      locateModalVisible: false,
+    });
+  }
+
   renderModal() {
+    if (this.state.locateModalVisible && this.state.traitorInLocate) {
+      return (
+        <GameStartedModal
+          onButtonPress={this.exitLocateModal.bind(this)}
+          buttonTitle='Okay'
+        >
+          Your friend is looking for you. Go to 'Find My Opponent'
+        </GameStartedModal>
+      );
+    }
     if (this.state.newGameModalVisible) {
       if (this.state.traitorInGame) {
         return (

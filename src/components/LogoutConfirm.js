@@ -8,24 +8,23 @@ import commonStyles from '../styles/commonStyles';
 
 export default class LogoutConfirmTracer extends React.Component {
 
-  //TODO: This logout doesn't really work because it's connected via the Router
-  //and won't get the sessionKey prop, so can't set the InGame to false on fb...
-  //Same for LogoutConfirmTraitor
-
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    if (this.props.role === 'tracer' || this.props.role === 'traitor') {
-      let updates = {};
-      updates[`/currentSessions/${this.props.sessionKey}/${this.props.role}InGame/`] = false;
-      firebase.database().ref().update(updates);
-    }
     //If player logged out from StartGame, don't need to subtract from numPlayers
     //since she was never added to numPlayers
     if (this.props.role !== 'none') {
       firebase.database().ref(`/currentSessions/${this.props.sessionKey}/numPlayers`)
       .once('value', snapshot => {
         let fbNumPlayers = snapshot.val();
-        if (fbNumPlayers > 0) {
+        if (fbNumPlayers <= 1) {
+          this.zeroPlayersActions();
+        }
+        else {
+          if (this.props.role === 'tracer' || this.props.role === 'traitor') {
+            let updates = {};
+            updates[`/currentSessions/${this.props.sessionKey}/${this.props.role}InGame/`] = false;
+            firebase.database().ref().update(updates);
+          }
           let updates = {};
           updates[`/currentSessions/${this.props.sessionKey}/numPlayers/`] = fbNumPlayers - 1;
           firebase.database().ref().update(updates);
@@ -34,6 +33,13 @@ export default class LogoutConfirmTracer extends React.Component {
     }
     firebase.auth().signOut();
     Actions.loginForm({type: ActionConst.RESET});
+  }
+
+  //Deletes session node
+  zeroPlayersActions() {
+    let updates = {};
+    updates[`/currentSessions/${this.props.sessionKey}/`] = null;
+    firebase.database().ref().update(updates);
   }
 
   render() {

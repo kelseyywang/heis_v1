@@ -23,24 +23,38 @@ export default class ChooseRole extends React.Component {
   }
 
   componentWillUnmount() {
+    this.unmountActions();
+  }
+
+  unmountActions() {
     clearInterval(this.interval);
   }
 
   checkInGame() {
+    let ret = false;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      this.setState({
-        tracerInGame: snapshot.val().tracerInGame,
-        traitorInGame: snapshot.val().traitorInGame,
-      });
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        return;
+      }
+      if (!ret) {
+        this.setState({
+          tracerInGame: snapshot.val().tracerInGame,
+          traitorInGame: snapshot.val().traitorInGame,
+        });
+      }
     });
   }
 
   goToTracer() {
+    this.unmountActions();
     Actions.mapScreenTracer({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 
   goToTraitor() {
+    this.unmountActions();
     Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 

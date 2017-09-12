@@ -76,55 +76,83 @@ export default class MapScreenTracer extends React.Component {
   }
 
   componentWillUnmount() {
-    this.endGameActions();
+    this.unmountActions();
+  }
+
+  //Resets intervals and stuff at the end of game
+  unmountActions() {
+    clearInterval(this.interval);
+    clearInterval(this.timerInterval);
+    clearTimeout(this.pauseBetweenClicksTimeout);
+    clearInterval(this.countdownInterval);
+    clearTimeout(this.getTraitorPosTimeout);
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
+    .once('value', snapshot => {
+      if (snapshot.val() !== null) {
+        let updates = {};
+        updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = false;
+        firebase.database().ref().update(updates);
+      }
+    });
   }
 
   //Updates timer and tracer's position
   //Also pulls disguise info from firebase
   callCurrentPosition() {
+    let ret = false;
     //Check if traitor is in game, if so, start countdown
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
-      let fbTraitorInGame = snapshot.val().traitorInGame;
-      if (fbTraitorInGame && this.countdownInterval === null) {
-        this.setState({
-          showCountdown: true,
-        });
-        this.startCountdown();
-        //Save initial position of tracer to make sure he doesn't move
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            this.initialLat = position.coords.latitude;
-            this.initialLon = position.coords.longitude;
-          },
-          (error) => this.setState({ error: error.message }),
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-        );
+      if (snapshot.val() === null) {
+        this.unmountActions();
+        ret = true;
+        //Return somehow doesn't work in this context sometimes... hence ret
+        return;
       }
-      this.setState({
-        traitorInGame: fbTraitorInGame,
-      });
-    });
-    //Set tracer's location to state
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+      if (!ret) {
+        let fbTraitorInGame = snapshot.val().traitorInGame;
+        if (fbTraitorInGame && this.countdownInterval === null) {
+          this.setState({
+            showCountdown: true,
+          });
+          this.startCountdown();
+          //Save initial position of tracer to make sure he doesn't move
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              this.initialLat = position.coords.latitude;
+              this.initialLon = position.coords.longitude;
+            },
+            (error) => this.setState({ error: error.message }),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+          );
+        }
         this.setState({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          error: null
+          traitorInGame: fbTraitorInGame,
         });
-      },
-      (error) => this.setState({ error: error.message }),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
-    );
-    //Determine whether tracer has moved too much during countdown
-    if (this.state.showCountdown && this.initialLat !== null
-      && this.initialLon !== null) {
+      }
+    });
+    if (!ret) {
+      //Set tracer's location to state
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.setState({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            error: null
+          });
+        },
+        (error) => this.setState({ error: error.message }),
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+      );
+      //Determine whether tracer has moved too much during countdown
+      if (this.state.showCountdown && this.initialLat !== null
+        && this.initialLon !== null) {
         if (this.calcDistance(this.state.latitude, this.state.longitude,
           this.initialLat, this.initialLon) > this.countdownBounds) {
           this.gameWonActions("Countdown move", null);
         }
       }
+    }
   }
 
   //Determines countdown amount and starts countdown after both players are in game
@@ -440,6 +468,7 @@ export default class MapScreenTracer extends React.Component {
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/gameWinner/`] = winnerString;
     firebase.database().ref().update(updates);
+    this.unmountActions();
     Actions.endScreenTracer({
       sessionKey: this.props.sessionKey,
       winner: winnerString,
@@ -482,18 +511,6 @@ export default class MapScreenTracer extends React.Component {
           currentTime: currTime / 1000,
         });
     }
-  }
-
-  //Resets intervals and stuff at the end of game
-  endGameActions() {
-    clearInterval(this.interval);
-    clearInterval(this.timerInterval);
-    clearTimeout(this.pauseBetweenClicksTimeout);
-    clearInterval(this.countdownInterval);
-    clearTimeout(this.getTraitorPosTimeout);
-    let updates = {};
-    updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = false;
-    firebase.database().ref().update(updates);
   }
 
   //Returns what timer should appear as
@@ -693,9 +710,6 @@ export default class MapScreenTracer extends React.Component {
   }
 
   renderContent() {
-    console.log("start");
-    console.log(this.state.latitude);
-    console.log(this.state.longitude);
     if (this.state.latitude !== 0 && this.state.longitude !== 0) {
       return this.renderCurrentUser();
     }
