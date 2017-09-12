@@ -474,6 +474,7 @@ export default class MapScreenTracer extends React.Component {
       winner: winnerString,
       endDistance: endDist,
       endTime: this.totalGameTime - this.state.currentTime,
+      fromGame: true,
       type: ActionConst.RESET});
   }
 

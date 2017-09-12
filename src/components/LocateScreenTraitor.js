@@ -156,7 +156,7 @@ export default class LocateScreenTraitor extends React.Component {
       <View style={commonStyles.setupStyle}>
         <Header
           headerText='Locate Other Player'
-          gameMode
+          includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
             {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
@@ -181,11 +181,6 @@ export default class LocateScreenTraitor extends React.Component {
             </View>
           </View>
         </Modal>
-        <Placeholder flex={0.3} >
-          <Text style={commonStyles.mainTextStyle} >
-            Reunite with the Tracer
-          </Text>
-        </Placeholder>
         <Placeholder flex={1} >
           {this.renderMap()}
         </Placeholder>

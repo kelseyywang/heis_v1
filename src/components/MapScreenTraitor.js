@@ -168,6 +168,7 @@ export default class MapScreenTraitor extends React.Component {
       sessionKey: this.props.sessionKey,
       winner: fbGameWinner,
       endTime: this.totalGameTime - this.state.currentTime - 2,
+      fromGame: true,
       type: ActionConst.RESET});
   }
 

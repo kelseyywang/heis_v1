@@ -19,11 +19,22 @@ export default class EndScreenTracer extends React.Component {
       traitorInLocate: false,
       newGameModalVisible: true,
       locateModalVisible: true,
+      message: '',
     };
   }
 
   componentDidMount() {
     this.interval = setInterval(this.checkInGame.bind(this), 1000);
+    if (this.props.fromGame) {
+      this.setState({
+        message: this.printMessage(true),
+      });
+    }
+    else {
+      this.setState({
+        message: this.printMessage(false),
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -53,24 +64,59 @@ export default class EndScreenTracer extends React.Component {
     });
   }
 
-  printMessage() {
+  printMessage(updateWins) {
     const winner = this.props.winner;
     if (winner === "Tracer") {
+      if (updateWins) this.updateWinsInfo(true);
       return `u win! u fired at a range of ${this.props.endDistance} meters n caught that traitorous lil bitch! Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor") {
+      if (updateWins) this.updateWinsInfo(false);
       return `u lose u peasant bc u ran out of triggers. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor deflect") {
+      if (updateWins) this.updateWinsInfo(false);
       return `u lose bc traitor deflected ur trigger bitch. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor time") {
+      if (updateWins) this.updateWinsInfo(false);
       return `u lose bc u ran outta time. u slow bro. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Countdown move") {
       return `u moved too much during the countdown... cheater`;
     }
     return "There's something wrong here because I didn't get my winner prop.";
+  }
+
+  updateWinsInfo(isWin) {
+    const { currentUser } = firebase.auth();
+    firebase.database().ref(`/users/${currentUser.uid}`)
+    .once('value', snapshot => {
+      if (isWin) {
+        let newWins;
+        if (snapshot.val() === null) {
+          newWins = 1;
+        }
+        else {
+          newWins = (snapshot.val().tracerWins || 0) + 1;
+        }
+        let updates = {};
+        updates[`/users/${currentUser.uid}/tracerWins/`] = newWins;
+        firebase.database().ref().update(updates);
+      }
+      else {
+        let newLosses;
+        if (snapshot.val() === null) {
+          newLosses = 1;
+        }
+        else {
+          newLosses = (snapshot.val().tracerLosses || 0) + 1;
+        }
+        let updates = {};
+        updates[`/users/${currentUser.uid}/tracerLosses/`] = newLosses;
+        firebase.database().ref().update(updates);
+      }
+    });
   }
 
   goToNewGame() {
@@ -106,6 +152,10 @@ export default class EndScreenTracer extends React.Component {
       endTime: this.props.endTime,
       type: ActionConst.RESET
     });
+  }
+
+  goToStats() {
+    Actions.statsScreen({sessionKey: this.props.sessionKey, role: 'tracer'});
   }
 
   exitNewGameModal() {
@@ -167,7 +217,7 @@ export default class EndScreenTracer extends React.Component {
             {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'tracer'});}}
         />
       <Placeholder>
-        <Text style={commonStyles.mainTextStyle}>{this.printMessage()}</Text>
+        <Text style={commonStyles.mainTextStyle}>{this.state.message}</Text>
           <View style={styles.buttonsRowStyle}>
             <Button
               onPress={this.goToNewGame.bind(this)}
@@ -177,8 +227,13 @@ export default class EndScreenTracer extends React.Component {
             <Button
               onPress={this.goToLocate.bind(this)}
               title='Find My Opponent'
-              margin={30}
+              margin={20}
               main
+            />
+            <Button
+              onPress={this.goToStats.bind(this)}
+              title='Stats'
+              margin={20}
             />
           </View>
         </Placeholder>

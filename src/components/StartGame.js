@@ -132,6 +132,10 @@ export default class StartGame extends React.Component {
       });
   }
 
+  statsActions() {
+    Actions.statsScreen({role: 'none'});
+  }
+
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -142,25 +146,19 @@ export default class StartGame extends React.Component {
             includeRightButton
             rightButtonText='Log Out'
             rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.state.sessionKey, role: 'none'});}}
+            {Actions.logoutConfirm({role: 'none'});}}
           />
-          <Placeholder
-            flex={0.3}
-          />
-          <Placeholder noJustify>
-              <Input
-                placeholder='sessionKey'
-                label='Session Key'
-                onChangeText={sessionKey => this.setState({ sessionKey })}
-              >
-            </Input>
+        <Placeholder noJustify >
+          <Input
+            placeholder='sessionKey'
+            label='Session Key'
+            onChangeText={sessionKey => this.setState({ sessionKey })}
+          >
+          </Input>
             <Text style={styles.altErrorTextStyle}>
               {this.state.error}
             </Text>
           </Placeholder>
-          <Placeholder
-            flex={0.2}
-          />
           <Placeholder>
             <Text style={commonStyles.mainTextStyle}>Are you ready to start the game?</Text>
             <Button
@@ -170,8 +168,15 @@ export default class StartGame extends React.Component {
             />
           </Placeholder>
           <Placeholder
-            flex={0.8}
-          />
+            flex={0.6}
+          >
+            <Button
+              onPress={this.statsActions.bind(this)}
+              title='Stats'
+              main={false}
+            />
+          </Placeholder>
+
         </View>
       </TouchableWithoutFeedback>
     );

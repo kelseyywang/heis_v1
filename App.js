@@ -7,6 +7,7 @@ import EndScreenTracer from './src/components/EndScreenTracer';
 import EndScreenTraitor from './src/components/EndScreenTraitor';
 import LogoutConfirm from './src/components/LogoutConfirm';
 import StartGame from './src/components/StartGame';
+import StatsScreen from './src/components/StatsScreen';
 import LocateScreenTracer from './src/components/LocateScreenTracer';
 import LocateScreenTraitor from './src/components/LocateScreenTraitor';
 import ChooseRole from './src/components/ChooseRole';
@@ -21,6 +22,8 @@ import ChooseRole from './src/components/ChooseRole';
 // this.maxDist = 1500;
 
 // PROBLEM TODO:
+// 9/12 - when you go to statsscreen from endscreen, is the timer a worry? dont think so
+// styling on endscreen tho!
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
@@ -57,6 +60,11 @@ export default class App extends React.Component {
           <Scene
             key="startGame"
             component={StartGame}
+            hideNavBar
+          />
+          <Scene
+            key="statsScreen"
+            component={StatsScreen}
             hideNavBar
           />
           <Scene

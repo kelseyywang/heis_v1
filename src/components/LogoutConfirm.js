@@ -10,9 +10,9 @@ export default class LogoutConfirmTracer extends React.Component {
 
   //Clears tracer's firebase stuff when logged out
   logOutActions() {
-    //If player logged out from StartGame, don't need to subtract from numPlayers
+    //If player logged out before/at StartGame, don't need to subtract from numPlayers
     //since she was never added to numPlayers
-    if (this.props.role !== 'none') {
+    if (this.props.role !== 'none' && this.props.role !== null) {
       firebase.database().ref(`/currentSessions/${this.props.sessionKey}/numPlayers`)
       .once('value', snapshot => {
         let fbNumPlayers = snapshot.val();

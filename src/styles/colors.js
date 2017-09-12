@@ -4,6 +4,7 @@ colors = {
   backgroundGameColor: '#4d4d51',
   lightTextColor: '#f2f2f4',
   darkTextColor: '#353160',
+  accentTextColor: '#4d4d51',
   clickTextColor: '#bdc3ed',
   borderColor: '#000000',
   mainButtonColor: '#353160',

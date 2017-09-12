@@ -8,6 +8,13 @@ commonStyles = {
     lineHeight: 30,
     color: colors.darkTextColor,
   },
+  accentTextStyle: {
+    margin: 15,
+    fontSize: 25,
+    textAlign: 'center',
+    lineHeight: 30,
+    color: colors.accentTextColor,
+  },
   lightTextStyle: {
     margin: 15,
     fontSize: 20,
