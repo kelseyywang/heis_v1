@@ -38,7 +38,6 @@ export default class MapScreenTracer extends React.Component {
       initialLatDelta: 0,
       initialLonDelta: 0,
     };
-    this.range = 70;
     //The following instance vars are to determine countdown time
     //where minDist or less get minTime, maxTime or more get maxTime,
     //and anything in between gets a countdown value
@@ -53,7 +52,8 @@ export default class MapScreenTracer extends React.Component {
     //The amount of meters the the tracer is permitted to travel from his
     //initial location during countdown
     this.countdownBounds = 70;
-    this.totalGameTime = 20;
+    this.defaultGameTime = 20;
+    this.defaultCaptureDist = 70;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
@@ -70,6 +70,8 @@ export default class MapScreenTracer extends React.Component {
     this.countdownInterval = null;
     this.initialLat = null;
     this.initialLon = null;
+    this.gameTime = null;
+    this.captureDist = null;
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = true;
     firebase.database().ref().update(updates);
@@ -157,33 +159,36 @@ export default class MapScreenTracer extends React.Component {
 
   //Determines countdown amount and starts countdown after both players are in game
   startCountdown() {
-    this.setCountdownTotal();
+    this.setGameValues();
     this.timerStart = new Date().getTime();
     this.countdownInterval = setInterval(this.updateTime, 1000);
   }
 
   //Uses traitor and tracer's location when they have just both clicked "Ready"
-  //to determine total countdown amount
-  setCountdownTotal() {
-    let traitorStartLat;
-    let traitorStartLon;
+  //to determine total countdown amount, region deltas, game time, and capture distance
+  setGameValues() {
+    let traitorStartLat, traitorStartLon;
+    let fbCountdownTotal, fbGameTime, fbCaptureDist;
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
     .once('value', snapshot => {
       traitorStartLat = snapshot.val().traitorLatitude;
       traitorStartLon = snapshot.val().traitorLongitude;
-    })
-    .then(() => {
+      fbCountdownTotal = snapshot.val().countdownTotal;
+      fbGameTime = snapshot.val().gameTime;
+      fbCaptureDist = snapshot.val().captureDist;
       if (traitorStartLat === 0 || traitorStartLon === 0) {
         //Traitor's position hasn't been uploaded to firebase yet, need to wait
-        this.getTraitorPosTimeout = setTimeout(this.setCountdownTotal.bind(this), 500);
+        this.getTraitorPosTimeout = setTimeout(this.setGameValues.bind(this), 500);
       }
       else {
         clearTimeout(this.getTraitorPosTimeout);
         //Traitor's position has been uploaded to firebase
-        //Compute countdown total
+        let updates = {};
         let startDistance = this.calcDistance(this.state.latitude, this.state.longitude,
           traitorStartLat, traitorStartLon);
-        this.countdownTotal = this.calcCountdownAmount(startDistance);
+        this.updateCountdownTotal(fbCountdownTotal, startDistance, updates);
+        this.updateGameTime(fbGameTime);
+        this.updateCaptureDist(fbCaptureDist);
         //Compute initial latitude and longitude delta on map
         let stateInitialLatDelta = this.calcInitialDeltas(startDistance, this.countdownTotal,
         'latitude', this.state.latitude);
@@ -201,13 +206,40 @@ export default class MapScreenTracer extends React.Component {
           initialLatDelta: stateInitialLatDelta,
           initialLonDelta: stateInitialLonDelta,
         });
-        let updates = {};
-        updates[`/currentSessions/${this.props.sessionKey}/countdownTotal/`] = this.countdownTotal;
         updates[`/currentSessions/${this.props.sessionKey}/initialLatDelta/`] = this.state.initialLatDelta;
         updates[`/currentSessions/${this.props.sessionKey}/initialLonDelta/`] = this.state.initialLonDelta;
         firebase.database().ref().update(updates);
       }
     });
+  }
+
+  updateCountdownTotal(fbCountdownTotal, startDistance, updates) {
+    //Only calculate countdownTotal if it hasn't already been set in GameSettings
+    if (typeof fbCountdownTotal === 'undefined' || fbCountdownTotal === null) {
+      this.countdownTotal = this.calcCountdownAmount(startDistance);
+      updates[`/currentSessions/${this.props.sessionKey}/countdownTotal/`] = this.countdownTotal;
+    }
+    else {
+      this.countdownTotal = fbCountdownTotal;
+    }
+  }
+
+  updateGameTime(fbGameTime) {
+    if (typeof fbGameTime === 'undefined' || fbGameTime === null) {
+      this.gameTime = this.defaultGameTime;
+    }
+    else {
+      this.gameTime = fbGameTime;
+    }
+  }
+
+  updateCaptureDist(fbCaptureDist) {
+    if (typeof fbCaptureDist === 'undefined' || fbCaptureDist === null) {
+      this.captureDist = this.defaultCaptureDist;
+    }
+    else {
+      this.captureDist = fbCaptureDist;
+    }
   }
 
   //Helps calculate countdown distance using linearly distributed
@@ -429,7 +461,7 @@ export default class MapScreenTracer extends React.Component {
     }
   }
 
-  //Determines whether traitor is in range and
+  //Determines whether traitor is in captureDist and
   //whether deflect was pulled. If no winner, resets state
   determineWinner() {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
@@ -439,8 +471,8 @@ export default class MapScreenTracer extends React.Component {
       let traitorDeflect = snapshot.val().deflectOn;
       let dist =
       this.calcDistance(this.state.latitude, this.state.longitude, traitorLat, traitorLon);
-      if (dist < this.range) {
-        if (typeof traitorDeflect === 'undefined' || !traitorDeflect) {
+      if (dist < this.captureDist) {
+        if (typeof traitorDeflect === 'undefined' || traitorDeflect === null || !traitorDeflect) {
           //Tracer won
           this.gameWonActions("Tracer", Math.round(dist));
         }
@@ -473,7 +505,7 @@ export default class MapScreenTracer extends React.Component {
       sessionKey: this.props.sessionKey,
       winner: winnerString,
       endDistance: endDist,
-      endTime: this.totalGameTime - this.state.currentTime,
+      endTime: this.gameTime - this.state.currentTime,
       fromGame: true,
       type: ActionConst.RESET});
   }
@@ -492,7 +524,7 @@ export default class MapScreenTracer extends React.Component {
         this.timerStart = new Date().getTime();
         this.setState({
           showCountdown: false,
-          currentTime: this.totalGameTime - 1,
+          currentTime: this.gameTime - 1,
         });
         this.startTimer();
       }
@@ -504,7 +536,7 @@ export default class MapScreenTracer extends React.Component {
     }
     else {
       //Get game time
-      let currTime = this.totalGameTime * 1000 - (new Date().getTime() - this.timerStart);
+      let currTime = this.gameTime * 1000 - (new Date().getTime() - this.timerStart);
       if (currTime < 1) {
         this.gameWonActions("Traitor time", null);
       }
@@ -576,7 +608,7 @@ export default class MapScreenTracer extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={this.range}
+              radius={this.captureDist}
               fillColor={colors.aimCircleColor}
               strokeColor={colors.aimCircleColor}
             />

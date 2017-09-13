@@ -32,8 +32,8 @@ export default class MapScreenTraitor extends React.Component {
       initialLatDelta: 0,
       initialLonDelta: 0,
     };
-    this.range = 70;
-    this.totalGameTime = 20;
+    this.defaultCaptureDist = 70;
+    this.defaultGameTime = 20;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
@@ -44,10 +44,14 @@ export default class MapScreenTraitor extends React.Component {
   //Sets interval to callCurrentPosition every second and
   //sets timerInterval to null
   componentDidMount() {
-    this.callCurrentPosition();
-    this.interval = setInterval(this.callCurrentPosition, 1000);
     this.timerInterval = null;
     this.countdownTotal = null;
+    this.captureDist = null;
+    this.gameTime = null;
+    this.updateGameTime();
+    this.updateCaptureDist();
+    this.callCurrentPosition();
+    this.interval = setInterval(this.callCurrentPosition, 1000);
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/traitorInGame/`] = true;
     firebase.database().ref().update(updates);
@@ -74,6 +78,33 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  //Sets game time to
+  updateGameTime() {
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}/gameTime/`)
+    .once('value', snapshot => {
+      let fbGameTime = snapshot.val();
+      if (typeof fbGameTime === 'undefined' || fbGameTime === null) {
+        this.gameTime = this.defaultGameTime;
+      }
+      else {
+        this.gameTime = fbGameTime;
+      }
+    });
+  }
+
+  updateCaptureDist() {
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}/captureDist/`)
+    .once('value', snapshot => {
+      let fbCaptureDist = snapshot.val();
+      if (typeof fbCaptureDist === 'undefined' || fbCaptureDist === null) {
+        this.captureDist = this.defaultCaptureDist;
+      }
+      else {
+        this.captureDist = fbCaptureDist;
+      }
+    });
+  }
+
   //Pulls all info from firebase, and checks stuff about
   //the current status of the game and current display.
   //Sets state to all this current info, with callback to
@@ -89,7 +120,7 @@ export default class MapScreenTraitor extends React.Component {
       }
       if (!ret) {
         let fbGameWinner = snapshot.val().gameWinner;
-        if (typeof fbGameWinner !== 'undefined') {
+        if (typeof fbGameWinner !== 'undefined' || fbGameWinner === null) {
           this.hasGameEnded(fbGameWinner);
         }
         else {
@@ -167,7 +198,7 @@ export default class MapScreenTraitor extends React.Component {
     Actions.endScreenTraitor({
       sessionKey: this.props.sessionKey,
       winner: fbGameWinner,
-      endTime: this.totalGameTime - this.state.currentTime - 2,
+      endTime: this.gameTime - this.state.currentTime - 2,
       fromGame: true,
       type: ActionConst.RESET});
   }
@@ -203,7 +234,7 @@ export default class MapScreenTraitor extends React.Component {
         this.timerStart = new Date().getTime();
         this.setState({
           showCountdown: false,
-          currentTime: this.totalGameTime - 1,
+          currentTime: this.gameTime - 1,
         });
         this.startTimer();
       }
@@ -215,7 +246,7 @@ export default class MapScreenTraitor extends React.Component {
     }
     else {
       //Get game time
-      let currTime = this.totalGameTime * 1000 - (new Date().getTime() - this.timerStart);
+      let currTime = this.gameTime * 1000 - (new Date().getTime() - this.timerStart);
       this.setState({
           currentTime: currTime / 1000,
       });
@@ -393,7 +424,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={this.range}
+              radius={this.captureDist}
               fillColor={colors.aimCircleColor}
               strokeColor={colors.aimCircleColor}
             />
@@ -404,7 +435,7 @@ export default class MapScreenTraitor extends React.Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }}
-              radius={this.range}
+              radius={this.captureDist}
               fillColor="rgba(0,206,165,.3)"
               strokeColor="rgba(0,206,165,.3)"
             />

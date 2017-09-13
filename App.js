@@ -14,7 +14,7 @@ import ChooseRole from './src/components/ChooseRole';
 import GameSettings from './src/components/GameSettings';
 
 //CHECKLIST BEFORE PUSHING TO EXPO
-//MapScreenTracer and Traitor change this.totalGameTime = 600;
+//MapScreenTracer and Traitor change this.defaultGameTime = 600;
 //and these in MapScreenTracer:
 // this.minTime = 60;
 // this.maxTime = 150;
@@ -23,8 +23,6 @@ import GameSettings from './src/components/GameSettings';
 // this.maxDist = 1500;
 
 // PROBLEM TODO:
-// 9/12 - when you go to statsscreen from endscreen, is the timer a worry? dont think so
-// styling on endscreen tho!
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
@@ -33,12 +31,14 @@ import GameSettings from './src/components/GameSettings';
 // 3. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
 // adjusted so that Traitor is usually a tiny tiny bit ahead of Tracer, but sometimes it's up to
 // 2-3 seconds off or something
+// 4. 9/13 - when you go to Game Settings screen, or return back to ChooseRole after Settings,
+// if the oter person started a game, the GameStartedModal doesn't pop up
+// ^ test if the interval is still going in ChooseRole when you go to GameSettings
 // GENERAL TODO:
 // handle when user quits app without logging out??
 // revise endscreen messages
 // about page - maybe an information icon on header on each page
 // chenge rules in firebase
-// Override default game time in ChooseRole, also set countdown time?
 // not important: make option to cancel game, while game is happening or in countdown
 // (mo)
 

@@ -13,11 +13,11 @@ export default class GameSettings extends React.Component {
     super(props);
 
     this.state = {
-      countdown: 3,
+      countdown: -1,
       countdownLabel: 'default',
-      gameTime: 10,
+      gameTime: -1,
       gameTimeLabel: '10:00',
-      captureDist: 70,
+      captureDist: -1,
       captureDistLabel: '70',
     };
   }
@@ -26,10 +26,22 @@ export default class GameSettings extends React.Component {
   }
 
   backActions() {
-    console.log("countdown" + this.state.countdown);
-    console.log("gameTime" + this.state.gameTime);
-    console.log("capture" + this.state.captureDist);
+    this.updateFirebase();
     Actions.pop();
+  }
+
+  updateFirebase() {
+    let updates = {};
+    if (this.state.countdown !== -1) {
+      updates[`/currentSessions/${this.props.sessionKey}/countdownTotal/`] = this.state.countdown * 60;
+    }
+    if (this.state.gameTime !== -1) {
+      updates[`/currentSessions/${this.props.sessionKey}/gameTime/`] = this.state.gameTime * 60;
+    }
+    if (this.state.captureDist !== -1) {
+      updates[`/currentSessions/${this.props.sessionKey}/captureDist/`] = this.state.captureDist;
+    }
+    firebase.database().ref().update(updates);
   }
 
   renderContent() {
