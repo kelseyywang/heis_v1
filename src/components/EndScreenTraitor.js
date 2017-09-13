@@ -27,12 +27,12 @@ export default class EndScreenTraitor extends React.Component {
     this.interval = setInterval(this.checkInGame.bind(this), 1000);
     if (this.props.fromGame) {
       this.setState({
-        message: this.printMessage(true),
+        message: this.informWinOrLoss(true),
       });
     }
     else {
       this.setState({
-        message: this.printMessage(false),
+        message: this.informWinOrLoss(false),
       });
     }
   }
@@ -65,7 +65,7 @@ export default class EndScreenTraitor extends React.Component {
   }
 
 
-  printMessage(updateWins) {
+  informWinOrLoss(updateWins) {
     const winner = this.props.winner;
     if (winner === "Tracer") {
       if (updateWins) this.updateWinsInfo(false);
@@ -155,8 +155,7 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   goToStats() {
-    //Don't really even need to say 'traitor', just something that's not 'none'
-    Actions.statsScreen({sessionKey: this.props.sessionKey, role: 'traitor'});
+    Actions.statsScreen({sessionKey: this.props.sessionKey, hasEntered: true});
   }
 
   exitNewGameModal() {
@@ -215,11 +214,12 @@ export default class EndScreenTraitor extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'traitor'});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
         />
+      <Placeholder flex={0.1} />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>{this.state.message}</Text>
-          <View style={styles.buttonsRowStyle}>
+          <View style={styles.buttonsColumnStyle}>
             <Button
               onPress={this.goToNewGame.bind(this)}
               title='New Game'
@@ -228,19 +228,20 @@ export default class EndScreenTraitor extends React.Component {
             <Button
               onPress={this.goToLocate.bind(this)}
               title='Find Your Opponent'
-              margin={20}
+              margin={30}
               main
-            />
-            <Button
-              onPress={this.goToStats.bind(this)}
-              title='Stats'
-              margin={20}
             />
           </View>
         </Placeholder>
         <Placeholder
-          flex={0.2}
-        />
+          flex={0.3}
+        >
+          <Button
+            onPress={this.goToStats.bind(this)}
+            title='Stats'
+          />
+        </Placeholder>
+        <Placeholder flex={0.1} />
       </View>
     );
   }
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.backgroundSetupColor,
   },
-  buttonsRowStyle: {
+  buttonsColumnStyle: {
     marginTop: 20,
     flexDirection: 'column',
     justifyContent: 'space-around',

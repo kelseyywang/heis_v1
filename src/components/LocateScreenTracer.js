@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Modal } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import { Spinner, Button, Header, Placeholder } from './common';
+import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
 export default class LocateScreenTracer extends React.Component {
@@ -141,6 +142,7 @@ export default class LocateScreenTracer extends React.Component {
           {this.state.traitorInLocate &&
             <MapView.Marker
               title="Traitor"
+              pinColor={colors.markerColor}
               coordinate={{
                 latitude: this.state.traitorLatitude,
                 longitude: this.state.traitorLongitude,
@@ -160,7 +162,7 @@ export default class LocateScreenTracer extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'tracer'});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
         />
         <Modal
           visible={!this.state.traitorInLocate && this.state.locateModalVisible}

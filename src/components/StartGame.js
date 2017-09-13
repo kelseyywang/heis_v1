@@ -133,7 +133,7 @@ export default class StartGame extends React.Component {
   }
 
   statsActions() {
-    Actions.statsScreen({role: 'none'});
+    Actions.statsScreen({hasEntered: false});
   }
 
   render() {
@@ -146,8 +146,9 @@ export default class StartGame extends React.Component {
             includeRightButton
             rightButtonText='Log Out'
             rightButtonAction={() =>
-            {Actions.logoutConfirm({role: 'none'});}}
+            {Actions.logoutConfirm({hasEntered: false});}}
           />
+        <Placeholder flex={0.1} />
         <Placeholder noJustify >
           <Input
             placeholder='sessionKey'
@@ -176,7 +177,7 @@ export default class StartGame extends React.Component {
               main={false}
             />
           </Placeholder>
-
+          <Placeholder flex={0.1} />
         </View>
       </TouchableWithoutFeedback>
     );

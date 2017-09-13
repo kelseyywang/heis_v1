@@ -5,7 +5,7 @@ import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
 export default class GameStartedModal extends React.Component {
-  renderCurrentUser() {
+  render() {
     return (
       <Modal
         visible
@@ -28,9 +28,5 @@ export default class GameStartedModal extends React.Component {
         </View>
       </Modal>
     );
-  }
-
-  render() {
-    return this.renderCurrentUser();
   }
 }

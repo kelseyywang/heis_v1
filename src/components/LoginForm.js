@@ -127,6 +127,7 @@ class LoginForm extends Component {
             label="Email"
             value={this.state.email}
             onChangeText={email => this.setState({ email })}
+            keyboardType='email-address'
           >
           </Input>
 

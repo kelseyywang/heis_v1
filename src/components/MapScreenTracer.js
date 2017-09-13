@@ -625,7 +625,7 @@ export default class MapScreenTracer extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'tracer'});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
         />
         <Placeholder flex={0.3} >
         {!this.state.showCountdown &&

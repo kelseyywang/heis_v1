@@ -12,7 +12,7 @@ export default class LogoutConfirmTracer extends React.Component {
   logOutActions() {
     //If player logged out before/at StartGame, don't need to subtract from numPlayers
     //since she was never added to numPlayers
-    if (this.props.role !== 'none' && this.props.role !== null) {
+    if (this.props.hasEntered) {
       firebase.database().ref(`/currentSessions/${this.props.sessionKey}/numPlayers`)
       .once('value', snapshot => {
         let fbNumPlayers = snapshot.val();
@@ -20,11 +20,6 @@ export default class LogoutConfirmTracer extends React.Component {
           this.zeroPlayersActions();
         }
         else {
-          if (this.props.role === 'tracer' || this.props.role === 'traitor') {
-            let updates = {};
-            updates[`/currentSessions/${this.props.sessionKey}/${this.props.role}InGame/`] = false;
-            firebase.database().ref().update(updates);
-          }
           let updates = {};
           updates[`/currentSessions/${this.props.sessionKey}/numPlayers/`] = fbNumPlayers - 1;
           firebase.database().ref().update(updates);

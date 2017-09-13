@@ -58,6 +58,11 @@ export default class ChooseRole extends React.Component {
     Actions.mapScreenTraitor({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
   }
 
+  goToGameSettings() {
+    this.unmountActions();
+    Actions.gameSettings({sessionKey: this.props.sessionKey});
+  }
+
   renderModal() {
     if (this.state.traitorInGame) {
       return (
@@ -90,7 +95,7 @@ export default class ChooseRole extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: 'unknown'});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>
@@ -108,8 +113,14 @@ export default class ChooseRole extends React.Component {
           </View>
         </Placeholder>
         <Placeholder
-          flex={0.2}
-        />
+          flex={0.3}
+        >
+          <Button
+            onPress={this.goToGameSettings.bind(this)}
+            title='Game Settings'
+          />
+        </Placeholder>
+        <Placeholder flex={0.2} />
       </View>
     );
   }

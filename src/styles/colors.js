@@ -23,6 +23,8 @@ colors = {
   clueStrokeColor: 'rgba(64, 52, 109, .9)',
   modalColor: '#ffffff',
   modalBorderColor: '#8892e2',
+  markerColor: '#353160',
+  pickerOptionColor: '#353160',
 }
 
 export default colors;

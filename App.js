@@ -11,6 +11,7 @@ import StatsScreen from './src/components/StatsScreen';
 import LocateScreenTracer from './src/components/LocateScreenTracer';
 import LocateScreenTraitor from './src/components/LocateScreenTraitor';
 import ChooseRole from './src/components/ChooseRole';
+import GameSettings from './src/components/GameSettings';
 
 //CHECKLIST BEFORE PUSHING TO EXPO
 //MapScreenTracer and Traitor change this.totalGameTime = 600;
@@ -27,7 +28,6 @@ import ChooseRole from './src/components/ChooseRole';
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
-// ^FIX? by doing the unmount stuff before any Actions.
 // 2. 8/28 - MapScreenTracer on iOS I think? When traitor logs in first, tracer on iOS
 // doesn't show the countdown modal... problem again arises seemingly randomly.
 // 3. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
@@ -35,14 +35,12 @@ import ChooseRole from './src/components/ChooseRole';
 // 2-3 seconds off or something
 // GENERAL TODO:
 // handle when user quits app without logging out??
-// make colors darker or make it zoom out when circle is really big
 // revise endscreen messages
 // about page - maybe an information icon on header on each page
 // chenge rules in firebase
-// In LocateScreens and maybe MapScreens, make lon/lat delta dependent on how far
-// away the players are initially
 // Override default game time in ChooseRole, also set countdown time?
 // not important: make option to cancel game, while game is happening or in countdown
+// (mo)
 
 
 export default class App extends React.Component {
@@ -60,6 +58,16 @@ export default class App extends React.Component {
           <Scene
             key="startGame"
             component={StartGame}
+            hideNavBar
+          />
+          <Scene
+            key="chooseRole"
+            component={ChooseRole}
+            hideNavBar
+          />
+          <Scene
+            key="gameSettings"
+            component={GameSettings}
             hideNavBar
           />
           <Scene
@@ -85,11 +93,6 @@ export default class App extends React.Component {
           <Scene
             key="locateScreenTraitor"
             component={LocateScreenTraitor}
-            hideNavBar
-          />
-          <Scene
-            key="chooseRole"
-            component={ChooseRole}
             hideNavBar
           />
           <Scene

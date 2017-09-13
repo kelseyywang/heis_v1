@@ -124,7 +124,7 @@ export default class StatsScreen extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, role: this.props.role});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: this.props.hasEntered});}}
         />
         <Placeholder flex={0.3} />
         {this.renderStatsSection('Tracer:',
