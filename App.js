@@ -38,7 +38,6 @@ import GameSettings from './src/components/GameSettings';
 // handle when user quits app without logging out??
 // revise endscreen messages
 // about page - maybe an information icon on header on each page
-// chenge rules in firebase
 // not important: make option to cancel game, while game is happening or in countdown
 // (mo)
 

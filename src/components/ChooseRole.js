@@ -48,6 +48,36 @@ export default class ChooseRole extends React.Component {
     });
   }
 
+  tracerPressed() {
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}/tracerInGame/`)
+    .once('value', snapshot => {
+      if (snapshot.val()) {
+        //Other user already picked Tracer. Show GameStartedModal
+        this.setState({
+          tracerInGame: snapshot.val(),
+        });
+      }
+      else {
+        this.goToTracer();
+      }
+    });
+  }
+
+  traitorPressed() {
+    firebase.database().ref(`/currentSessions/${this.props.sessionKey}/traitorInGame/`)
+    .once('value', snapshot => {
+      if (snapshot.val()) {
+        //Other user already picked Traitor. Show GameStartedModal
+        this.setState({
+          traitorInGame: snapshot.val(),
+        });
+      }
+      else {
+        this.goToTraitor();
+      }
+    });
+  }
+
   goToTracer() {
     this.unmountActions();
     Actions.mapScreenTracer({sessionKey: this.props.sessionKey, type: ActionConst.RESET});
@@ -101,12 +131,12 @@ export default class ChooseRole extends React.Component {
         <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>
           <View style={styles.buttonsRowStyle}>
             <Button
-              onPress={this.goToTracer.bind(this)}
+              onPress={this.tracerPressed.bind(this)}
               title='Tracer'
               main
             />
             <Button
-              onPress={this.goToTraitor.bind(this)}
+              onPress={this.traitorPressed.bind(this)}
               title='Traitor'
               main
             />
