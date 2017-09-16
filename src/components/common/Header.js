@@ -3,47 +3,58 @@ import { Text, View, StyleSheet, TouchableOpacity, Platform } from 'react-native
 import colors from '../../styles/colors';
 
 const Header = (props) => {
-  const { titleText, rightText,
-    viewStyle, altViewStyle,
-    placeholderStyle, gameViewStyle,
-    gameTitleText, gameRightText } = styles;
-  if (props.gameMode) {
+  const { titleText, leftText, rightText,
+    viewStyle, helpViewStyle, placeholderStyle } = styles;
+  if (props.helpMode) {
     return (
-      <View style={gameViewStyle}>
-          <View style={placeholderStyle} />
-          <View style={placeholderStyle}>
-            <Text style={gameTitleText}>{props.headerText}</Text>
-          </View>
-          <View style={placeholderStyle}>
+      <View style={helpViewStyle}>
+        <View style={placeholderStyle}>
+          {props.includeLeftButton &&
             <TouchableOpacity
-              onPress={props.rightButtonAction}
+              onPress={props.leftButtonAction}
             >
-              <Text style={gameRightText}>{props.rightButtonText}</Text>
+              <Text style={leftText}>{props.leftButtonText}</Text>
             </TouchableOpacity>
+          }
         </View>
-      </View>
-    );
-  }
-  if (props.includeRightButton) {
-    return (
-      <View style={viewStyle}>
-          <View style={placeholderStyle} />
-          <View style={placeholderStyle}>
-            <Text style={titleText}>{props.headerText}</Text>
-          </View>
-          <View style={placeholderStyle}>
+        <View style={placeholderStyle}>
+          <Text style={titleText}>{props.headerText}</Text>
+        </View>
+        <View style={placeholderStyle}>
+          {props.includeRightButton &&
             <TouchableOpacity
               onPress={props.rightButtonAction}
             >
               <Text style={rightText}>{props.rightButtonText}</Text>
             </TouchableOpacity>
+          }
         </View>
       </View>
     );
   }
   return (
-    <View style={altViewStyle}>
-      <Text style={titleText}>{props.headerText}</Text>
+    <View style={viewStyle}>
+      <View style={placeholderStyle}>
+        {props.includeLeftButton &&
+          <TouchableOpacity
+            onPress={props.leftButtonAction}
+          >
+            <Text style={leftText}>{props.leftButtonText}</Text>
+          </TouchableOpacity>
+        }
+      </View>
+      <View style={placeholderStyle}>
+        <Text style={titleText}>{props.headerText}</Text>
+      </View>
+      <View style={placeholderStyle}>
+        {props.includeRightButton &&
+          <TouchableOpacity
+            onPress={props.rightButtonAction}
+          >
+            <Text style={rightText}>{props.rightButtonText}</Text>
+          </TouchableOpacity>
+        }
+      </View>
     </View>
   );
 };
@@ -73,7 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  gameViewStyle: {
+  helpViewStyle: {
     ...Platform.select({
       ios: {
         paddingTop: 20,
@@ -89,36 +100,11 @@ const styles = StyleSheet.create({
       },
     }),
     alignSelf: 'stretch',
-    backgroundColor: colors.gameHeaderColor,
+    backgroundColor: colors.helpHeaderColor,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderColor,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  altViewStyle: {
-    ...Platform.select({
-      ios: {
-        paddingTop: 20,
-        height: 70,
-      },
-      android: {
-        paddingTop: 25,
-        height: 75,
-      },
-      windows: {
-        paddingTop: 25,
-        height: 75,
-      },
-    }),
-    paddingLeft: 20,
-    paddingRight: 20,
-    alignSelf: 'stretch',
-    backgroundColor: colors.headerColor,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderColor,
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderStyle: {
@@ -129,6 +115,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  leftText: {
+    paddingRight: 30,
+    alignSelf: 'center',
+    color: colors.clickTextColor,
+  },
   rightText: {
     paddingLeft: 30,
     alignSelf: 'center',
@@ -138,16 +129,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
     color: colors.lightTextColor,
-  },
-  gameRightText: {
-    paddingLeft: 30,
-    alignSelf: 'center',
-    color: colors.gameClickTextColor,
-  },
-  gameTitleText: {
-    alignSelf: 'center',
-    textAlign: 'center',
-    color: colors.darkTextColor,
   },
 });
 

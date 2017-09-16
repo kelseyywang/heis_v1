@@ -1,11 +1,12 @@
 import React from 'react';
 import firebase from 'firebase';
-import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, TouchableOpacity } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button, Placeholder, Input, Header } from './common';
 import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
+
 
 export default class StartGame extends React.Component {
   constructor(props) {
@@ -15,7 +16,13 @@ export default class StartGame extends React.Component {
       sessionKey: '',
       error: '',
       newUserModalVisible: true,
+      helpMode: false,
+      showSessionKeyHelp: false,
+      showReadyHelp: false,
+      showStatsHelp: false,
+      modalShowing: 'none',
     };
+    this.callb = null;
   }
 
   readyActions() {
@@ -87,8 +94,125 @@ export default class StartGame extends React.Component {
     });
   }
 
+  renderAModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        console.log(`this.state.${whichModal} is true`);
+        //can even add an eval for onbuttonpress
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+          >
+            Hello
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  showSessionKeyHelpClose() {
+    this.setState({
+      showSessionKeyHelp: false,
+    });
+  }
+
+  sessionKeyHelp() {
+    const closeThisModal = () => {
+      console.log('lol');
+      this.setState({
+        showSessionKeyHelp: false,
+      });
+    this.callb = closeThisModal;
+    };
+    this.setState({
+      modalShowing: 'showSessionKeyHelp',
+      showSessionKeyHelp: true,
+    });
+
+    //this.renderHelpModal('dis is session key', 'showSessionKeyHelp', closeThisModal);
+  }
+
+  readyHelp() {
+    const closeThisModal = () => {
+      this.setState({
+        showReadyHelp: false,
+      });
+    };
+    this.setState({
+      modalShowing: 'showReadyHelp',
+      showReadyHelp: true,
+    });
+    //this.renderHelpModal('dis is ready', 'this.state.showReadyHelp', closeThisModal);
+  }
+
+  statsHelp() {
+    const closeThisModal = () => {
+      this.setState({
+        showStatsHelp: false,
+      });
+    };
+    this.setState({
+      modalShowing: 'showStatsHelp',
+      showStatsHelp: true,
+    });
+    //this.renderHelpModal('dis is session key', 'this.state.showStatsHelp', closeThisModal);
+  }
+
+  renderHelpMode() {
+    return (
+      <View style={commonStyles.setupStyle}>
+        {this.renderAModal(this.state.modalShowing)}
+        <Header
+          headerText='Set Up Game'
+          helpMode
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+          {Actions.logoutConfirm({hasEntered: 'none'});}}
+        />
+      <Placeholder flex={0.1} />
+      <TouchableOpacity onPress={this.sessionKeyHelp.bind(this)} style={commonStyles.placeholderNJStyle}>
+        <Placeholder noJustify >
+          <Input
+            placeholder='sessionKey'
+            label='Session Key'
+            editable={false}
+          >
+          </Input>
+            <Text style={styles.altErrorTextStyle}>
+              {this.state.error}
+            </Text>
+          </Placeholder>
+        </TouchableOpacity>
+        <Placeholder>
+          <Text style={commonStyles.mainTextStyle}>Are you ready to start the game?</Text>
+          <Button
+            onPress={this.readyHelp.bind(this)}
+            title='Ready'
+            main
+          />
+        </Placeholder>
+        <Placeholder
+          flex={0.6}
+        >
+          <Button
+            onPress={this.statsHelp.bind(this)}
+            title='Stats'
+            main={false}
+          />
+        </Placeholder>
+        <Placeholder flex={0.1} />
+      </View>
+    );
+  }
+
   renderModal() {
-    if (this.props.newUser) {
+    if (this.props.newUser && this.state.newUserModalVisible) {
       return (
         <ModalWithButton
           onButtonPress={this.exitNewUserModal.bind(this)}
@@ -123,13 +247,17 @@ export default class StartGame extends React.Component {
     Actions.statsScreen({fromRole: 'none'});
   }
 
-  render() {
+  renderContent() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={commonStyles.setupStyle}>
           {this.renderModal()}
           <Header
             headerText='Set Up Game'
+            includeLeftButton
+            leftButtonText='Help Mode'
+            leftButtonAction={() =>
+            {this.setState({helpMode: !this.state.helpMode});}}
             includeRightButton
             rightButtonText='Log Out'
             rightButtonAction={() =>
@@ -168,6 +296,13 @@ export default class StartGame extends React.Component {
         </View>
       </TouchableWithoutFeedback>
     );
+  }
+
+  render() {
+    if (this.state.helpMode) {
+      return this.renderHelpMode();
+    }
+    return this.renderContent();
   }
 }
 const styles = StyleSheet.create({

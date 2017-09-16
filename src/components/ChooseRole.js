@@ -2,10 +2,9 @@ import React from 'react';
 import firebase from 'firebase';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button, Header, Placeholder } from './common';
+import { Button, Header, Placeholder, ModalWithButton } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
-import ModalWithButton from './ModalWithButton';
 
 export default class ChooseRole extends React.Component {
 

@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, Modal } from 'react-native';
+import { Text, View, Modal } from 'react-native';
 import { Button } from './common';
-import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
 export default class ModalWithButton extends React.Component {

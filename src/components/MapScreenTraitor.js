@@ -2,9 +2,9 @@ import React from 'react';
 import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
-import { StyleSheet, Text, View, Vibration, Modal, TouchableOpacity } from 'react-native';
-import ModalWithButton from './ModalWithButton';
+import { Text, View, Vibration, TouchableOpacity } from 'react-native';
 import { Spinner, Button, Header, Placeholder } from './common';
+import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 

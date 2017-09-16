@@ -111,6 +111,16 @@ commonStyles = {
     justifyContent: 'center',
     flex: 1
   },
+  placeholderStyle: {
+    flex: 1,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderNJStyle: {
+    flex: 1,
+    alignSelf: 'stretch',
+  },
 };
 
 export default commonStyles;

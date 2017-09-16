@@ -2,8 +2,8 @@ import React from 'react';
 import firebase from 'firebase';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import ModalWithButton from './ModalWithButton';
 import { Button, Header, Placeholder } from './common';
+import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
