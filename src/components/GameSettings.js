@@ -48,11 +48,11 @@ export default class GameSettings extends React.Component {
     return (
       <View style={commonStyles.setupStyle}>
         <Header
-          headerText='Game Settings'
+          headerText='Settings'
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
         />
         <Placeholder flex={0.2} />
           <SettingPicker
@@ -88,7 +88,7 @@ export default class GameSettings extends React.Component {
           <Placeholder flex={0.5} >
             <Button
               onPress={this.backActions.bind(this)}
-              title='Back'
+              title='Save'
               main
             >
             </Button>

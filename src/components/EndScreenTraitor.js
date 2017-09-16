@@ -2,13 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import firebase from 'firebase';
-import GameStartedModal from './GameStartedModal';
+import ModalWithButton from './ModalWithButton';
 import { Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
 export default class EndScreenTraitor extends React.Component {
-  //TODO: refer to TODOs on EndScreenTracer
 
   constructor(props) {
     super(props);
@@ -69,7 +68,7 @@ export default class EndScreenTraitor extends React.Component {
     const winner = this.props.winner;
     if (winner === "Tracer") {
       if (updateWins) this.updateWinsInfo(false);
-      return `u lose bitch - got caught by tracer. Game time: ${Math.floor(this.props.endTime)}`;
+      return `u lose bitch - got caught by tracer. Fired at ${this.props.triggerDistance} meters. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor") {
       if (updateWins) this.updateWinsInfo(true);
@@ -77,7 +76,7 @@ export default class EndScreenTraitor extends React.Component {
     }
     else if (winner === "Traitor deflect") {
       if (updateWins) this.updateWinsInfo(true);
-      return `yoo you deflected and won. Game time: ${Math.floor(this.props.endTime)}`;
+      return `yoo you deflected at ${this.props.triggerDistance} meterz and won. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor time") {
       if (updateWins) this.updateWinsInfo(true);
@@ -155,7 +154,7 @@ export default class EndScreenTraitor extends React.Component {
   }
 
   goToStats() {
-    Actions.statsScreen({sessionKey: this.props.sessionKey, hasEntered: true});
+    Actions.statsScreen({sessionKey: this.props.sessionKey, fromRole: 'someone'});
   }
 
   exitNewGameModal() {
@@ -173,33 +172,33 @@ export default class EndScreenTraitor extends React.Component {
   renderModal() {
     if (this.state.locateModalVisible && this.state.tracerInLocate) {
       return (
-        <GameStartedModal
+        <ModalWithButton
           onButtonPress={this.exitLocateModal.bind(this)}
           buttonTitle='Okay'
         >
           Your friend is looking for you. Go to 'Find My Opponent'
-        </GameStartedModal>
+        </ModalWithButton>
       );
     }
     if (this.state.newGameModalVisible) {
       if (this.state.traitorInGame) {
         return (
-          <GameStartedModal
+          <ModalWithButton
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new game. You are the Tracer.
-          </GameStartedModal>
+            Your opponent started a new round. You are the Tracer.
+          </ModalWithButton>
         );
       }
       else if (this.state.tracerInGame) {
         return (
-          <GameStartedModal
+          <ModalWithButton
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your friend started a new game. You are the Traitor.
-          </GameStartedModal>
+            Your friend started a new round. You are the Traitor.
+          </ModalWithButton>
         );
       }
     }
@@ -214,7 +213,7 @@ export default class EndScreenTraitor extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
         />
       <Placeholder flex={0.1} />
       <Placeholder>
@@ -222,7 +221,7 @@ export default class EndScreenTraitor extends React.Component {
           <View style={styles.buttonsColumnStyle}>
             <Button
               onPress={this.goToNewGame.bind(this)}
-              title='New Game'
+              title='New Round'
               main
             />
             <Button

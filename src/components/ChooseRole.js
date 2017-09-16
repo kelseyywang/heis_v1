@@ -5,7 +5,7 @@ import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
-import GameStartedModal from './GameStartedModal';
+import ModalWithButton from './ModalWithButton';
 
 export default class ChooseRole extends React.Component {
 
@@ -52,7 +52,7 @@ export default class ChooseRole extends React.Component {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}/tracerInGame/`)
     .once('value', snapshot => {
       if (snapshot.val()) {
-        //Other user already picked Tracer. Show GameStartedModal
+        //Other user already picked Tracer. Show ModalWithButton
         this.setState({
           tracerInGame: snapshot.val(),
         });
@@ -67,7 +67,7 @@ export default class ChooseRole extends React.Component {
     firebase.database().ref(`/currentSessions/${this.props.sessionKey}/traitorInGame/`)
     .once('value', snapshot => {
       if (snapshot.val()) {
-        //Other user already picked Traitor. Show GameStartedModal
+        //Other user already picked Traitor. Show ModalWithButton
         this.setState({
           traitorInGame: snapshot.val(),
         });
@@ -96,22 +96,22 @@ export default class ChooseRole extends React.Component {
   renderModal() {
     if (this.state.traitorInGame) {
       return (
-        <GameStartedModal
+        <ModalWithButton
           onButtonPress={this.goToTracer.bind(this)}
           buttonTitle='Go to game'
         >
-          Your opponent started a new game. You are the Tracer.
-        </GameStartedModal>
+          Your opponent started a new round. You are the Tracer.
+        </ModalWithButton>
       );
     }
     else if (this.state.tracerInGame) {
       return (
-        <GameStartedModal
+        <ModalWithButton
           onButtonPress={this.goToTraitor.bind(this)}
           buttonTitle='Go to game'
         >
-          Your opponent started a new game. You are the Traitor.
-        </GameStartedModal>
+          Your opponent started a new round. You are the Traitor.
+        </ModalWithButton>
       );
     }
   }

@@ -2,15 +2,13 @@ import React from 'react';
 import firebase from 'firebase';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import GameStartedModal from './GameStartedModal';
+import ModalWithButton from './ModalWithButton';
 import { Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
 export default class EndScreenTracer extends React.Component {
-  //TODO: Upload #wins info to firebase so every time user
-  //logs in, he has #wins against a specific opponent
-  //and total #wins and losses.
+
   constructor(props) {
     super(props);
     this.state = {
@@ -68,7 +66,7 @@ export default class EndScreenTracer extends React.Component {
     const winner = this.props.winner;
     if (winner === "Tracer") {
       if (updateWins) this.updateWinsInfo(true);
-      return `u win! u fired at a range of ${this.props.endDistance} meters n caught that traitorous lil bitch! Game time: ${Math.floor(this.props.endTime)}`;
+      return `u win! u fired at a range of ${this.props.triggerDistance} meters n caught that traitorous lil bitch! Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor") {
       if (updateWins) this.updateWinsInfo(false);
@@ -76,7 +74,7 @@ export default class EndScreenTracer extends React.Component {
     }
     else if (winner === "Traitor deflect") {
       if (updateWins) this.updateWinsInfo(false);
-      return `u lose bc traitor deflected ur trigger bitch. Game time: ${Math.floor(this.props.endTime)}`;
+      return `u lose bc traitor deflected ur trigger at ${this.props.triggerDistance} m. Game time: ${Math.floor(this.props.endTime)}`;
     }
     else if (winner === "Traitor time") {
       if (updateWins) this.updateWinsInfo(false);
@@ -148,14 +146,14 @@ export default class EndScreenTracer extends React.Component {
     Actions.locateScreenTracer({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
-      endDistance: this.props.endDistance,
+      triggerDistance: this.props.triggerDistance,
       endTime: this.props.endTime,
       type: ActionConst.RESET
     });
   }
 
   goToStats() {
-    Actions.statsScreen({sessionKey: this.props.sessionKey, hasEntered: true});
+    Actions.statsScreen({sessionKey: this.props.sessionKey, fromRole: 'someone'});
   }
 
   exitNewGameModal() {
@@ -173,33 +171,33 @@ export default class EndScreenTracer extends React.Component {
   renderModal() {
     if (this.state.locateModalVisible && this.state.traitorInLocate) {
       return (
-        <GameStartedModal
+        <ModalWithButton
           onButtonPress={this.exitLocateModal.bind(this)}
           buttonTitle='Okay'
         >
           Your friend is looking for you. Go to 'Find My Opponent'
-        </GameStartedModal>
+        </ModalWithButton>
       );
     }
     if (this.state.newGameModalVisible) {
       if (this.state.traitorInGame) {
         return (
-          <GameStartedModal
+          <ModalWithButton
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new game. You are the Tracer.
-          </GameStartedModal>
+            Your opponent started a new round. You are the Tracer.
+          </ModalWithButton>
         );
       }
       else if (this.state.tracerInGame) {
         return (
-          <GameStartedModal
+          <ModalWithButton
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new game. You are the Traitor.
-          </GameStartedModal>
+            Your opponent started a new round. You are the Traitor.
+          </ModalWithButton>
         );
       }
     }
@@ -214,7 +212,7 @@ export default class EndScreenTracer extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
         />
       <Placeholder flex={0.1} />
       <Placeholder>
@@ -222,7 +220,7 @@ export default class EndScreenTracer extends React.Component {
           <View style={styles.buttonsColumnStyle}>
             <Button
               onPress={this.goToNewGame.bind(this)}
-              title='New Game'
+              title='New Round'
               main
             />
             <Button

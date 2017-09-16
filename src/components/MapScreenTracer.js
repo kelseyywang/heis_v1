@@ -3,7 +3,7 @@ import firebase from 'firebase';
 import MapView from 'react-native-maps';
 import React from 'react';
 import { StyleSheet, Text, View, Vibration, Modal, TouchableOpacity } from 'react-native';
-import GameStartedModal from './GameStartedModal';
+import ModalWithButton from './ModalWithButton';
 import { Spinner, Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
@@ -29,7 +29,7 @@ export default class MapScreenTracer extends React.Component {
       showTriggerCircle: false,
       triggersRemaining: 3,
       traitorInGame: false,
-      timerModalVisible: true,
+      showTimerModal: true,
       disguiseOn: false,
       pauseBetweenClicks: false,
       showPauseText: false,
@@ -37,6 +37,7 @@ export default class MapScreenTracer extends React.Component {
       showCountdown: false,
       initialLatDelta: 0,
       initialLonDelta: 0,
+      showCountdownModal: true,
     };
     //The following instance vars are to determine countdown time
     //where minDist or less get minTime, maxTime or more get maxTime,
@@ -58,7 +59,6 @@ export default class MapScreenTracer extends React.Component {
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.resumeClicks = this.resumeClicks.bind(this);
     this.updateTime = this.updateTime.bind(this);
-    this.notInGameModal = this.notInGameModal.bind(this);
   }
 
   //Sets interval to callCurrentPosition every second and
@@ -88,14 +88,6 @@ export default class MapScreenTracer extends React.Component {
     clearTimeout(this.pauseBetweenClicksTimeout);
     clearInterval(this.countdownInterval);
     clearTimeout(this.getTraitorPosTimeout);
-    firebase.database().ref(`/currentSessions/${this.props.sessionKey}`)
-    .once('value', snapshot => {
-      if (snapshot.val() !== null) {
-        let updates = {};
-        updates[`/currentSessions/${this.props.sessionKey}/tracerInGame/`] = false;
-        firebase.database().ref().update(updates);
-      }
-    });
   }
 
   //Updates timer and tracer's position
@@ -478,7 +470,7 @@ export default class MapScreenTracer extends React.Component {
         }
         else {
           //Traitor won by deflect
-          this.gameWonActions("Traitor deflect", null);
+          this.gameWonActions("Traitor deflect", Math.round(dist));
         }
       }
       else {
@@ -496,15 +488,18 @@ export default class MapScreenTracer extends React.Component {
 
   //Helper function to set winner to Firebase
   //and send to end screen
-  gameWonActions(winnerString, endDist) {
+  gameWonActions(winnerString, triggerDist) {
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/gameWinner/`] = winnerString;
+    if (triggerDist !== null) {
+      updates[`/currentSessions/${this.props.sessionKey}/triggerDist/`] = Math.round(triggerDist);
+    }
     firebase.database().ref().update(updates);
     this.unmountActions();
     Actions.endScreenTracer({
       sessionKey: this.props.sessionKey,
       winner: winnerString,
-      endDistance: endDist,
+      triggerDistance: triggerDist,
       endTime: this.gameTime - this.state.currentTime,
       fromGame: true,
       type: ActionConst.RESET});
@@ -570,9 +565,15 @@ export default class MapScreenTracer extends React.Component {
   }
 
   //User wants to exit modal
-  notInGameModal() {
+  exitNotInGameModal() {
     this.setState({
-      timerModalVisible: false,
+      showTimerModal: false,
+    });
+  }
+
+  exitCountdownModal() {
+    this.setState({
+      showCountdownModal: false,
     });
   }
 
@@ -649,6 +650,30 @@ export default class MapScreenTracer extends React.Component {
     }
   }
 
+  renderTimerOrCountdown() {
+    if (!this.state.showCountdown) {
+      return (
+        <Text style={commonStyles.lightTextStyle}>
+          {"Time: " + this.returnTimerString(this.state.currentTime)}
+        </Text>
+      );
+    }
+    else if (this.state.showCountdownModal) {
+      return (
+        <Text style={commonStyles.lightTextStyle}>
+          In countdown
+        </Text>
+      );
+    }
+    else if (!this.state.showCountdownModal) {
+      return (
+        <Text style={commonStyles.lightTextStyle}>
+          {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
+        </Text>
+      );
+    }
+  }
+
   renderCurrentUser() {
     return (
       <View style={commonStyles.gameStyle}>
@@ -657,49 +682,29 @@ export default class MapScreenTracer extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'tracer'});}}
         />
         <Placeholder flex={0.3} >
-        {!this.state.showCountdown &&
-          <Text style={commonStyles.lightTextStyle}>
-            {"Time: " + this.returnTimerString(this.state.currentTime)}
-          </Text>
-        }
+          {this.renderTimerOrCountdown()}
         </Placeholder>
-        <Modal
-          visible={!this.state.showCountdown && !this.state.traitorInGame && this.state.timerModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => {}}
-        >
-          <View style={commonStyles.modalStyle}>
-            <View style={commonStyles.modalSectionStyle}>
-              <Text style={commonStyles.mainTextStyle}>
-                Traitor is not in the game
-              </Text>
-              <Button
-                onPress={this.notInGameModal}
-                title='Okay'
-                main
-              >
-              </Button>
-            </View>
-          </View>
-        </Modal>
-        <Modal
-        visible={this.state.showCountdown}
-        transparent
-        animationType="slide"
-        onRequestClose={() => {}}
-        >
-          <View style={commonStyles.modalStyle}>
-            <View style={commonStyles.modalShortSectionStyle}>
-              <Text style={commonStyles.mainTextStyle}>
-                {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
-              </Text>
-            </View>
-          </View>
-        </Modal>
+        {!this.state.showCountdown && !this.state.traitorInGame && this.state.showTimerModal &&
+          <ModalWithButton
+            onButtonPress={this.exitNotInGameModal.bind(this)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.modalSectionStyle}
+          >
+            Traitor is not in the game
+          </ModalWithButton>
+        }
+        {this.state.showCountdown && this.state.showCountdownModal &&
+          <ModalWithButton
+            onButtonPress={this.exitCountdownModal.bind(this)}
+            buttonTitle='Close'
+            modalSectionStyle={commonStyles.modalSectionStyle}
+          >
+            {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
+          </ModalWithButton>
+        }
         <Placeholder flex={2} >
           {this.renderMap()}
         </Placeholder>

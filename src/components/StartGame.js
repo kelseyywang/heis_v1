@@ -3,6 +3,7 @@ import firebase from 'firebase';
 import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard, Modal } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button, Placeholder, Input, Header } from './common';
+import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
@@ -89,26 +90,12 @@ export default class StartGame extends React.Component {
   renderModal() {
     if (this.props.newUser) {
       return (
-        <Modal
-          visible={this.state.newUserModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => {}}
+        <ModalWithButton
+          onButtonPress={this.exitNewUserModal.bind(this)}
+          buttonTitle='Okay'
         >
-          <View style={commonStyles.modalStyle}>
-            <View style={commonStyles.longModalSectionStyle}>
-              <Text style={commonStyles.mainTextStyle}>
-                I see you just made a new account here. Welcome to heis!
-              </Text>
-              <Button
-                onPress={this.exitNewUserModal.bind(this)}
-                title='Okay'
-                main
-              >
-              </Button>
-            </View>
-          </View>
-        </Modal>
+          I see you just made a new account here. Welcome to heis!
+        </ModalWithButton>
       );
     }
   }
@@ -133,7 +120,7 @@ export default class StartGame extends React.Component {
   }
 
   statsActions() {
-    Actions.statsScreen({hasEntered: false});
+    Actions.statsScreen({fromRole: 'none'});
   }
 
   render() {
@@ -146,7 +133,7 @@ export default class StartGame extends React.Component {
             includeRightButton
             rightButtonText='Log Out'
             rightButtonAction={() =>
-            {Actions.logoutConfirm({hasEntered: false});}}
+            {Actions.logoutConfirm({hasEntered: 'none'});}}
           />
         <Placeholder flex={0.1} />
         <Placeholder noJustify >

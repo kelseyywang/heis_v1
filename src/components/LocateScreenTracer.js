@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Modal } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import MapView from 'react-native-maps';
 import { Spinner, Button, Header, Placeholder } from './common';
+import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
@@ -162,28 +163,16 @@ export default class LocateScreenTracer extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'tracer'});}}
         />
-        <Modal
-          visible={!this.state.traitorInLocate && this.state.locateModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => {}}
-        >
-          <View style={commonStyles.modalStyle}>
-            <View style={commonStyles.longModalSectionStyle}>
-              <Text style={commonStyles.mainTextStyle}>
-                Traitor must also be locating you for you to get their position.
-              </Text>
-              <Button
-                onPress={this.exitLocateModal.bind(this)}
-                title='Okay'
-                main
-              >
-              </Button>
-            </View>
-          </View>
-        </Modal>
+        {!this.state.traitorInLocate && this.state.locateModalVisible &&
+          <ModalWithButton
+            onButtonPress={this.exitLocateModal.bind(this)}
+            buttonTitle='Okay'
+          >
+            Traitor must also be locating you for you to get their position.
+          </ModalWithButton>
+        }
         <Placeholder flex={1} >
           {this.renderMap()}
         </Placeholder>

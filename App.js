@@ -32,7 +32,7 @@ import GameSettings from './src/components/GameSettings';
 // adjusted so that Traitor is usually a tiny tiny bit ahead of Tracer, but sometimes it's up to
 // 2-3 seconds off or something
 // 4. 9/13 - when you go to Game Settings screen, or return back to ChooseRole after Settings,
-// if the oter person started a game, the GameStartedModal doesn't pop up
+// if the oter person started a game, the ModalWithButton doesn't pop up
 // ^ test if the interval is still going in ChooseRole when you go to GameSettings
 // GENERAL TODO:
 // handle when user quits app without logging out??

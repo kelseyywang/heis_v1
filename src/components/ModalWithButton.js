@@ -4,7 +4,7 @@ import { Button } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
-export default class GameStartedModal extends React.Component {
+export default class ModalWithButton extends React.Component {
   render() {
     return (
       <Modal
@@ -14,7 +14,7 @@ export default class GameStartedModal extends React.Component {
         onRequestClose={() => {}}
       >
         <View style={commonStyles.modalStyle}>
-          <View style={commonStyles.longModalSectionStyle}>
+          <View style={this.props.modalSectionStyle || commonStyles.longModalSectionStyle}>
             <Text style={commonStyles.mainTextStyle}>
               {this.props.children}
             </Text>

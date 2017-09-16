@@ -1,6 +1,6 @@
 import React from 'react';
 import firebase from 'firebase';
-import { StyleSheet, Text, View, Modal } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { Spinner, Button, Header, Placeholder } from './common';
 import commonStyles from '../styles/commonStyles';
@@ -124,7 +124,7 @@ export default class StatsScreen extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: this.props.hasEntered});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: this.props.fromRole});}}
         />
         <Placeholder flex={0.3} />
         {this.renderStatsSection('Tracer:',

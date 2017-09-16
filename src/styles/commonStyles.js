@@ -93,7 +93,7 @@ commonStyles = {
     borderColor: colors.modalBorderColor,
     height: 150
   },
-  modalShortSectionStyle: {
+  shortModalSectionStyle: {
     borderRadius: 8,
     borderWidth: 2,
     padding: 15,
