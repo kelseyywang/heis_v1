@@ -7,6 +7,7 @@ import { Spinner, Button, Header, Placeholder } from './common';
 import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
+import strings from '../styles/strings';
 
 export default class MapScreenTracer extends React.Component {
   constructor(props) {
@@ -38,6 +39,13 @@ export default class MapScreenTracer extends React.Component {
       initialLatDelta: 0,
       initialLonDelta: 0,
       showCountdownModal: true,
+      helpMode: false,
+      mapHelp: false,
+      distanceHelp: false,
+      directionHelp: false,
+      aimHelp: false,
+      triggerHelp: false,
+      modalShowing: 'none',
     };
     //The following instance vars are to determine countdown time
     //where minDist or less get minTime, maxTime or more get maxTime,
@@ -577,6 +585,151 @@ export default class MapScreenTracer extends React.Component {
     });
   }
 
+  mapHelpClose() {
+    this.setState({
+      mapHelp: false,
+    });
+  }
+
+  showMapHelp() {
+    this.setState({
+      modalShowing: 'mapHelp',
+      mapHelp: true,
+    });
+  }
+
+  distanceHelpClose() {
+    this.setState({
+      distanceHelp: false,
+    });
+  }
+
+  showDistanceHelp() {
+    this.setState({
+      modalShowing: 'distanceHelp',
+      distanceHelp: true,
+    });
+  }
+
+  directionHelpClose() {
+    this.setState({
+      directionHelp: false,
+    });
+  }
+
+  showDirectionHelp() {
+    this.setState({
+      modalShowing: 'directionHelp',
+      directionHelp: true,
+    });
+  }
+
+  aimHelpClose() {
+    this.setState({
+      aimHelp: false,
+    });
+  }
+
+  showAimHelp() {
+    this.setState({
+      modalShowing: 'aimHelp',
+      aimHelp: true,
+    });
+  }
+
+  triggerHelpClose() {
+    this.setState({
+      triggerHelp: false,
+    });
+  }
+
+  showTriggerHelp() {
+    this.setState({
+      modalShowing: 'triggerHelp',
+      triggerHelp: true,
+    });
+  }
+
+  renderHelpModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.helpModalSectionStyle}
+          >
+            {strings[whichModal]}
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  renderHelpMode() {
+    return (
+      <View style={commonStyles.gameStyle}>
+        {this.renderHelpModal(this.state.modalShowing)}
+        <Header
+          helpMode
+          headerText='Tracer - Help Mode'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'tracer'});}}
+        />
+        <Placeholder flex={0.3} >
+          {this.renderTimerOrCountdown()}
+        </Placeholder>
+        <TouchableOpacity
+          onPress={this.showMapHelp.bind(this)}
+          style={commonStyles.placeholderStyle2}
+        >
+          {this.renderMap()}
+        </TouchableOpacity>
+        <Placeholder flex={2} >
+          <View style={commonStyles.gameStyle}>
+            <Button
+              onPress={this.showDistanceHelp.bind(this)}
+              title='Distance'
+              main={false}
+            />
+            <Button
+              onPress={this.showDirectionHelp.bind(this)}
+              title='Direction'
+              main={false}
+            />
+            <View style={commonStyles.rowContainerStyle}>
+              <TouchableOpacity
+                onPress={this.showAimHelp.bind(this)}
+                style={commonStyles.aimButtonStyle}
+              >
+                <Text style={commonStyles.aimTextStyle} >Aim</Text>
+              </TouchableOpacity>
+              <Button
+                onPress={this.showTriggerHelp.bind(this)}
+                title={`Trigger (${this.state.triggersRemaining})`}
+                main
+              />
+            </View>
+          </View>
+        </Placeholder>
+        <Placeholder flex={0.3} >
+          {this.state.showPauseText && this.state.traitorInGame &&
+            !this.state.showCountdown &&
+            <Text style={commonStyles.errorTextStyle}>
+              Must wait 5 sec. between clues
+            </Text>
+          }
+        </Placeholder>
+      </View>
+    );
+  }
+
   renderMap() {
     if (this.state.initialLatDelta > 0 && this.state.initialLonDelta > 0) {
       return (
@@ -679,6 +832,10 @@ export default class MapScreenTracer extends React.Component {
       <View style={commonStyles.gameStyle}>
         <Header
           headerText='Tracer'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -755,6 +912,13 @@ export default class MapScreenTracer extends React.Component {
   }
 
   render() {
+    if (this.state.helpMode) {
+      return (
+        <View style={commonStyles.gameStyle}>
+          {this.renderHelpMode()}
+        </View>
+      );
+    }
     return (
       <View style={commonStyles.gameStyle}>
         {this.renderContent()}

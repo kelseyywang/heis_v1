@@ -6,6 +6,7 @@ import { Button, Header, Placeholder } from './common';
 import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
+import strings from '../styles/strings';
 
 export default class EndScreenTracer extends React.Component {
 
@@ -18,6 +19,11 @@ export default class EndScreenTracer extends React.Component {
       newGameModalVisible: true,
       locateModalVisible: true,
       message: '',
+      helpMode: false,
+      newGameHelp: false,
+      locateHelp: false,
+      statsHelp: false,
+      modalShowing: 'none',
     };
   }
 
@@ -64,26 +70,32 @@ export default class EndScreenTracer extends React.Component {
 
   informWinOrLoss(updateWins) {
     const winner = this.props.winner;
+    const messages = {
+      triggerAndTime:
+      `Fired at ${this.props.triggerDistance} meters. Game time: ${Math.floor(this.props.endTime)}`,
+      time:
+      `Game time: ${Math.floor(this.props.endTime)}`,
+    };
     if (winner === "Tracer") {
       if (updateWins) this.updateWinsInfo(true);
-      return `u win! u fired at a range of ${this.props.triggerDistance} meters n caught that traitorous lil bitch! Game time: ${Math.floor(this.props.endTime)}`;
+      return `${strings.tracer1} ${messages.triggerAndTime}`;
     }
     else if (winner === "Traitor") {
       if (updateWins) this.updateWinsInfo(false);
-      return `u lose u peasant bc u ran out of triggers. Game time: ${Math.floor(this.props.endTime)}`;
+      return `${strings.traitor1} ${messages.time}`;
     }
     else if (winner === "Traitor deflect") {
       if (updateWins) this.updateWinsInfo(false);
-      return `u lose bc traitor deflected ur trigger at ${this.props.triggerDistance} m. Game time: ${Math.floor(this.props.endTime)}`;
+      return `${strings.deflect1} ${messages.triggerAndTime}`;
     }
     else if (winner === "Traitor time") {
       if (updateWins) this.updateWinsInfo(false);
-      return `u lose bc u ran outta time. u slow bro. Game time: ${Math.floor(this.props.endTime)}`;
+      return `${strings.time1} ${messages.time}`;
     }
     else if (winner === "Countdown move") {
-      return `u moved too much during the countdown... cheater`;
+      return `${strings.move1}`;
     }
-    return "There's something wrong here because I didn't get my winner prop.";
+    return "Sorry, something went wrong. Try again.";
   }
 
   updateWinsInfo(isWin) {
@@ -168,6 +180,107 @@ export default class EndScreenTracer extends React.Component {
     });
   }
 
+  newGameHelpClose() {
+    this.setState({
+      newGameHelp: false,
+    });
+  }
+
+  showNewGameHelp() {
+    this.setState({
+      modalShowing: 'newGameHelp',
+      newGameHelp: true,
+    });
+  }
+
+  locateHelpClose() {
+    this.setState({
+      locateHelp: false,
+    });
+  }
+
+  showLocateHelp() {
+    this.setState({
+      modalShowing: 'locateHelp',
+      locateHelp: true,
+    });
+  }
+
+  statsHelpClose() {
+    this.setState({
+      statsHelp: false,
+    });
+  }
+
+  showStatsHelp() {
+    this.setState({
+      modalShowing: 'statsHelp',
+      statsHelp: true,
+    });
+  }
+
+  renderHelpModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.helpModalSectionStyle}
+          >
+            {strings[whichModal]}
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  renderHelpMode() {
+    return (
+      <View style={commonStyles.setupStyle}>
+        {this.renderHelpModal(this.state.modalShowing)}
+        <Header
+          headerText='Game Over - Help Mode'
+          helpMode
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
+        />
+      <Placeholder flex={0.1} />
+      <Placeholder>
+        <Text style={commonStyles.mainTextStyle}>{this.state.message}</Text>
+          <View style={styles.buttonsColumnStyle}>
+            <Button
+              onPress={this.showNewGameHelp.bind(this)}
+              title='New Round'
+              main
+            />
+            <Button
+              onPress={this.showLocateHelp.bind(this)}
+              title='Find My Opponent'
+              margin={30}
+              main
+            />
+          </View>
+        </Placeholder>
+        <Placeholder
+          flex={0.3}
+        >
+          <Button
+            onPress={this.showStatsHelp.bind(this)}
+            title='Stats'
+          />
+        </Placeholder>
+        <Placeholder flex={0.1} />
+      </View>
+    );
+  }
+
   renderModal() {
     if (this.state.locateModalVisible && this.state.traitorInLocate) {
       return (
@@ -203,12 +316,16 @@ export default class EndScreenTracer extends React.Component {
     }
   }
 
-  render() {
+  renderContent() {
     return (
       <View style={commonStyles.setupStyle}>
         {this.renderModal()}
         <Header
           headerText='Game Over'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -242,6 +359,13 @@ export default class EndScreenTracer extends React.Component {
         <Placeholder flex={0.1} />
       </View>
     );
+  }
+
+  render() {
+    if (this.state.helpMode) {
+      return this.renderHelpMode();
+    }
+    return this.renderContent();
   }
 }
 

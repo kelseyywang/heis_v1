@@ -1,12 +1,13 @@
 import React from 'react';
 import firebase from 'firebase';
-import ModalSelector from 'react-native-modal-selector';
-import { StyleSheet, Text, View, TextInput } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import { Button, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 import SettingPicker from './SettingPicker';
+import ModalWithButton from './ModalWithButton';
+import strings from '../styles/strings';
 
 export default class GameSettings extends React.Component {
   constructor(props) {
@@ -19,6 +20,11 @@ export default class GameSettings extends React.Component {
       gameTimeLabel: '10:00',
       captureDist: -1,
       captureDistLabel: '70',
+      helpMode: false,
+      countdownHelp: false,
+      gameTimeHelp: false,
+      captureDistHelp: false,
+      modalShowing: 'none',
     };
   }
 
@@ -44,11 +50,149 @@ export default class GameSettings extends React.Component {
     firebase.database().ref().update(updates);
   }
 
+  countdownHelpClose() {
+    this.setState({
+      countdownHelp: false,
+    });
+  }
+
+  showCountdownHelp() {
+    this.setState({
+      modalShowing: 'countdownHelp',
+      countdownHelp: true,
+    });
+  }
+
+  gameTimeHelpClose() {
+    this.setState({
+      gameTimeHelp: false,
+    });
+  }
+
+  showGameTimeHelp() {
+    this.setState({
+      modalShowing: 'gameTimeHelp',
+      gameTimeHelp: true,
+    });
+  }
+
+  captureDistHelpClose() {
+    this.setState({
+      captureDistHelp: false,
+    });
+  }
+
+  showCaptureDistHelp() {
+    this.setState({
+      modalShowing: 'captureDistHelp',
+      captureDistHelp: true,
+    });
+  }
+
+  saveSettingsHelpClose() {
+    this.setState({
+      saveSettingsHelp: false,
+    });
+  }
+
+  showSaveSettingsHelp() {
+    this.setState({
+      modalShowing: 'saveSettingsHelp',
+      saveSettingsHelp: true,
+    });
+  }
+
+  renderHelpModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.helpModalSectionStyle}
+          >
+            {strings[whichModal]}
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  renderHelpMode(){
+    return (
+      <View style={commonStyles.setupStyle}>
+        {this.renderHelpModal(this.state.modalShowing)}
+        <Header
+          headerText='Settings - Help Mode'
+          helpMode
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+          {Actions.logoutConfirm({fromRole: 'someone'});}}
+        />
+        <Placeholder flex={0.2} />
+        <TouchableOpacity
+          onPress={this.showCountdownHelp.bind(this)}
+          style={commonStyles.placeholderStyle}
+        >
+          <SettingPicker
+            disabled
+            title='Adjust Countdown (min:sec):'
+            data={countdownData}
+            placeholder='default'
+            value={this.state.countdownLabel}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={this.showGameTimeHelp.bind(this)}
+          style={commonStyles.placeholderStyle}
+        >
+          <SettingPicker
+            disabled
+            title='Adjust Game Time (min:sec):'
+            data={gameTimeData}
+            placeholder='10:00'
+            value={this.state.gameTimeLabel}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={this.showCaptureDistHelp.bind(this)}
+          style={commonStyles.placeholderStyle}
+        >
+          <SettingPicker
+            disabled
+            title='Adjust Capture Distance (meters):'
+            data={captureDistData}
+            placeholder='70'
+            value={this.state.captureDistLabel}
+          />
+        </TouchableOpacity>
+        <Placeholder flex={0.5} >
+          <Button
+            onPress={this.showSaveSettingsHelp.bind(this)}
+            title='Save'
+            main
+          >
+          </Button>
+        </Placeholder>
+        <Placeholder flex={0.2} />
+      </View>
+    );
+  }
+
   renderContent() {
     return (
       <View style={commonStyles.setupStyle}>
         <Header
           headerText='Settings'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -95,11 +239,17 @@ export default class GameSettings extends React.Component {
         </Placeholder>
         <Placeholder flex={0.2} />
       </View>
-
     );
   }
 
   render() {
+    if (this.state.helpMode) {
+      return (
+        <View style={commonStyles.setupStyle}>
+          {this.renderHelpMode()}
+        </View>
+      );
+    }
     return (
       <View style={commonStyles.setupStyle}>
         {this.renderContent()}

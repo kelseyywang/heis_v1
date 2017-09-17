@@ -1,4 +1,4 @@
-colors = {
+const colors = {
   headerColor: '#4d4d51',
   backgroundSetupColor: '#d1d2d6',
   backgroundGameColor: '#4d4d51',
@@ -24,6 +24,6 @@ colors = {
   modalBorderColor: '#8892e2',
   markerColor: '#353160',
   pickerOptionColor: '#353160',
-}
+};
 
 export default colors;

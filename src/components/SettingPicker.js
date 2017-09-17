@@ -20,6 +20,7 @@ export default class SettingPicker extends React.Component {
             optionTextStyle={{color: colors.pickerOptionColor}}
             data={this.props.data}
             onChange={this.props.onChange}
+            disabled={this.props.disabled}
           >
             <TextInput
               placeholder={this.props.placeholder}

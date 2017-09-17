@@ -8,14 +8,14 @@ const Input = ({label, value, onChangeText, placeholder, secureTextEntry, keyboa
     <View style={containerStyle}>
       <Text style={labelStyle}>{label}</Text>
       <TextInput
-      editable={!(editable === false)}
-      secureTextEntry={secureTextEntry}
-      placeholder={placeholder}
-      autoCorrect={false}
-      value={value}
-      onChangeText={onChangeText}
-      style={inputStyle}
-      keyboardType={(keyboardType || 'default')}
+        editable={!(editable === false)}
+        secureTextEntry={secureTextEntry}
+        placeholder={placeholder}
+        autoCorrect={false}
+        value={value}
+        onChangeText={onChangeText}
+        style={inputStyle}
+        keyboardType={(keyboardType || 'default')}
       />
     </View>
   );

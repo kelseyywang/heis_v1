@@ -6,6 +6,7 @@ import { Button, Placeholder, Input, Header } from './common';
 import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
+import strings from '../styles/strings';
 
 
 export default class StartGame extends React.Component {
@@ -17,12 +18,11 @@ export default class StartGame extends React.Component {
       error: '',
       newUserModalVisible: true,
       helpMode: false,
-      showSessionKeyHelp: false,
-      showReadyHelp: false,
-      showStatsHelp: false,
+      sessionKeyHelp: false,
+      readyHelp: false,
+      statsHelp: false,
       modalShowing: 'none',
     };
-    this.callb = null;
   }
 
   readyActions() {
@@ -94,136 +94,6 @@ export default class StartGame extends React.Component {
     });
   }
 
-  renderAModal(whichModal) {
-    if (whichModal !== 'none') {
-      if (eval(`this.state.${whichModal}`)) {
-        console.log(`this.state.${whichModal} is true`);
-        //can even add an eval for onbuttonpress
-        return (
-          <ModalWithButton
-            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
-            buttonTitle='Okay'
-          >
-            Hello
-          </ModalWithButton>
-        );
-      }
-    }
-  }
-
-  showSessionKeyHelpClose() {
-    this.setState({
-      showSessionKeyHelp: false,
-    });
-  }
-
-  sessionKeyHelp() {
-    const closeThisModal = () => {
-      console.log('lol');
-      this.setState({
-        showSessionKeyHelp: false,
-      });
-    this.callb = closeThisModal;
-    };
-    this.setState({
-      modalShowing: 'showSessionKeyHelp',
-      showSessionKeyHelp: true,
-    });
-
-    //this.renderHelpModal('dis is session key', 'showSessionKeyHelp', closeThisModal);
-  }
-
-  readyHelp() {
-    const closeThisModal = () => {
-      this.setState({
-        showReadyHelp: false,
-      });
-    };
-    this.setState({
-      modalShowing: 'showReadyHelp',
-      showReadyHelp: true,
-    });
-    //this.renderHelpModal('dis is ready', 'this.state.showReadyHelp', closeThisModal);
-  }
-
-  statsHelp() {
-    const closeThisModal = () => {
-      this.setState({
-        showStatsHelp: false,
-      });
-    };
-    this.setState({
-      modalShowing: 'showStatsHelp',
-      showStatsHelp: true,
-    });
-    //this.renderHelpModal('dis is session key', 'this.state.showStatsHelp', closeThisModal);
-  }
-
-  renderHelpMode() {
-    return (
-      <View style={commonStyles.setupStyle}>
-        {this.renderAModal(this.state.modalShowing)}
-        <Header
-          headerText='Set Up Game'
-          helpMode
-          includeLeftButton
-          leftButtonText='Help Mode'
-          leftButtonAction={() =>
-          {this.setState({helpMode: !this.state.helpMode});}}
-          includeRightButton
-          rightButtonText='Log Out'
-          rightButtonAction={() =>
-          {Actions.logoutConfirm({hasEntered: 'none'});}}
-        />
-      <Placeholder flex={0.1} />
-      <TouchableOpacity onPress={this.sessionKeyHelp.bind(this)} style={commonStyles.placeholderNJStyle}>
-        <Placeholder noJustify >
-          <Input
-            placeholder='sessionKey'
-            label='Session Key'
-            editable={false}
-          >
-          </Input>
-            <Text style={styles.altErrorTextStyle}>
-              {this.state.error}
-            </Text>
-          </Placeholder>
-        </TouchableOpacity>
-        <Placeholder>
-          <Text style={commonStyles.mainTextStyle}>Are you ready to start the game?</Text>
-          <Button
-            onPress={this.readyHelp.bind(this)}
-            title='Ready'
-            main
-          />
-        </Placeholder>
-        <Placeholder
-          flex={0.6}
-        >
-          <Button
-            onPress={this.statsHelp.bind(this)}
-            title='Stats'
-            main={false}
-          />
-        </Placeholder>
-        <Placeholder flex={0.1} />
-      </View>
-    );
-  }
-
-  renderModal() {
-    if (this.props.newUser && this.state.newUserModalVisible) {
-      return (
-        <ModalWithButton
-          onButtonPress={this.exitNewUserModal.bind(this)}
-          buttonTitle='Okay'
-        >
-          I see you just made a new account here. Welcome to heis!
-        </ModalWithButton>
-      );
-    }
-  }
-
   //Resets game properties to default when game is over
   clearFirebaseActions(currTracerInGame, currTraitorInGame, currNumPlayers) {
     firebase.database().ref(`/currentSessions/${this.state.sessionKey}`)
@@ -247,6 +117,129 @@ export default class StartGame extends React.Component {
     Actions.statsScreen({fromRole: 'none'});
   }
 
+  sessionKeyHelpClose() {
+    this.setState({
+      sessionKeyHelp: false,
+    });
+  }
+
+  showSessionKeyHelp() {
+    this.setState({
+      modalShowing: 'sessionKeyHelp',
+      sessionKeyHelp: true,
+    });
+  }
+
+  readyHelpClose() {
+    this.setState({
+      readyHelp: false,
+    });
+  }
+
+  showReadyHelp() {
+    this.setState({
+      modalShowing: 'readyHelp',
+      readyHelp: true,
+    });
+  }
+
+  statsHelpClose() {
+    this.setState({
+      statsHelp: false,
+    });
+  }
+
+  showStatsHelp() {
+    this.setState({
+      modalShowing: 'statsHelp',
+      statsHelp: true,
+    });
+  }
+
+  renderHelpModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.helpModalSectionStyle}
+          >
+            {strings[whichModal]}
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  renderHelpMode() {
+    return (
+      <View style={commonStyles.setupStyle}>
+        {this.renderHelpModal(this.state.modalShowing)}
+        <Header
+          headerText='Set Up Game - Help Mode'
+          helpMode
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+          {Actions.logoutConfirm({fromRole: 'none'});}}
+        />
+      <Placeholder flex={0.1} />
+      <TouchableOpacity
+        onPress={this.showSessionKeyHelp.bind(this)}
+        style={commonStyles.placeholderNJStyle}
+      >
+        <Placeholder noJustify >
+          <Input
+            placeholder='sessionKey'
+            label='Session Key'
+            editable={false}
+          >
+          </Input>
+            <Text style={styles.altErrorTextStyle}>
+              {this.state.error}
+            </Text>
+          </Placeholder>
+        </TouchableOpacity>
+        <Placeholder>
+          <Text style={commonStyles.mainTextStyle}>Are you ready to start the game?</Text>
+          <Button
+            onPress={this.showReadyHelp.bind(this)}
+            title='Ready'
+            main
+          />
+        </Placeholder>
+        <Placeholder
+          flex={0.6}
+        >
+          <Button
+            onPress={this.showStatsHelp.bind(this)}
+            title='Stats'
+            main={false}
+          />
+        </Placeholder>
+        <Placeholder flex={0.1} />
+      </View>
+    );
+  }
+
+  renderModal() {
+    if (this.props.newUser && this.state.newUserModalVisible) {
+      return (
+        <ModalWithButton
+          onButtonPress={this.exitNewUserModal.bind(this)}
+          buttonTitle='Okay'
+        >
+          I see you just made a new account here. Welcome to heis!
+        </ModalWithButton>
+      );
+    }
+  }
+
   renderContent() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -261,7 +254,7 @@ export default class StartGame extends React.Component {
             includeRightButton
             rightButtonText='Log Out'
             rightButtonAction={() =>
-            {Actions.logoutConfirm({hasEntered: 'none'});}}
+            {Actions.logoutConfirm({fromRole: 'none'});}}
           />
         <Placeholder flex={0.1} />
         <Placeholder noJustify >
@@ -305,6 +298,7 @@ export default class StartGame extends React.Component {
     return this.renderContent();
   }
 }
+
 const styles = StyleSheet.create({
   altErrorTextStyle: {
     marginLeft: 20,

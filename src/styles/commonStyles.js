@@ -1,6 +1,6 @@
 import colors from './colors';
 
-commonStyles = {
+const commonStyles = {
   mainTextStyle: {
     margin: 15,
     fontSize: 20,
@@ -73,6 +73,16 @@ commonStyles = {
     color: colors.mainButtonTextColor,
     fontSize: 16,
   },
+  helpModalSectionStyle: {
+    borderRadius: 8,
+    borderWidth: 2,
+    padding: 15,
+    backgroundColor: colors.modalColor,
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+    borderColor: colors.modalBorderColor,
+    height: 300
+  },
   longModalSectionStyle: {
     borderRadius: 8,
     borderWidth: 2,
@@ -113,6 +123,12 @@ commonStyles = {
   },
   placeholderStyle: {
     flex: 1,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderStyle2: {
+    flex: 2,
     alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',

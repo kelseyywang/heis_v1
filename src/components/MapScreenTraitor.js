@@ -7,6 +7,7 @@ import { Spinner, Button, Header, Placeholder } from './common';
 import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
+import strings from '../styles/strings';
 
 export default class MapScreenTraitor extends React.Component {
   constructor(props) {
@@ -33,6 +34,12 @@ export default class MapScreenTraitor extends React.Component {
       initialLatDelta: 0,
       initialLonDelta: 0,
       showCountdownModal: true,
+      helpMode: false,
+      mapHelp: false,
+      disguiseHelp: false,
+      aimHelp: false,
+      deflectHelp: false,
+      modalShowing: 'none',
     };
     this.defaultCaptureDist = 70;
     this.defaultGameTime = 20;
@@ -387,6 +394,125 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  mapHelpClose() {
+    this.setState({
+      mapHelp: false,
+    });
+  }
+
+  showMapHelp() {
+    this.setState({
+      modalShowing: 'mapHelp',
+      mapHelp: true,
+    });
+  }
+
+  disguiseHelpClose() {
+    this.setState({
+      disguiseHelp: false,
+    });
+  }
+
+  showDisguiseHelp() {
+    this.setState({
+      modalShowing: 'disguiseHelp',
+      disguiseHelp: true,
+    });
+  }
+
+  aimHelpClose() {
+    this.setState({
+      aimHelp: false,
+    });
+  }
+
+  showAimHelp() {
+    this.setState({
+      modalShowing: 'aimHelp',
+      aimHelp: true,
+    });
+  }
+
+  deflectHelpClose() {
+    this.setState({
+      deflectHelp: false,
+    });
+  }
+
+  showDeflectHelp() {
+    this.setState({
+      modalShowing: 'deflectHelp',
+      deflectHelp: true,
+    });
+  }
+
+  renderHelpModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.helpModalSectionStyle}
+          >
+            {strings[whichModal]}
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  renderHelpMode() {
+    return (
+      <View style={commonStyles.gameStyle}>
+        {this.renderHelpModal(this.state.modalShowing)}
+        <Header
+          helpMode
+          headerText='Traitor - Help Mode'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'traitor'});}}
+        />
+        <Placeholder flex={0.3} >
+          {this.renderTimerOrCountdown()}
+        </Placeholder>
+        <TouchableOpacity
+          onPress={this.showMapHelp.bind(this)}
+          style={commonStyles.placeholderStyle2}
+        >
+          {this.renderMap()}
+        </TouchableOpacity>
+        <Placeholder flex={2} >
+          <View style={commonStyles.gameStyle}>
+            <Button
+              onPress={this.showDisguiseHelp.bind(this)}
+              title={`Disguise (${this.state.disguisesRemaining})`}
+              main={false}
+            />
+          <View style={commonStyles.rowContainerStyle}>
+            <TouchableOpacity
+              onPress={this.showAimHelp.bind(this)}
+              style={commonStyles.aimButtonStyle}
+            >
+              <Text style={commonStyles.aimTextStyle} >Aim</Text>
+            </TouchableOpacity>
+            <Button
+              onPress={this.showDeflectHelp.bind(this)}
+              title={`Deflect (${this.state.deflectsRemaining})`}
+              main
+            />
+          </View>
+        </View>
+      </Placeholder>
+    </View>
+    );
+  }
+
   renderMap() {
     if (this.state.initialLatDelta > 0 && this.state.initialLonDelta > 0) {
       return (
@@ -489,6 +615,10 @@ export default class MapScreenTraitor extends React.Component {
       <View style={commonStyles.gameStyle}>
         <Header
           headerText='Traitor'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
@@ -552,6 +682,13 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   render() {
+    if (this.state.helpMode) {
+      return (
+        <View style={commonStyles.gameStyle}>
+          {this.renderHelpMode()}
+        </View>
+      );
+    }
     return (
       <View style={commonStyles.gameStyle}>
         {this.renderContent()}

@@ -2,9 +2,11 @@ import React from 'react';
 import firebase from 'firebase';
 import { StyleSheet, Text, View } from 'react-native';
 import { Actions, ActionConst } from 'react-native-router-flux';
-import { Button, Header, Placeholder, ModalWithButton } from './common';
+import { Button, Header, Placeholder } from './common';
+import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
+import strings from '../styles/strings';
 
 export default class ChooseRole extends React.Component {
 
@@ -14,6 +16,11 @@ export default class ChooseRole extends React.Component {
       traitorInGame: false,
       tracerInGame: false,
       newGameModalVisible: true,
+      helpMode: false,
+      tracerHelp: false,
+      traitorHelp: false,
+      settingsHelp: false,
+      modalShowing: 'none',
     };
   }
 
@@ -92,6 +99,105 @@ export default class ChooseRole extends React.Component {
     Actions.gameSettings({sessionKey: this.props.sessionKey});
   }
 
+  tracerHelpClose() {
+    this.setState({
+      tracerHelp: false,
+    });
+  }
+
+  showTracerHelp() {
+    this.setState({
+      modalShowing: 'tracerHelp',
+      tracerHelp: true,
+    });
+  }
+
+  traitorHelpClose() {
+    this.setState({
+      traitorHelp: false,
+    });
+  }
+
+  showTraitorHelp() {
+    this.setState({
+      modalShowing: 'traitorHelp',
+      traitorHelp: true,
+    });
+  }
+
+  settingsHelpClose() {
+    this.setState({
+      settingsHelp: false,
+    });
+  }
+
+  showSettingsHelp() {
+    this.setState({
+      modalShowing: 'settingsHelp',
+      settingsHelp: true,
+    });
+  }
+
+  renderHelpModal(whichModal) {
+    if (whichModal !== 'none') {
+      if (eval(`this.state.${whichModal}`)) {
+        return (
+          <ModalWithButton
+            onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
+            buttonTitle='Okay'
+            modalSectionStyle={commonStyles.helpModalSectionStyle}
+          >
+            {strings[whichModal]}
+          </ModalWithButton>
+        );
+      }
+    }
+  }
+
+  renderHelpMode() {
+    return (
+      <View style={commonStyles.setupStyle}>
+        {this.renderHelpModal(this.state.modalShowing)}
+        <Header
+          headerText='Choose Role - Help Mode'
+          helpMode
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
+          includeRightButton
+          rightButtonText='Log Out'
+          rightButtonAction={() =>
+          {Actions.logoutConfirm({fromRole: 'none'});}}
+        />
+      <Placeholder>
+        <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>
+          <View style={styles.buttonsRowStyle}>
+            <Button
+              onPress={this.showTracerHelp.bind(this)}
+              title='Tracer'
+              main
+            />
+            <Button
+              onPress={this.showTraitorHelp.bind(this)}
+              title='Traitor'
+              main
+            />
+          </View>
+        </Placeholder>
+        <Placeholder
+          flex={0.3}
+        >
+          <Button
+            onPress={this.showSettingsHelp.bind(this)}
+            title='Game Settings'
+          />
+        </Placeholder>
+        <Placeholder flex={0.2} />
+      </View>
+    );
+  }
+
   renderModal() {
     if (this.state.traitorInGame) {
       return (
@@ -115,16 +221,20 @@ export default class ChooseRole extends React.Component {
     }
   }
 
-  render() {
+  renderContent() {
     return (
       <View style={commonStyles.setupStyle}>
         {this.renderModal()}
         <Header
           headerText='Choose Side'
+          includeLeftButton
+          leftButtonText='Help Mode'
+          leftButtonAction={() =>
+          {this.setState({helpMode: !this.state.helpMode});}}
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, hasEntered: true});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'none'});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>
@@ -152,6 +262,13 @@ export default class ChooseRole extends React.Component {
         <Placeholder flex={0.2} />
       </View>
     );
+  }
+
+  render() {
+    if (this.state.helpMode) {
+      return this.renderHelpMode();
+    }
+    return this.renderContent();
   }
 }
 

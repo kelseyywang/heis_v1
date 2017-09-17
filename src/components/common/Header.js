@@ -116,12 +116,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   leftText: {
-    paddingRight: 30,
+    paddingRight: 15,
     alignSelf: 'center',
     color: colors.clickTextColor,
   },
   rightText: {
-    paddingLeft: 30,
+    paddingLeft: 15,
     alignSelf: 'center',
     color: colors.clickTextColor,
   },
