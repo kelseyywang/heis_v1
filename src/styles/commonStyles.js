@@ -80,27 +80,6 @@ const commonStyles = {
     color: colors.mainButtonTextColor,
     fontSize: 16,
   },
-  // helpModalSectionStyle: {
-  //   borderRadius: 8,
-  //   borderWidth: 2,
-  //   padding: 15,
-  //   backgroundColor: colors.modalColor,
-  //   justifyContent: 'space-around',
-  //   flexDirection: 'column',
-  //   borderColor: colors.modalBorderColor,
-  //   marginTop: 22,
-  //   //height: 420,
-  // },
-  // longModalSectionStyle: {
-  //   borderRadius: 8,
-  //   borderWidth: 2,
-  //   padding: 15,
-  //   backgroundColor: colors.modalColor,
-  //   justifyContent: 'space-around',
-  //   flexDirection: 'column',
-  //   borderColor: colors.modalBorderColor,
-  //   height: 200
-  // },
   modalSectionStyle: {
     margin: 10,
     borderRadius: 8,
@@ -111,16 +90,6 @@ const commonStyles = {
     flexDirection: 'column',
     borderColor: colors.modalBorderColor,
   },
-  // shortModalSectionStyle: {
-  //   borderRadius: 8,
-  //   borderWidth: 2,
-  //   padding: 15,
-  //   backgroundColor: colors.modalColor,
-  //   justifyContent: 'space-around',
-  //   flexDirection: 'column',
-  //   borderColor: colors.modalBorderColor,
-  //   height: 70
-  // },
   modalStyle: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     position: 'relative',

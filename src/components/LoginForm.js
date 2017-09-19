@@ -3,7 +3,6 @@ import { View, Text, Image, TouchableWithoutFeedback, Keyboard } from 'react-nat
 import firebase from 'firebase';
 import { Actions, ActionConst } from 'react-native-router-flux';
 import { Button, Input, Spinner, Header, Placeholder } from './common';
-import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
 class LoginForm extends Component {
@@ -11,8 +10,8 @@ class LoginForm extends Component {
     super(props);
 
     this.state = {
-      email: 't@test.com',
-      password: 'password',
+      email: '',
+      password: '',
       error: '',
       loading: false,
       loggedIn: false,
@@ -33,21 +32,6 @@ class LoginForm extends Component {
     }
     this.onLoginSuccess = this.onLoginSuccess.bind(this);
     this.onLoginFail = this.onLoginFail.bind(this);
-  }
-
-  //Check if logged in already
-  componentWillMount() {
-    //TODO: if already logged in, bring to start page or something.
-    // const { currentUser } = firebase.auth();
-    // if (currentUser !== null) {
-    //   if (currentUser.uid === "oAoeKzMPhwZ5W5xUMEQImvQ1r333") {
-    //     this.resetForm();
-    //     Actions.mapScreenTracer({type: ActionConst.RESET});
-    //   }
-    // }
-  }
-
-  componentWillUnmount() {
   }
 
   //Attempts to sign in
@@ -113,7 +97,7 @@ class LoginForm extends Component {
         <Placeholder>
           <Image
             style={styles.logoStyle}
-            source={require('../images/heistemplogo.png')}
+            source={require('../images/heistextlogo.png')}
           />
         </Placeholder>
         <Placeholder

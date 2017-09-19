@@ -8,7 +8,6 @@ import commonStyles from '../styles/commonStyles';
 
 export default class LogoutConfirmTracer extends React.Component {
 
-  //Clears tracer's firebase stuff when logged out
   logOutActions() {
     //If player logged out before/at StartGame, don't need to subtract from numPlayers
     //since she was never added to numPlayers

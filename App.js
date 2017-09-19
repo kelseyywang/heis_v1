@@ -26,19 +26,14 @@ import GameSettings from './src/components/GameSettings';
 // 1. 8/23 - MapScreenTracer problem that arises kinda randomly - but mostly after traitor deflects
 // and tracer triggers. Causes error "Can only update a mounted or mounting component"
 // I've also seen the same error on MapScreenTraitor after logout or login?
-// 2. 8/28 - MapScreenTracer on iOS I think? When traitor logs in first, tracer on iOS
-// doesn't show the countdown modal... problem again arises seemingly randomly.
-// 3. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
+// 2. 8/28 - timing between MapScreens is always a little off - I have it currently sketchily
 // adjusted so that Traitor is usually a tiny tiny bit ahead of Tracer, but sometimes it's up to
 // 2-3 seconds off or something
-// 4. 9/13 - when you go to Game Settings screen, or return back to ChooseRole after Settings,
+// 3. 9/13 - when you go to Game Settings screen, or return back to ChooseRole after Settings,
 // if the oter person started a game, the ModalWithButton doesn't pop up
 // ^ test if the interval is still going in ChooseRole when you go to GameSettings
 // GENERAL TODO:
 // handle when user quits app without logging out??
-// not important: make option to cancel game, while game is happening or in countdown
-// (mo)
-
 
 export default class App extends React.Component {
 
