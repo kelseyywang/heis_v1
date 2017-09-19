@@ -37,11 +37,11 @@ const styles = {
   textStyle: {
     alignSelf: 'center',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   buttonStyle: {
-    borderWidth: 1,
-    borderRadius: 8,
+    borderWidth: 0,
+    borderRadius: 3,
     paddingTop: 10,
     paddingBottom: 10,
     paddingLeft: 20,

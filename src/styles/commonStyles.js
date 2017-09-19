@@ -8,6 +8,13 @@ const commonStyles = {
     lineHeight: 30,
     color: colors.darkTextColor,
   },
+  modalTextStyle: {
+    margin: 15,
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 30,
+    color: colors.darkTextColor,
+  },
   accentTextStyle: {
     margin: 15,
     fontSize: 25,
@@ -73,46 +80,47 @@ const commonStyles = {
     color: colors.mainButtonTextColor,
     fontSize: 16,
   },
-  helpModalSectionStyle: {
-    borderRadius: 8,
-    borderWidth: 2,
-    padding: 15,
-    backgroundColor: colors.modalColor,
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: colors.modalBorderColor,
-    height: 300
-  },
-  longModalSectionStyle: {
-    borderRadius: 8,
-    borderWidth: 2,
-    padding: 15,
-    backgroundColor: colors.modalColor,
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: colors.modalBorderColor,
-    height: 200
-  },
+  // helpModalSectionStyle: {
+  //   borderRadius: 8,
+  //   borderWidth: 2,
+  //   padding: 15,
+  //   backgroundColor: colors.modalColor,
+  //   justifyContent: 'space-around',
+  //   flexDirection: 'column',
+  //   borderColor: colors.modalBorderColor,
+  //   marginTop: 22,
+  //   //height: 420,
+  // },
+  // longModalSectionStyle: {
+  //   borderRadius: 8,
+  //   borderWidth: 2,
+  //   padding: 15,
+  //   backgroundColor: colors.modalColor,
+  //   justifyContent: 'space-around',
+  //   flexDirection: 'column',
+  //   borderColor: colors.modalBorderColor,
+  //   height: 200
+  // },
   modalSectionStyle: {
+    margin: 10,
     borderRadius: 8,
     borderWidth: 2,
-    padding: 15,
+    padding: 10,
     backgroundColor: colors.modalColor,
     justifyContent: 'space-around',
     flexDirection: 'column',
     borderColor: colors.modalBorderColor,
-    height: 150
   },
-  shortModalSectionStyle: {
-    borderRadius: 8,
-    borderWidth: 2,
-    padding: 15,
-    backgroundColor: colors.modalColor,
-    justifyContent: 'space-around',
-    flexDirection: 'column',
-    borderColor: colors.modalBorderColor,
-    height: 70
-  },
+  // shortModalSectionStyle: {
+  //   borderRadius: 8,
+  //   borderWidth: 2,
+  //   padding: 15,
+  //   backgroundColor: colors.modalColor,
+  //   justifyContent: 'space-around',
+  //   flexDirection: 'column',
+  //   borderColor: colors.modalBorderColor,
+  //   height: 70
+  // },
   modalStyle: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
     position: 'relative',

@@ -119,7 +119,7 @@ export default class LocateScreenTracer extends React.Component {
     Actions.endScreenTracer({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
-      endDistance: this.props.endDistance,
+      triggerDistance: this.props.triggerDistance,
       endTime: this.props.endTime,
       type: ActionConst.RESET
     });

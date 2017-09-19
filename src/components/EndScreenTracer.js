@@ -70,11 +70,12 @@ export default class EndScreenTracer extends React.Component {
 
   informWinOrLoss(updateWins) {
     const winner = this.props.winner;
+    let gameTimeSeconds = Math.floor(this.props.endTime);
     const messages = {
       triggerAndTime:
-      `Fired at ${this.props.triggerDistance} meters. Game time: ${Math.floor(this.props.endTime)}`,
+      `Triggered at ${this.props.triggerDistance} meters. Game time: ${Math.floor(gameTimeSeconds / 60)} minutes, ${gameTimeSeconds % 60} seconds.`,
       time:
-      `Game time: ${Math.floor(this.props.endTime)}`,
+      `Game time: ${Math.floor(gameTimeSeconds / 60)} minutes, ${gameTimeSeconds % 60} seconds.`,
     };
     if (winner === "Tracer") {
       if (updateWins) this.updateWinsInfo(true);
@@ -90,7 +91,7 @@ export default class EndScreenTracer extends React.Component {
     }
     else if (winner === "Traitor time") {
       if (updateWins) this.updateWinsInfo(false);
-      return `${strings.time1} ${messages.time}`;
+      return `${strings.time1}`;
     }
     else if (winner === "Countdown move") {
       return `${strings.move1}`;
@@ -226,7 +227,6 @@ export default class EndScreenTracer extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -262,7 +262,7 @@ export default class EndScreenTracer extends React.Component {
             />
             <Button
               onPress={this.showLocateHelp.bind(this)}
-              title='Find My Opponent'
+              title='Find Your Opponent'
               margin={30}
               main
             />
@@ -288,7 +288,7 @@ export default class EndScreenTracer extends React.Component {
           onButtonPress={this.exitLocateModal.bind(this)}
           buttonTitle='Okay'
         >
-          Your friend is looking for you. Go to 'Find My Opponent'
+          {strings.locateModalText}
         </ModalWithButton>
       );
     }
@@ -299,7 +299,7 @@ export default class EndScreenTracer extends React.Component {
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new round. You are the Tracer.
+            {strings.newRoundTracer}
           </ModalWithButton>
         );
       }
@@ -309,7 +309,7 @@ export default class EndScreenTracer extends React.Component {
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new round. You are the Traitor.
+            {strings.newRoundTraitor}
           </ModalWithButton>
         );
       }
@@ -342,7 +342,7 @@ export default class EndScreenTracer extends React.Component {
             />
             <Button
               onPress={this.goToLocate.bind(this)}
-              title='Find My Opponent'
+              title='Find Your Opponent'
               margin={30}
               main
             />

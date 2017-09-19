@@ -119,6 +119,7 @@ export default class LocateScreenTraitor extends React.Component {
     Actions.endScreenTraitor({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
+      triggerDistance: this.props.triggerDistance,
       endTime: this.props.endTime,
       type: ActionConst.RESET
     });

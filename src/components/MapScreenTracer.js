@@ -40,7 +40,7 @@ export default class MapScreenTracer extends React.Component {
       initialLonDelta: 0,
       showCountdownModal: true,
       helpMode: false,
-      mapHelp: false,
+      tracerMapHelp: false,
       distanceHelp: false,
       directionHelp: false,
       aimHelp: false,
@@ -52,16 +52,21 @@ export default class MapScreenTracer extends React.Component {
     //and anything in between gets a countdown value
     //linearly correlated to its distance, and set to the nearest
     //time increment
-    this.minTime = 3;
-    this.maxTime = 3;
+    // this.minTime = 3;
+    // this.maxTime = 3;
+    // this.timeIncrements = 30;
+    // this.minDist = 200;
+    // this.maxDist = 1500;
+    this.minTime = 60;
+    this.maxTime = 150;
     this.timeIncrements = 30;
     this.minDist = 200;
-    this.maxDist = 1500;
-
+    this.maxDist = 1000;
     //The amount of meters the the tracer is permitted to travel from his
     //initial location during countdown
     this.countdownBounds = 70;
-    this.defaultGameTime = 20;
+    //this.defaultGameTime = 20;
+    this.defaultGameTime = 600;
     this.defaultCaptureDist = 70;
     this.setFirebase = this.setFirebase.bind(this);
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
@@ -176,7 +181,8 @@ export default class MapScreenTracer extends React.Component {
       fbCountdownTotal = snapshot.val().countdownTotal;
       fbGameTime = snapshot.val().gameTime;
       fbCaptureDist = snapshot.val().captureDist;
-      if (traitorStartLat === 0 || traitorStartLon === 0) {
+      if (traitorStartLat === null || typeof traitorStartLat === 'undefined'
+         || traitorStartLon === null || typeof traitorStartLon === 'undefined') {
         //Traitor's position hasn't been uploaded to firebase yet, need to wait
         this.getTraitorPosTimeout = setTimeout(this.setGameValues.bind(this), 500);
       }
@@ -239,6 +245,7 @@ export default class MapScreenTracer extends React.Component {
     }
     else {
       this.captureDist = fbCaptureDist;
+      this.countdownBounds = fbCaptureDist;
     }
   }
 
@@ -497,8 +504,10 @@ export default class MapScreenTracer extends React.Component {
   //Helper function to set winner to Firebase
   //and send to end screen
   gameWonActions(winnerString, triggerDist) {
+    let saveEndTime = this.gameTime - this.state.currentTime;
     let updates = {};
     updates[`/currentSessions/${this.props.sessionKey}/gameWinner/`] = winnerString;
+    updates[`/currentSessions/${this.props.sessionKey}/endTime/`] = saveEndTime;
     if (triggerDist !== null) {
       updates[`/currentSessions/${this.props.sessionKey}/triggerDist/`] = Math.round(triggerDist);
     }
@@ -508,7 +517,7 @@ export default class MapScreenTracer extends React.Component {
       sessionKey: this.props.sessionKey,
       winner: winnerString,
       triggerDistance: triggerDist,
-      endTime: this.gameTime - this.state.currentTime,
+      endTime: saveEndTime,
       fromGame: true,
       type: ActionConst.RESET});
   }
@@ -585,16 +594,16 @@ export default class MapScreenTracer extends React.Component {
     });
   }
 
-  mapHelpClose() {
+  tracerMapHelpClose() {
     this.setState({
-      mapHelp: false,
+      tracerMapHelp: false,
     });
   }
 
-  showMapHelp() {
+  showTracerMapHelp() {
     this.setState({
-      modalShowing: 'mapHelp',
-      mapHelp: true,
+      modalShowing: 'tracerMapHelp',
+      tracerMapHelp: true,
     });
   }
 
@@ -657,7 +666,6 @@ export default class MapScreenTracer extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -686,7 +694,7 @@ export default class MapScreenTracer extends React.Component {
           {this.renderTimerOrCountdown()}
         </Placeholder>
         <TouchableOpacity
-          onPress={this.showMapHelp.bind(this)}
+          onPress={this.showTracerMapHelp.bind(this)}
           style={commonStyles.placeholderStyle2}
         >
           {this.renderMap()}
@@ -696,12 +704,12 @@ export default class MapScreenTracer extends React.Component {
             <Button
               onPress={this.showDistanceHelp.bind(this)}
               title='Distance'
-              main={false}
+              main
             />
             <Button
               onPress={this.showDirectionHelp.bind(this)}
               title='Direction'
-              main={false}
+              main
             />
             <View style={commonStyles.rowContainerStyle}>
               <TouchableOpacity
@@ -713,7 +721,7 @@ export default class MapScreenTracer extends React.Component {
               <Button
                 onPress={this.showTriggerHelp.bind(this)}
                 title={`Trigger (${this.state.triggersRemaining})`}
-                main
+                main={false}
               />
             </View>
           </View>
@@ -811,20 +819,11 @@ export default class MapScreenTracer extends React.Component {
         </Text>
       );
     }
-    else if (this.state.showCountdownModal) {
-      return (
-        <Text style={commonStyles.lightTextStyle}>
-          In countdown
-        </Text>
-      );
-    }
-    else if (!this.state.showCountdownModal) {
-      return (
-        <Text style={commonStyles.lightTextStyle}>
-          {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
-        </Text>
-      );
-    }
+    return (
+      <Text style={commonStyles.lightTextStyle}>
+        {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
+      </Text>
+    );
   }
 
   renderCurrentUser() {
@@ -848,7 +847,6 @@ export default class MapScreenTracer extends React.Component {
           <ModalWithButton
             onButtonPress={this.exitNotInGameModal.bind(this)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.modalSectionStyle}
           >
             Traitor is not in the game
           </ModalWithButton>
@@ -857,7 +855,6 @@ export default class MapScreenTracer extends React.Component {
           <ModalWithButton
             onButtonPress={this.exitCountdownModal.bind(this)}
             buttonTitle='Close'
-            modalSectionStyle={commonStyles.modalSectionStyle}
           >
             {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
           </ModalWithButton>
@@ -870,12 +867,12 @@ export default class MapScreenTracer extends React.Component {
             <Button
               onPress={this.setCurrentDistance.bind(this)}
               title='Distance'
-              main={false}
+              main
             />
             <Button
               onPress={this.setCurrentDirectionCoords.bind(this)}
               title='Direction'
-              main={false}
+              main
             />
             <View style={commonStyles.rowContainerStyle}>
               <TouchableOpacity
@@ -887,7 +884,7 @@ export default class MapScreenTracer extends React.Component {
               <Button
                 onPress={this.triggerPulled.bind(this)}
                 title={`Trigger (${this.state.triggersRemaining})`}
-                main
+                main={false}
               />
             </View>
           </View>

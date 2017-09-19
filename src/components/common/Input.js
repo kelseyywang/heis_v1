@@ -36,7 +36,7 @@ const styles = {
     textAlign: 'center',
     marginRight: 20,
     marginLeft: 20,
-    borderRadius: 8,
+    borderRadius: 3,
   },
   labelStyle: {
     marginTop: 10,

@@ -17,6 +17,8 @@ export default class StartGame extends React.Component {
       sessionKey: '',
       error: '',
       newUserModalVisible: true,
+      newUserModal2Visible: false,
+      newUserModal3Visible: false,
       helpMode: false,
       sessionKeyHelp: false,
       readyHelp: false,
@@ -49,9 +51,23 @@ export default class StartGame extends React.Component {
     return true;
   }
 
-  exitNewUserModal() {
+  nextNewUserModal() {
     this.setState({
       newUserModalVisible: false,
+      newUserModal2Visible: true,
+    });
+  }
+
+  exitNewUserModal3() {
+    this.setState({
+      newUserModal3Visible: false,
+    });
+  }
+
+  nextNewUserModal2() {
+    this.setState({
+      newUserModal2Visible: false,
+      newUserModal3Visible: true,
     });
   }
 
@@ -163,7 +179,6 @@ export default class StartGame extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -231,10 +246,30 @@ export default class StartGame extends React.Component {
     if (this.props.newUser && this.state.newUserModalVisible) {
       return (
         <ModalWithButton
-          onButtonPress={this.exitNewUserModal.bind(this)}
+          onButtonPress={this.nextNewUserModal.bind(this)}
+          buttonTitle='Next'
+        >
+          {strings.welcomeMessage1}
+        </ModalWithButton>
+      );
+    }
+    else if (this.state.newUserModal2Visible) {
+      return (
+        <ModalWithButton
+          onButtonPress={this.nextNewUserModal2.bind(this)}
           buttonTitle='Okay'
         >
-          I see you just made a new account here. Welcome to heis!
+          {strings.welcomeMessage2}
+        </ModalWithButton>
+      );
+    }
+    else if (this.state.newUserModal3Visible) {
+      return (
+        <ModalWithButton
+          onButtonPress={this.exitNewUserModal3.bind(this)}
+          buttonTitle='Okay'
+        >
+          {strings.welcomeMessage3}
         </ModalWithButton>
       );
     }

@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginRight: 20,
     marginLeft: 20,
-    borderRadius: 8,
+    marginBottom: 10,
+    borderRadius: 3,
   },
 });

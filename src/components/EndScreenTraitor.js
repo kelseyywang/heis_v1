@@ -72,11 +72,12 @@ export default class EndScreenTraitor extends React.Component {
 
   informWinOrLoss(updateWins) {
     const winner = this.props.winner;
+    let gameTimeSeconds = Math.floor(this.props.endTime);
     const messages = {
       triggerAndTime:
-      `Fired at ${this.props.triggerDistance} meters. Game time: ${Math.floor(this.props.endTime)}`,
+      `Triggered at ${this.props.triggerDistance} meters. Game time: ${Math.floor(gameTimeSeconds / 60)} minutes, ${gameTimeSeconds % 60} seconds.`,
       time:
-      `Game time: ${Math.floor(this.props.endTime)}`,
+      `Game time: ${Math.floor(gameTimeSeconds / 60)} minutes, ${gameTimeSeconds % 60} seconds`,
     };
     if (winner === "Tracer") {
       if (updateWins) this.updateWinsInfo(false);
@@ -92,7 +93,7 @@ export default class EndScreenTraitor extends React.Component {
     }
     else if (winner === "Traitor time") {
       if (updateWins) this.updateWinsInfo(true);
-      return `${strings.time2} ${messages.time}`;
+      return `${strings.time2}`;
     }
     else if (winner === "Countdown move") {
       return `${strings.move2}`;
@@ -160,6 +161,7 @@ export default class EndScreenTraitor extends React.Component {
     Actions.locateScreenTraitor({
       sessionKey: this.props.sessionKey,
       winner: this.props.winner,
+      triggerDistance: this.props.triggerDistance,
       endTime: this.props.endTime,
       type: ActionConst.RESET
     });
@@ -227,7 +229,6 @@ export default class EndScreenTraitor extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -289,7 +290,7 @@ export default class EndScreenTraitor extends React.Component {
           onButtonPress={this.exitLocateModal.bind(this)}
           buttonTitle='Okay'
         >
-          Your friend is looking for you. Go to 'Find My Opponent'
+          {strings.locateModalText}
         </ModalWithButton>
       );
     }
@@ -300,7 +301,7 @@ export default class EndScreenTraitor extends React.Component {
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your opponent started a new round. You are the Tracer.
+            {strings.newRoundTracer}
           </ModalWithButton>
         );
       }
@@ -310,7 +311,7 @@ export default class EndScreenTraitor extends React.Component {
             onButtonPress={this.exitNewGameModal.bind(this)}
             buttonTitle='Okay'
           >
-            Your friend started a new round. You are the Traitor.
+            {strings.newRoundTraitor}
           </ModalWithButton>
         );
       }

@@ -109,7 +109,6 @@ export default class GameSettings extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -132,7 +131,7 @@ export default class GameSettings extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-          {Actions.logoutConfirm({fromRole: 'someone'});}}
+          {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
         />
         <Placeholder flex={0.2} />
         <TouchableOpacity
@@ -153,7 +152,7 @@ export default class GameSettings extends React.Component {
         >
           <SettingPicker
             disabled
-            title='Adjust Game Time (min:sec):'
+            title='Adjust Round Time (min:sec):'
             data={gameTimeData}
             placeholder='10:00'
             value={this.state.gameTimeLabel}
@@ -210,7 +209,7 @@ export default class GameSettings extends React.Component {
               countdown: option.key});}}
           />
           <SettingPicker
-            title='Adjust Game Time (min:sec):'
+            title='Adjust Round Time (min:sec):'
             data={gameTimeData}
             placeholder='10:00'
             value={this.state.gameTimeLabel}
@@ -259,6 +258,8 @@ export default class GameSettings extends React.Component {
 }
 
 const countdownData = [
+    { key: 0, label: ':00' },
+    { key: 0.25, label: ':15' },
     { key: 0.5, label: ':30' },
     { key: 1, label: '1:00' },
     { key: 1.5, label: '1:30' },

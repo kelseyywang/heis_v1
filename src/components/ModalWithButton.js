@@ -9,12 +9,12 @@ export default class ModalWithButton extends React.Component {
       <Modal
         visible
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => {}}
       >
         <View style={commonStyles.modalStyle}>
-          <View style={this.props.modalSectionStyle || commonStyles.longModalSectionStyle}>
-            <Text style={commonStyles.mainTextStyle}>
+          <View style={commonStyles.modalSectionStyle}>
+            <Text style={commonStyles.modalTextStyle}>
               {this.props.children}
             </Text>
             <Button

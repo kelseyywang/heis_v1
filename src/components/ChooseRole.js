@@ -145,7 +145,6 @@ export default class ChooseRole extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -168,7 +167,7 @@ export default class ChooseRole extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-          {Actions.logoutConfirm({fromRole: 'none'});}}
+          {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>
@@ -234,7 +233,7 @@ export default class ChooseRole extends React.Component {
           includeRightButton
           rightButtonText='Log Out'
           rightButtonAction={() =>
-            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'none'});}}
+            {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'someone'});}}
         />
       <Placeholder>
         <Text style={commonStyles.mainTextStyle}>Which side are you on?</Text>

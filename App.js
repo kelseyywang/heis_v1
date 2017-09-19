@@ -36,8 +36,6 @@ import GameSettings from './src/components/GameSettings';
 // ^ test if the interval is still going in ChooseRole when you go to GameSettings
 // GENERAL TODO:
 // handle when user quits app without logging out??
-// revise endscreen messages
-// about page - maybe an information icon on header on each page
 // not important: make option to cancel game, while game is happening or in countdown
 // (mo)
 

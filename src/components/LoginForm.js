@@ -6,14 +6,12 @@ import { Button, Input, Spinner, Header, Placeholder } from './common';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
 
-//TODO 9/7: make styling less bad... why is password deleting
-//completely after you touch outside on ios?
 class LoginForm extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      email: 'tracer@test.com',
+      email: 't@test.com',
       password: 'password',
       error: '',
       loading: false,
@@ -103,7 +101,7 @@ class LoginForm extends Component {
     return (
       <Button
         onPress={this.onButtonPress.bind(this)}
-        title='Log In'
+        title='Log In or Create Account'
         main
       />
     );

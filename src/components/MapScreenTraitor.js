@@ -35,14 +35,17 @@ export default class MapScreenTraitor extends React.Component {
       initialLonDelta: 0,
       showCountdownModal: true,
       helpMode: false,
-      mapHelp: false,
+      traitorMapHelp: false,
       disguiseHelp: false,
       aimHelp: false,
       deflectHelp: false,
       modalShowing: 'none',
     };
     this.defaultCaptureDist = 70;
-    this.defaultGameTime = 20;
+    //this.defaultGameTime = 20;
+    this.defaultGameTime = 600;
+    this.disguiseTime = 30;
+    this.deflectTime = 30;
     this.callCurrentPosition = this.callCurrentPosition.bind(this);
     this.endDeflect = this.endDeflect.bind(this);
     this.endDisguise = this.endDisguise.bind(this);
@@ -89,6 +92,10 @@ export default class MapScreenTraitor extends React.Component {
       else {
         this.gameTime = fbGameTime;
       }
+    })
+    .then(() => {
+      this.disguiseTime = this.gameTime / 20;
+      this.deflectTime = this.gameTime / 20;
     });
   }
 
@@ -121,13 +128,10 @@ export default class MapScreenTraitor extends React.Component {
       if (!ret) {
         let fbGameWinner = snapshot.val().gameWinner;
         let fbTriggerDist = snapshot.val().triggerDist;
-        if (typeof fbGameWinner !== 'undefined') {
-          if (fbTriggerDist === 'undefined' || fbTriggerDist === null) {
-            this.hasGameEnded(fbGameWinner, null);
-          }
-          else {
-            this.hasGameEnded(fbGameWinner, fbTriggerDist);
-          }
+        let fbEndTime = snapshot.val().endTime;
+        if (typeof fbGameWinner !== 'undefined' && fbGameWinner !== null) {
+          //There is a winner
+          this.goToHasGameEnded(fbGameWinner, fbTriggerDist, fbEndTime);
         }
         else {
           let fbShowDirection = snapshot.val().showDirection;
@@ -184,6 +188,21 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
+  goToHasGameEnded(fbGameWinner, fbTriggerDist, fbEndTime) {
+    if (fbTriggerDist === 'undefined' || fbTriggerDist === null) {
+      //No trigger distance
+      if (fbEndTime === 'undefined' || fbTriggerDist === null) {
+        this.hasGameEnded(fbGameWinner, null, null);
+      }
+      else {
+        this.hasGameEnded(fbGameWinner, null, fbEndTime);
+      }
+    }
+    else {
+      this.hasGameEnded(fbGameWinner, fbTriggerDist, fbEndTime);
+    }
+  }
+
   //Determines countdown amount and starts countdown after both players are in game
   startCountdown() {
     this.timerStart = new Date().getTime();
@@ -197,7 +216,7 @@ export default class MapScreenTraitor extends React.Component {
   }
 
   //Check if game has ended
-  hasGameEnded(fbGameWinner, fbTriggerDist) {
+  hasGameEnded(fbGameWinner, fbTriggerDist, fbEndTime) {
     //Have to adjust endTime by 2 because of Tracer being set 2 seconds "behind"
     this.clearFirebaseActions();
     this.unmountActions();
@@ -205,7 +224,7 @@ export default class MapScreenTraitor extends React.Component {
       sessionKey: this.props.sessionKey,
       winner: fbGameWinner,
       triggerDistance: fbTriggerDist,
-      endTime: this.gameTime - this.state.currentTime - 2,
+      endTime: fbEndTime,//this.gameTime - this.state.currentTime - 2,
       fromGame: true,
       type: ActionConst.RESET});
   }
@@ -246,8 +265,10 @@ export default class MapScreenTraitor extends React.Component {
         this.startTimer();
       }
       else {
+          //Set current countdown time, add 1 because otherwise it
+          //skips a second in the beginning, like 00:30 to 00:28
           this.setState({
-            currentTime: currCountdownTime,
+            currentTime: currCountdownTime + 1,
           });
       }
     }
@@ -304,7 +325,7 @@ export default class MapScreenTraitor extends React.Component {
       this.setState({
         disguiseOn: true,
       }, () => {
-        this.disguiseTimeout = setTimeout(this.endDisguise, 10000);
+        this.disguiseTimeout = setTimeout(this.endDisguise, this.disguiseTime * 1000);
       });
     }
   }
@@ -341,7 +362,7 @@ export default class MapScreenTraitor extends React.Component {
       this.setState({
         deflectOn: true,
       }, () => {
-        this.deflectTimeout = setTimeout(this.endDeflect, 10000);
+        this.deflectTimeout = setTimeout(this.endDeflect, this.deflectTime * 1000);
       });
     }
   }
@@ -394,16 +415,16 @@ export default class MapScreenTraitor extends React.Component {
     });
   }
 
-  mapHelpClose() {
+  traitorMapHelpClose() {
     this.setState({
-      mapHelp: false,
+      traitorMapHelp: false,
     });
   }
 
-  showMapHelp() {
+  showTraitorMapHelp() {
     this.setState({
-      modalShowing: 'mapHelp',
-      mapHelp: true,
+      modalShowing: 'traitorMapHelp',
+      traitorMapHelp: true,
     });
   }
 
@@ -453,7 +474,6 @@ export default class MapScreenTraitor extends React.Component {
           <ModalWithButton
             onButtonPress={eval(`this.${whichModal}Close.bind(this)`)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.helpModalSectionStyle}
           >
             {strings[whichModal]}
           </ModalWithButton>
@@ -482,7 +502,7 @@ export default class MapScreenTraitor extends React.Component {
           {this.renderTimerOrCountdown()}
         </Placeholder>
         <TouchableOpacity
-          onPress={this.showMapHelp.bind(this)}
+          onPress={this.showTraitorMapHelp.bind(this)}
           style={commonStyles.placeholderStyle2}
         >
           {this.renderMap()}
@@ -492,7 +512,7 @@ export default class MapScreenTraitor extends React.Component {
             <Button
               onPress={this.showDisguiseHelp.bind(this)}
               title={`Disguise (${this.state.disguisesRemaining})`}
-              main={false}
+              main
             />
           <View style={commonStyles.rowContainerStyle}>
             <TouchableOpacity
@@ -504,7 +524,7 @@ export default class MapScreenTraitor extends React.Component {
             <Button
               onPress={this.showDeflectHelp.bind(this)}
               title={`Deflect (${this.state.deflectsRemaining})`}
-              main
+              main={false}
             />
           </View>
         </View>
@@ -594,20 +614,11 @@ export default class MapScreenTraitor extends React.Component {
         </Text>
       );
     }
-    else if (this.state.showCountdownModal) {
-      return (
-        <Text style={commonStyles.lightTextStyle}>
-          In countdown
-        </Text>
-      );
-    }
-    else if (!this.state.showCountdownModal) {
-      return (
-        <Text style={commonStyles.lightTextStyle}>
-          {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
-        </Text>
-      );
-    }
+    return (
+      <Text style={commonStyles.lightTextStyle}>
+        {"Run! Countdown: " + this.returnTimerString(this.state.currentTime)}
+      </Text>
+    );
   }
 
   renderCurrentUser() {
@@ -631,7 +642,6 @@ export default class MapScreenTraitor extends React.Component {
           <ModalWithButton
             onButtonPress={this.exitNotInGameModal.bind(this)}
             buttonTitle='Okay'
-            modalSectionStyle={commonStyles.modalSectionStyle}
           >
             Tracer is not in the game
           </ModalWithButton>
@@ -640,9 +650,8 @@ export default class MapScreenTraitor extends React.Component {
         <ModalWithButton
           onButtonPress={this.exitCountdownModal.bind(this)}
           buttonTitle='Close'
-          modalSectionStyle={commonStyles.modalSectionStyle}
         >
-          {"Wait. Countdown: " + this.returnTimerString(this.state.currentTime)}
+          {"Run! Countdown: " + this.returnTimerString(this.state.currentTime)}
         </ModalWithButton>
       }
       <Placeholder flex={2} >
@@ -653,7 +662,7 @@ export default class MapScreenTraitor extends React.Component {
             <Button
               onPress={this.disguisePressed.bind(this)}
               title={`Disguise (${this.state.disguisesRemaining})`}
-              main={false}
+              main
             />
           <View style={commonStyles.rowContainerStyle}>
             <TouchableOpacity
@@ -665,7 +674,7 @@ export default class MapScreenTraitor extends React.Component {
             <Button
               onPress={this.deflectPressed.bind(this)}
               title={`Deflect (${this.state.deflectsRemaining})`}
-              main
+              main={false}
             />
           </View>
         </View>
