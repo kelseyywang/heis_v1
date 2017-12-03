@@ -10,8 +10,8 @@ class LoginForm extends Component {
     super(props);
 
     this.state = {
-      email: '',
-      password: '',
+      email: 'test@test.com',
+      password: 'password',
       error: '',
       loading: false,
       loggedIn: false,

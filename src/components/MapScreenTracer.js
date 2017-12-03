@@ -4,6 +4,7 @@ import MapView from 'react-native-maps';
 import React from 'react';
 import { Text, View, Vibration, TouchableOpacity } from 'react-native';
 import { Spinner, Button, Header, Placeholder } from './common';
+import Timer from './Timer';
 import ModalWithButton from './ModalWithButton';
 import colors from '../styles/colors';
 import commonStyles from '../styles/commonStyles';
@@ -46,6 +47,7 @@ export default class MapScreenTracer extends React.Component {
       aimHelp: false,
       triggerHelp: false,
       modalShowing: 'none',
+      showTimerComponent: false,
     };
     //The following instance vars are to determine countdown time
     //where minDist or less get minTime, maxTime or more get maxTime,
@@ -166,6 +168,9 @@ export default class MapScreenTracer extends React.Component {
   startCountdown() {
     this.setGameValues();
     this.timerStart = new Date().getTime();
+    this.setState({
+      showTimerComponent: true,
+    });
     this.countdownInterval = setInterval(this.updateTime, 1000);
   }
 
@@ -826,6 +831,21 @@ export default class MapScreenTracer extends React.Component {
     );
   }
 
+  //TODO: fix this! remove testStart, replace w this.timerStart?
+  renderTimerComponent() {
+    if (this.state.showTimerComponent) {
+      let testStart = new Date().getTime();
+      console.log("TIMERSTART IS " + this.timerStart);
+      return (
+        <Timer
+          countdownDuration={10}
+          gameDuration={60}
+          timerStart={testStart}
+        />
+      );
+    }
+  }
+
   renderCurrentUser() {
     return (
       <View style={commonStyles.gameStyle}>
@@ -841,7 +861,7 @@ export default class MapScreenTracer extends React.Component {
             {Actions.logoutConfirm({sessionKey: this.props.sessionKey, fromRole: 'tracer'});}}
         />
         <Placeholder flex={0.3} >
-          {this.renderTimerOrCountdown()}
+          {this.renderTimerComponent()}
         </Placeholder>
         {!this.state.showCountdown && !this.state.traitorInGame && this.state.showTimerModal &&
           <ModalWithButton
