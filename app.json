@@ -1,17 +1,6 @@
 {
   "expo": {
-   "name": "heis",
-   "icon": "./src/images/heistexticon.png",
-   "version": "0.0.1",
-   "slug": "heis_v1_pub",
-   "sdkVersion": "19.0.0",
-   "orientation" : "portrait",
-   "primaryColor" : "#353160",
-   "ios": {
-     "bundleIdentifier": "com.heisio.heis"
-   },
-   "android": {
-     "package": "com.heisio.heis"
-   }
+    "sdkVersion": "19.0.0",
+    "orientation" : "portrait",
   }
 }
